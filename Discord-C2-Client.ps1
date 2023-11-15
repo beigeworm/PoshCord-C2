@@ -435,6 +435,6 @@ $response = Invoke-RestMethod -Uri $GHurl
     else{
     write-output "No command found.."
     }
-sleep 10
+sleep 5
 }
 

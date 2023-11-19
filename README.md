@@ -9,7 +9,7 @@ Using a Discord webhook and a hosted text file to Act as a Command and Control P
 This script will wait until it notices a change in the contents of a text file hosted online (eg. github/pastebin).
 Every 10 seconds it will check a file for a change in the file contents and interpret it as a custom command / module.
 
-*Using github to host your command file will take up to 5 minutes to run each module command - Use pasatebin (account needed) OR your own server to host the txt file for instant response* 
+*Using github to host your command file will take up to 5 minutes to run each module command - Use pastebin (account needed) OR your own server to host the txt file for instant response* 
 
 **SETUP**
 1. Goto https://pastebin.com and make an account..

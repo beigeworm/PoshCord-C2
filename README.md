@@ -27,7 +27,7 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 **MODULES**
 1. `Message` : Send a message window to the Users desktop.          
 2. `Screenshot`  : Sends a screenshot of the desktop to Discord.      
-3. `Keycapture`   : Capture Keystrokes and send to Discord. (see ExtraInfo for usage.)          
+3. `KeyCapture`   : Capture Keystrokes and send to Discord. (see ExtraInfo for usage.)          
 4. `Exfiltrate` : Send various files to Discord zipped in 25mb files. (see ExtraInfo for usage.)                   
 5. `Upload` : Upload a file to Discord. (see ExtraInfo for usage.)     
 6. `Systeminfo` : Send System information as text file to Discord. (takes a few minutes to gather data)         
@@ -44,7 +44,8 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 17. `Options`  : Show the Module menu
 18. `ExtraInfo`  : Show extra Module information
 
-**EXTRA**
+**FEATURES**
+**Custom Script**
 
 You can add custom scripting in a secondary hosted file, change YOUR_OTHER_FILE_URL to another text file and add code to it,
 then in the original hosted file save it with 'customcommand' as the contents 

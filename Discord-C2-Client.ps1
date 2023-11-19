@@ -12,7 +12,7 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 SETUP
 1. Goto https://pastebin.com and make an account..
 2. Create an empty paste/file and copy the RAW url.
-3. Change YOUR_FILE_URL to the RAW url  eg. https://pastebin.com/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
+3. Change YOUR_FILE_URL to the RAW url  eg. https://pastebin.com/raw/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
 4. Change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 
 USAGE

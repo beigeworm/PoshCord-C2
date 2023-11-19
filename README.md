@@ -35,8 +35,7 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 8. `FolderTree` : Save folder trees to file and send to Discord.
 9. `FakeUpdate` : Spoof windows update screen.            
 10. `AddPersistance` : Add this script to the startup folder.         
-11. `RemovePersistance` : Remove this script from the startup folder.              
-12. `CustomCommand` : Execute a hosted text file as a script. 
+11. `RemovePersistance` : Remove this script from the startup folder.               
 13. `IsAdmin`  : Check if the session is admin.             
 14. `AttemptElevate` : Attempt to restart script as admin. (displays a UAC prompt to User)  
 15. `EnumerateLAN`  : Show all devices on the network (see ExtraInfo for usage.) (can take a few miniutes to complete)    
@@ -46,10 +45,9 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 
 **FEATURES**
 
-**Custom Script**
+**Custom Scripting**
 
-You can add custom scripting in a secondary hosted file, change YOUR_OTHER_FILE_URL to another text file and add code to it,
-then in the original hosted file save it with 'customcommand' as the contents 
+Edit the hosted file contents to any custom powershell script or command to run custom powershell.
 
 **Killswitch**
 

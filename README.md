@@ -22,7 +22,7 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 1. Setup the script
 2. Run the script on a target.
 3. Check discord for 'waiting to connect..' message.
-4. Save the contents of your hosted file to contain 'options' to get a list of modules
+4. edit the contents of your hosted file to contain 'options' to get a list of modules
 5. Do the same with any other command listed - To run that module.
 
 **MODULES**

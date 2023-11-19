@@ -18,7 +18,6 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 4. Change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 
 **USAGE**
-
 1. Setup the script
 2. Run the script on a target.
 3. Check discord for 'waiting to connect..' message.
@@ -26,28 +25,28 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 5. Do the same with any other command listed - To run that module.
 
 **MODULES**
-
-= `Close`  : Close the Session                           =
-
-= `Screenshot`  : Sends a screenshot of the desktop      =
-
-= `Keycapture`   : Capture Keystrokes and send           =
-
-= `Exfiltrate` : Send various files.                     =
-
-= `Systeminfo` : Send System info as text file.          =
-
-= `TakePicture` : Send a webcam picture.                 =
-
-= `FolderTree` : Save folder trees to file and send.     =
-
-= `FakeUpdate` : Spoof windows update screen.            =
-
-= `CustomCommand` : Execute a github file as a script.   =
+1. `Message` : Send a message window to the User          
+2. `Screenshot`  : Sends a screenshot of the desktop      
+3. `Keycapture`   : Capture Keystrokes and send           
+4. `Exfiltrate` : Send various files.                     
+5. `Upload` : Upload a file. eg. upload <pth/to/file>     
+6. `Systeminfo` : Send System info as text file.          
+7. `TakePicture` : Send a webcam picture.                 
+8. `FolderTree` : Save folder trees to file and send.     
+9. `FakeUpdate` : Spoof windows update screen.            
+10. `AddPersistance` : Add this script to startup.         
+11. `RemovePersistance` : Remove from startup              
+12. `CustomCommand` : Execute a github file as a script.   
+13. `IsAdmin`  : Check if the session is admin             
+14. `AttemptElevate` : Attempt to restart script as admin  
+15. `EnumerateLAN`  : Show all devices on the network      
+16. `Close`  : Close this Session                          
+17. `Options`  : Show the Module menu
+18. `ExtraInfo`  : Show extra Module information
 
 **EXTRA**
 
-You can add custom scripting in a secondary hosted file, change YOUR_OTHER_GITHUB_FILE_URL to another text file and add code to it,
+You can add custom scripting in a secondary hosted file, change YOUR_OTHER_FILE_URL to another text file and add code to it,
 then in the original hosted file save it with 'customcommand' as the contents 
 
 **Killswitch**

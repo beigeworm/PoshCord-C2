@@ -45,6 +45,7 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 18. `ExtraInfo`  : Show extra Module information
 
 **FEATURES**
+
 **Custom Script**
 
 You can add custom scripting in a secondary hosted file, change YOUR_OTHER_FILE_URL to another text file and add code to it,

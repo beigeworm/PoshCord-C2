@@ -22,17 +22,6 @@ USAGE
 4. Edit the contents of your hosted file to contain 'options' to get a list of modules
 5. Do the same with any other command listed - To run that module.
 
-MODULES
-= Close : Close the Session                           
-= Screenshot  : Sends a screenshot of the desktop      
-= Keycapture  : Capture Keystrokes and send           
-= Exfiltrate : Send various files.                     
-= Systeminfo : Send System info as text file.          
-= TakePicture : Send a webcam picture.                 
-= FolderTree : Save folder trees to file and send.     
-= FakeUpdate : Spoof windows update screen.            
-= CustomCommand : Execute a github file as a script.   
-
 EXTRA
 You can add custom scripting in a secondary hosted file, change YOUR_SECONDARY_FILE_URL to another text file and add code to it,
 then in the original hosted file save it with 'customcommand' as the contents 

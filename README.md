@@ -25,17 +25,18 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 5. Do the same with any other command listed - To run that module.
 
 **MODULES**
-1. `Message` : Send a message window to the Users desktop.          
-2. `Screenshot`  : Sends a screenshot of the desktop to Discord.      
-3. `KeyCapture`   : Capture Keystrokes and send to Discord. (see ExtraInfo for usage.)          
-4. `Exfiltrate` : Send various files to Discord zipped in 25mb files. (see ExtraInfo for usage.)                   
-5. `Upload` : Upload a file to Discord. (see ExtraInfo for usage.)     
-6. `Systeminfo` : Send System information as text file to Discord. (takes a few minutes to gather data)         
-7. `TakePicture` : Send a webcam picture to Discord. (can take a few minutes..)
-8. `FolderTree` : Save folder trees to file and send to Discord.
-9. `FakeUpdate` : Spoof windows update screen.            
-10. `AddPersistance` : Add this script to the startup folder.         
-11. `RemovePersistance` : Remove this script from the startup folder.               
+1. `Message` : Send a message window to the Users desktop.
+2. `SpeechToText`  : Send microphone audio transcript to Discord       
+3. `Screenshot`  : Sends a screenshot of the desktop to Discord.      
+4. `KeyCapture`   : Capture Keystrokes and send to Discord. (see ExtraInfo for usage.)          
+5. `Exfiltrate` : Send various files to Discord zipped in 25mb files. (see ExtraInfo for usage.)                   
+6. `Upload` : Upload a file to Discord. (see ExtraInfo for usage.)     
+7. `Systeminfo` : Send System information as text file to Discord. (takes a few minutes to gather data)         
+8. `TakePicture` : Send a webcam picture to Discord. (can take a few minutes..)
+9. `FolderTree` : Save folder trees to file and send to Discord.
+10. `FakeUpdate` : Spoof windows update screen.            
+11. `AddPersistance` : Add this script to the startup folder.         
+12. `RemovePersistance` : Remove this script from the startup folder.               
 13. `IsAdmin`  : Check if the session is admin.             
 14. `AttemptElevate` : Attempt to restart script as admin. (displays a UAC prompt to User)  
 15. `EnumerateLAN`  : Show all devices on the network (see ExtraInfo for usage.) (can take a few miniutes to complete)    

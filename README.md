@@ -31,18 +31,19 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 4. `KeyCapture`   : Capture Keystrokes and send to Discord. (see ExtraInfo for usage.)          
 5. `Exfiltrate` : Send various files to Discord zipped in 25mb files. (see ExtraInfo for usage.)                   
 6. `Upload` : Upload a file to Discord. (see ExtraInfo for usage.)     
-7. `Systeminfo` : Send System information as text file to Discord. (takes a few minutes to gather data)         
-8. `TakePicture` : Send a webcam picture to Discord. (can take a few minutes..)
-9. `FolderTree` : Save folder trees to file and send to Discord.
-10. `FakeUpdate` : Spoof windows update screen.            
-11. `AddPersistance` : Add this script to the startup folder.         
-12. `RemovePersistance` : Remove this script from the startup folder.               
-13. `IsAdmin`  : Check if the session is admin.             
-14. `AttemptElevate` : Attempt to restart script as admin. (displays a UAC prompt to User)  
-15. `EnumerateLAN`  : Show all devices on the network (see ExtraInfo for usage.) (can take a few miniutes to complete)    
-16. `Close`  : Close this Session                          
-17. `Options`  : Show the Module menu
-18. `ExtraInfo`  : Show extra Module information
+7. `Systeminfo` : Send System information as text file to Discord. (takes a few minutes to gather data)
+8. `RecordAudio`  : Record microphone to Discord (RecordAudio -t 100) in seconds      
+9. `TakePicture` : Send a webcam picture to Discord. (can take a few minutes..)
+10. `FolderTree` : Save folder trees to file and send to Discord.
+11. `FakeUpdate` : Spoof windows update screen.            
+12. `AddPersistance` : Add this script to the startup folder.         
+13. `RemovePersistance` : Remove this script from the startup folder.               
+14. `IsAdmin`  : Check if the session is admin.             
+15. `AttemptElevate` : Attempt to restart script as admin. (displays a UAC prompt to User)  
+16. `EnumerateLAN`  : Show all devices on the network (see ExtraInfo for usage.) (can take a few miniutes to complete)    
+17. `Close`  : Close this Session                          
+18. `Options`  : Show the Module menu
+19. `ExtraInfo`  : Show extra Module information
 
 **FEATURES**
 

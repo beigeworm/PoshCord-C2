@@ -4,7 +4,7 @@
 
 <br><br>
 
-<h3 align="left"> v1.5 - 21/11/23 - Feature Additions </h3>
+<h3 align="left"> v1.1 - 21/11/23 - Feature Additions </h3>
 
 **Features**
 - Added Module - SpeechToText

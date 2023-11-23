@@ -1,6 +1,6 @@
 <div align="left">
 
-<h2 align="center"> Change Log for PoshGram-C2 </h2>
+<h2 align="center"> Change Log for PoshCord-C2 </h2>
 
 <br><br>
 

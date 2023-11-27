@@ -36,15 +36,18 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 9. `RecordScreen`  : Record Screen to Discord (RecordScreen -t 100) in seconds
 10. `TakePicture` : Send a webcam picture to Discord. (can take a few minutes..)
 11. `FolderTree` : Save folder trees to file and send to Discord.
-12. `FakeUpdate` : Spoof windows update screen.            
-13. `AddPersistance` : Add this script to the startup folder.         
-14. `RemovePersistance` : Remove this script from the startup folder.               
-15. `IsAdmin`  : Check if the session is admin.             
-16. `AttemptElevate` : Attempt to restart script as admin. (displays a UAC prompt to User)  
-17. `EnumerateLAN`  : Show all devices on the network (see ExtraInfo for usage.) (can take a few miniutes to complete)    
-18. `Close`  : Close this Session                          
-19. `Options`  : Show the Module menu
-20. `ExtraInfo`  : Show extra Module information
+12. `FakeUpdate` : Spoof windows update screen.
+13. `Nearby-Wifi` : Show nearby wifi networks
+14. `Send-Hydra` : Never ending popups (use killswitch)            
+15. `AddPersistance` : Add this script to the startup folder.         
+16. `RemovePersistance` : Remove this script from the startup folder.               
+17. `IsAdmin`  : Check if the session is admin.             
+18. `AttemptElevate` : Attempt to restart script as admin. (displays a UAC prompt to User)  
+19. `EnumerateLAN`  : Show all devices on the network (see ExtraInfo for usage.) (can take a few miniutes to complete)    
+20. `Close`  : Close this Session                          
+21. `Options`  : Show the Module menu
+22. `ExtraInfo`  : Show extra Module information
+
 
 **FEATURES**
 

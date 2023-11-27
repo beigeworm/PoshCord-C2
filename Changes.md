@@ -4,6 +4,18 @@
 
 <br><br>
 
+<h3 align="left"> v1.6 - 27/11/23 - Feature Additions </h3>
+
+**Features**
+- Added Module - Nearby-Wifi
+- Added Module - Send-Hydra
+
+**Changes**
+- Sys-Info Module reworked.
+
+<br><br>
+
+
 <h3 align="left"> v1.1 - 21/11/23 - Feature Additions </h3>
 
 **Features**

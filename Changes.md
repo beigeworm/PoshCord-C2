@@ -4,7 +4,17 @@
 
 <br><br>
 
-<h3 align="left"> v1.6 - 27/11/23 - Feature Additions </h3>
+<h3 align="left"> v1.2 - 27/11/23 - Feature Additions </h3>
+
+**Features**
+- Added Auto Update Feature - check current version and update if neccecary
+
+**Changes**
+- None
+
+<br><br>
+
+<h3 align="left"> v1.2 - 27/11/23 - Feature Additions </h3>
 
 **Features**
 - Added Module - Nearby-Wifi

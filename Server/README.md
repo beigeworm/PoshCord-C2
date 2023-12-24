@@ -4,5 +4,6 @@
 
 ```powershell
   PoshCord-C2>cd Server
+  PoshCord-C2/Server> npm install
   PoshCord-C2/Server> npm start
 ```

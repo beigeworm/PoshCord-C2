@@ -666,8 +666,9 @@ While ($true){
     }
 $LastKeypressTime.Restart()
 Start-Sleep -Milliseconds 10
+if ($messages -match "kill") {return 0}
 }
-return 0
+break
 }
 
 Function GetFfmpeg{

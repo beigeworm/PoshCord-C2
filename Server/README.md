@@ -2,16 +2,17 @@
 
 ## How to run
 
-1.
+### 1. OPTION
 
 ```powershell
   PoshCord-C2>cd Server
   PoshCord-C2/Server> npm install
   PoshCord-C2/Server> npm start
 ```
-2. Run the file `start-server.ps1`:
+
+### 2. OPTION
 
 STEPS:
-1. Right click on file
+1. Right click on file start-server.ps1
    
-2. Run with powershell
+2. Click `Run with powershell`

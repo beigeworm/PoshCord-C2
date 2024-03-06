@@ -620,7 +620,7 @@ function EnumNotepad{
             }
             $seperator = ("=" * 60)
             $SMseperator = ("-" * 60)
-            $seperator | Out-File -FilePath $outpath -Encoding ASCII -Append
+            $seperator | Out-File -FilePath $outpath -Append
             $filename = $fullFilePath.Name
             $contents = [System.IO.File]::ReadAllBytes($fullFilePath.FullName)
             $isSavedFile = $contents[3]
@@ -629,13 +629,13 @@ function EnumNotepad{
                 $filenameEnding = 5 + $lengthOfFilename * 2
                 $originalFilename = [System.Text.Encoding]::Unicode.GetString($contents[5..($filenameEnding - 1)])
                 "Found saved file : $originalFilename" | Out-File -FilePath $outpath -Append
-                $filename | Out-File -FilePath $outpath -Encoding ASCII -Append
-                $SMseperator | Out-File -FilePath $outpath -Encoding ASCII -Append
+                $filename | Out-File -FilePath $outpath -Append
+                $SMseperator | Out-File -FilePath $outpath -Append
                 Get-Content -Path $originalFilename -Raw | Out-File -FilePath $outpath -Append
             } else {
-                "Found an unsaved tab!" | Out-File -FilePath $outpath -Encoding ASCII -Append
-                $filename | Out-File -FilePath $outpath -Encoding ASCII -Append
-                $SMseperator | Out-File -FilePath $outpath -Encoding ASCII -Append
+                "Found an unsaved tab!" | Out-File -FilePath $outpath -Append
+                $filename | Out-File -FilePath $outpath -Append
+                $SMseperator | Out-File -FilePath $outpath -Append
                 $filenameEnding = 0
                 $delimeterStart = [array]::IndexOf($contents, 0, $filenameEnding)
                 $delimeterEnd = [array]::IndexOf($contents, 1, $filenameEnding)
@@ -644,9 +644,9 @@ function EnumNotepad{
                 $fileMarker = -join ($fileMarker | ForEach-Object { [char]$_ })
     
                 $originalFileContents = [System.Text.Encoding]::Unicode.GetString($contents[($delimeterEnd + 4 + $fileMarker.Length)..($contents.Length - 6)])
-                $originalFileContents | Out-File -FilePath $outpath -Encoding ASCII -Append
+                $originalFileContents | Out-File -FilePath $outpath -Append
             }
-         "`n" | Out-File -FilePath $outpath -Encoding ASCII -Append
+         "`n" | Out-File -FilePath $outpath -Append
         }
     }
 }

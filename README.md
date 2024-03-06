@@ -11,6 +11,8 @@ Every 10 seconds it will check a file for a change in the file contents and inte
 
 *Using github to host your command file will take up to 5 minutes to run each module command - Use pastebin (account needed) OR your own server to host the txt file for instant response* 
 
+(Using .vbs stager and python bot)
+
 ![GIF 3-6-2024 9-01-04 PM](https://github.com/beigeworm/PoshCord-C2/assets/93350544/a741facf-ed46-4d0d-b68f-df6bdf5da8c1)
 
 **SETUP**

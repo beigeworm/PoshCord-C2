@@ -4,7 +4,7 @@
 
 <br><br>
 
-<h3 align="left"> v1.4 - 20/12/23 - Update : Using discord bots instaed of hosting text files!</h3>
+<h3 align="left"> v1.4 - 07/03/24 - Update : Using discord bots instaed of hosting text files!</h3>
 
 **Changes**
 - Updated to use a bot and discords api to enumerate new messages

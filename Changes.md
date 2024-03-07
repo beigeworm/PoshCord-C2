@@ -4,6 +4,15 @@
 
 <br><br>
 
+<h3 align="left"> v1.4 - 20/12/23 - Update : Using discord bots instaed of hosting text files!</h3>
+
+**Changes**
+- Updated to use a bot and discords api to enumerate new messages
+- Added GPS to System info
+- Added Steal notepad tabs (win 11 only) to system info
+
+<br><br>
+
 <h3 align="left"> v1.3.1 - 20/12/23 - Update for Win 11</h3>
 
 **Changes**

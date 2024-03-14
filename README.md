@@ -81,7 +81,11 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 
 **Custom Scripting**
 
-Edit the hosted file contents to any custom powershell script or command to run custom powershell.
+You can add custom scripting / commands - Type 'YOUR CUSTOM POWERSHELL COMMAND' in chat
+
+**Mass Control Mode**
+
+Control all waiting sessions simultaneously with 'controll-all' to mass authenticate sessions.
 
 **Killswitch**
 

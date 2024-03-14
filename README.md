@@ -11,7 +11,7 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 
 **Demo** (using .vbs stager and python bot)
 
-![GIF 3-6-2024 9-01-04 PM](https://github.com/beigeworm/PoshCord-C2/assets/93350544/a741facf-ed46-4d0d-b68f-df6bdf5da8c1)
+![GIF 3-14-2024 7-18-11 PM](https://github.com/beigeworm/PoshCord-C2/assets/93350544/d1805cf3-f850-45c1-b4d2-c342cc17ecdb)
 
 **SETUP**
 1. make a discord bot at https://discord.com/developers/applications/

@@ -24,7 +24,7 @@ USAGE
 
 EXTRA
 You can add custom scripting / commands - Type 'YOUR CUSTOM POWERSHELL COMMAND' in chat
-Control all waiting sessions simultaneously with 'controll-all' to mass authenticate sessions.
+Control all waiting sessions simultaneously with 'control-all' to mass authenticate sessions.
 Killswitch - Type 'kill' in chat to stop 'KeyCapture' or other commands listed in 'extrainfo'..
 #>
 

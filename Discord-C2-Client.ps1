@@ -1064,13 +1064,13 @@ $script:jsonPayload = @{
 - **Email Address**         : ``$email``
 - **Language**              : ``$systemLanguage``
 
-:minidisc: OS Information :minidisc:
+:minidisc: **OS Information** :minidisc:
 -----------------------------------------------
 - **Current OS**            : ``$OSString``
 - **Build ID**              : ``$ver``
 - **Architechture**         : ``$OSArch``
 
-:globe_with_meridians: **Network** :globe_with_meridians:
+:globe_with_meridians: **Network Information** :globe_with_meridians:
 -----------------------------------------------
 - **Public IP Address**     : ``$computerPubIP``
 

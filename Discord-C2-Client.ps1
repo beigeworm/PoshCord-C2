@@ -1140,7 +1140,7 @@ if ($InfoOnConnect -eq '1'){
     $infocall = '``Getting system info - please wait..``'
 }
 else{
-    $infocall = 'Use ``Options`` in chat for commands list'
+    $infocall = 'Type `` Options `` in chat for commands list'
 }
 
 $script:jsonPayload = @{
@@ -1160,7 +1160,6 @@ $infocall
     )
 }
 sendMsg -Embed $jsonPayload
-
     if ($InfoOnConnect -eq '1'){
  	quickInfo
     }

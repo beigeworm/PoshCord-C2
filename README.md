@@ -33,6 +33,7 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 
 **MODULES**
 - **SpeechToText**: Send audio transcript to Discord
+- **QuickInfo**: Send a quick System info embed (sent on first connect)
 - **Systeminfo**: Send System info as text file to Discord
 - **FolderTree**: Save folder trees to file and send to Discord
 - **EnumerateLAN**: Show devices on LAN (see ExtraInfo)

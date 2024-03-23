@@ -1068,8 +1068,7 @@ $script:jsonPayload = @{
 - **Administrator**         : ``$adminperm``
 
 :minidisc: **OS Information** :minidisc:
-- **Current OS**            : ``$OSString``
-- **Build ID**              : ``$ver``
+- **Current OS**            : ``$OSString - $ver``
 - **Architechture**         : ``$OSArch``
 
 :globe_with_meridians: **Network Information** :globe_with_meridians:

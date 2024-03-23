@@ -6,7 +6,7 @@ $chan = "$ch" # make sure the bot AND webhook can access this channel
 
 # =============================================================== SCRIPT SETUP =========================================================================
 
-$version = "1.3.1" # Check version number
+$version = "1.5.1" # Check version number
 $response = $null
 $previouscmd = $null
 $authenticated = 0

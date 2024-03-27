@@ -1085,8 +1085,6 @@ $script:jsonPayload = @{
     )
 }
 sendMsg -Embed $jsonPayload
-$dir = $PWD.Path
-sendMsg -Message "``PS | $dir>``"
 }
 
 Function WaitingMsg {

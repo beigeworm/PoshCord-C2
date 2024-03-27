@@ -1216,8 +1216,6 @@ function sendMsg {
             $webClient.Headers.Add("Content-Type", "application/json")
             $response = $webClient.UploadString($url, "POST", $jsonBody)
             Write-Host "Message sent to Discord"
-	    $jsonBody = $null
-     	    $message = $null
     }
 }
 

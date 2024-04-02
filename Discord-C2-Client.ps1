@@ -30,7 +30,7 @@ if ($detectContent.Length -gt 1) {
     Write-Host "script is running from PS File"
 }
 else{
-    $ScriptPath = $MyInvocation.MyCommand.ScriptBlock
+    $ScriptPath = $MyInvocation.PSCommandPath
     $ScriptContent = Get-Content -Path $ScriptPath
     Write-Host "script is running from Invoke-Expression"
 }  

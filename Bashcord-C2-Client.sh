@@ -9,11 +9,12 @@
 # **SETUP**
 # 1. make a discord bot at https://discord.com/developers/applications/
 # 2. add the bot to your discord server
-# 3. Give these permissions in Oauth2 tab and copy link into a browser url bar (Send-Messages, Read-messages/view-channels, Attach files)
-# 4. Click 'Reset Token' in "Bot" tab for your token
-# 5. Change YOUR_BOT_TOKEN_HERE below with your bot token
-# 6. Change CHANNEL_ID_HERE below to the channel ID of your channel.
-# 7. Change BOT_USER_ID_HERE below to your bots user ID.
+# 3. Turn on ALL intents in the 'Bot' tab.
+# 4. Give these permissions in Oauth2 tab and copy link into a browser url bar (Send-Messages, Read-messages/view-channels, Attach files)
+# 5. Click 'Reset Token' in "Bot" tab for your token
+# 6. Change YOUR_BOT_TOKEN_HERE below with your bot token
+# 7. Change CHANNEL_ID_HERE below to the channel ID of your channel.
+# 8. Change BOT_USER_ID_HERE below to your bots user ID.
 
 token="YOUR_BOT_TOKEN_HERE" # Your bot intents should be on and 'read messages' permissions when joining your server
 chan="CHANNEL_ID_HERE" # On Discord app rightclick the channel > 'Copy Channel ID' (Make sure the bot can access this channel)

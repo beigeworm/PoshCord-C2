@@ -14,9 +14,10 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 ![GIF 3-14-2024 7-18-11 PM](https://github.com/beigeworm/PoshCord-C2/assets/93350544/d1805cf3-f850-45c1-b4d2-c342cc17ecdb)
 
 **SETUP**
-1. make a discord bot at https://discord.com/developers/applications/
-2. add the bot to your discord server
-3. Give these permissions in Oauth2 tab and copy link into a browser url bar
+1. Make a discord bot at https://discord.com/developers/applications/
+2. Turn on ALL intents in the 'Bot' tab.
+3. add the bot to your discord server
+4. Give these permissions in Oauth2 tab and copy link into a browser url bar
 
 ![Screenshot_1](https://github.com/beigeworm/PoshCord-C2/assets/93350544/b8634f20-7d76-48fb-a159-89ac02303abd)
 

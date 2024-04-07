@@ -212,7 +212,7 @@ while true; do
         if [[ "$recent_message" =~ ^cd\  ]]; then
             cd_command=$(echo "$recent_message" | awk '{print $2}')
             cd "$cd_command"
-            execute_command "pwd"  # Test if cd was successful
+            execute_command "pwd"
         else
             execute_command "$recent_message"
         fi

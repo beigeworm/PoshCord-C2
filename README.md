@@ -16,6 +16,9 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 **SETUP**
 1. Make a discord bot at https://discord.com/developers/applications/
 2. Turn on ALL intents in the 'Bot' tab.
+
+![image](https://github.com/beigeworm/PoshCord-C2/assets/93350544/f4b381b1-9217-4469-90de-e913681aecd6)
+
 3. Give these permissions in Oauth2 tab and copy link into a browser url bar
 
 ![Screenshot_1](https://github.com/beigeworm/PoshCord-C2/assets/93350544/b8634f20-7d76-48fb-a159-89ac02303abd)

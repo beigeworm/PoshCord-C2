@@ -35,7 +35,10 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 4. Edit the contents of your hosted file to contain 'options' to get a list of modules
 5. Do the same with any other command listed - To run that module.
 
-**MODULES**
+**MODULES / COMMANDS**
+
+*Write these in chat to run on the target.*
+
 - **SpeechToText**: Send audio transcript to Discord
 - **QuickInfo**: Send a quick System info embed (sent on first connect)
 - **Systeminfo**: Send System info as text file to Discord

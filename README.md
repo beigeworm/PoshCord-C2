@@ -21,7 +21,7 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 
 3. Give these permissions in Oauth2 tab and copy link into a browser url bar
 
-![Screenshot_1](https://github.com/beigeworm/PoshCord-C2/assets/93350544/b8634f20-7d76-48fb-a159-89ac02303abd)
+![Screenshot_1](https://github.com/beigeworm/PoshCord-C2/assets/93350544/1c944403-b4b0-4730-bc53-c958f4082ef9)
 
 4. add the bot to your discord server
 5. Click 'Reset Token' in "Bot" tab for your token
@@ -32,8 +32,9 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 1. Setup the script
 2. Run the script on a target.
 3. Check discord for 'waiting to connect..' message.
-4. Edit the contents of your hosted file to contain 'options' to get a list of modules
-5. Do the same with any other command listed - To run that module.
+4. Type the computers name into chat to start a session
+5. The session will be started in a newly created channel - (unles you use -nonew to use the maseter channel eg. `DESKTOP-3DG5fS -nonew`) 
+6. Use the commands listed below
 
 **MODULES / COMMANDS**
 

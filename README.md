@@ -2,11 +2,11 @@
 
 **SYNOPSIS**
 
-Using a Discord bot along with discords API and a webhook to Act as a Command and Control Platform.
+Using a Discord bot along with discords API and Powershell to Act as a Command and Control Platform.
 
 **INFORMATION**
 
-This script uses a discord bot along with discords API and a webhook to create a chat that can control a windows pc.
+This script uses a discord bot along with discords API to create a server channel that can control a windows pc.
 Every 10 seconds it will check for a new message in chat and interpret it as a custom command / module in powershell.
 
 **Demo** (using .vbs stager and python bot)

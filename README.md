@@ -81,7 +81,7 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 - **VolumeMax**: Maximise System Volume
 - **VolumeMin**: Minimise System Volume
 - **ShortcutBomb**: Create 50 shortcuts on the desktop.
-- **Wallpaper**: Set the wallpaper (wallpaper -url http://img.com/f4wc)
+- **Wallpaper**: Set the wallpaper `wallpaper -url http://img.com/f4wc`
 - **Goose**: Spawn an annoying goose (Sam Pearson App)
 
 - **ExtraInfo**: Get a list of further info and command examples

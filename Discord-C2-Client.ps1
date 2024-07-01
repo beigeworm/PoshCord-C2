@@ -1311,17 +1311,19 @@ Function GetFfmpeg{
     If (!(Test-Path $Path)){  
         $tempDir = "$env:temp"
         $apiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/latest"
-        $response = Invoke-WebRequest -Uri $apiUrl -Headers @{ "User-Agent" = "PowerShell" } -UseBasicParsing
-        $release = $response.Content | ConvertFrom-Json
+        $wc = New-Object System.Net.WebClient           
+        $wc.Headers.Add("User-Agent", "PowerShell")
+        $response = $wc.DownloadString("$apiUrl")
+        $release = $response | ConvertFrom-Json
         $asset = $release.assets | Where-Object { $_.name -like "*essentials_build.zip" }
         $zipUrl = $asset.browser_download_url
         $zipFilePath = Join-Path $tempDir $asset.name
         $extractedDir = Join-Path $tempDir ($asset.name -replace '.zip$', '')
-        Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath
+        $wc.DownloadFile($zipUrl, $zipFilePath)
         Expand-Archive -Path $zipFilePath -DestinationPath $tempDir -Force
         Move-Item -Path (Join-Path $extractedDir 'bin\ffmpeg.exe') -Destination $tempDir -Force
-        Remove-Item -Path $zipFilePath -Force
-        Remove-Item -Path $extractedDir -Recurse -Force
+        rm -Path $zipFilePath -Force
+        rm -Path $extractedDir -Recurse -Force
     }
     sendMsg -Message ":white_check_mark: ``Download Complete`` :white_check_mark:"
 }

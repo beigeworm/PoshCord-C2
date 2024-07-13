@@ -23,7 +23,7 @@ if(Test-Path "C:\Windows\Tasks\service.vbs"){
     rm -path "C:\Windows\Tasks\service.vbs" -Force
 }
 
-$version = "2.0.1" # Check version number
+$version = "1.5.1" # Check version number
 $response = $null
 $previouscmd = $null
 $authenticated = 0

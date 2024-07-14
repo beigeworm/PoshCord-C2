@@ -5,7 +5,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 #>
 # =====================================================================================================================================================
-$global:token = "$tk" # make sure your bot is in the same server as the webhook
+$global:token = "$tk" # make sure your bot is in ONE server only
 # =============================================================== SCRIPT SETUP =========================================================================
 
 $HideConsole = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running

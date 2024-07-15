@@ -12,7 +12,7 @@ This script creates a GUI for receiving the info stream from one Poshcord-C2 cli
 **IMPORTANT**
 - Both bots must only be in ONE Server ONLY.
 - Run This Script AFTER starting the client session
-- Only one set of client channels can be in the server (delete clossed sessions in discord after use).
+- Only one set of client channels can be in the server (delete closed sessions in discord after use).
 - Add ->   -ip your.ip.address.or.domain -port 8080 to the 'session command input' box before running StartUVNC
 - get UVNC listener here - https://github.com/beigeworm/assets/raw/main/uvnc-server.zip
 ============================================================================================

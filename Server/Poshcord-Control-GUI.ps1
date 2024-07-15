@@ -4,9 +4,9 @@
 This script creates a GUI for receiving the info stream from one Poshcord-C2 client.
 
 **USAGE**
-1. Replace TOKEN_1 with the main token. (the token used for the client)
+1. Replace TOKEN_1_HERE with the main token. (the token used for the client)
 2. Create a SECOND bot with the same permissions as the client bot and add it to the same server.
-3. Replace TOKEN_2 with the token you just created (used for sending messages like a user)
+3. Replace TOKEN_2_HERE with the token you just created (used for sending messages like a user)
 4. Run the script to create the Control GUI
 
 **IMPORTANT**

@@ -1,8 +1,21 @@
 
 # =====================================================================================================================================================
 <#
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum
+**SETUP**
+-SETUP THE BOT
+1. make a discord bot at https://discord.com/developers/applications/
+2. Enable all Privileged Gateway Intents on 'Bot' page
+3. On OAuth2 page, tick 'Bot' in Scopes section
+4. In Bot Permissions section tick Manage Channels, Read Messages/View Channels, Attach Files, Read Message History.
+5. Copy the URL into a browser and add the bot to your server.
+6. On 'Bot' page click 'Reset Token' and copy the token.
 
+-SETUP THE SCRIPT
+1. Copy the token into the script directly below.
+
+**INFORMATION**
+- The Discord bot you use must be in one server ONLY
+-------------------------------------------------------------------------------------------------
 #>
 # =====================================================================================================================================================
 $global:token = "$tk" # make sure your bot is in ONE server only

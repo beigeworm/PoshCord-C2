@@ -32,11 +32,11 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 2. Run the script on a target.
 3. Check discord for new channels created.
 5. The session will be started in a newly created channel category 
-6. Use the commands listed below
+6. Use the commands listed below in 'session-control' channel
 
 **MODULES / COMMANDS**
 
-*Write these in chat to run on the target.*
+*Write these in 'session-control' channel to run on the target.*
 
 -SYSTEM
 - **AddPersistance**: Add this script to startup.

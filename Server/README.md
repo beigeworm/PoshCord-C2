@@ -15,4 +15,4 @@ This script creates a GUI for receiving the info stream from one Poshcord-C2 cli
 - Run This Script AFTER starting the client session
 - Only one set of client channels can be in the server (delete clossed sessions in discord after use).
 
-![Screenshot_2](https://github.com/user-attachments/assets/92c9fb97-82fd-4332-8289-cb969e0a4822)
+![Screenshot_1](https://github.com/user-attachments/assets/1725becb-c357-486b-8c07-4580e6fa4ad2)

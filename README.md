@@ -30,9 +30,8 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 **USAGE**
 1. Setup the script
 2. Run the script on a target.
-3. Check discord for 'waiting to connect..' message.
-4. Type the computers name into chat to start a session
-5. The session will be started in a newly created channel - (unles you use -nonew to use the maseter channel eg. `DESKTOP-3DG5fS -nonew`) 
+3. Check discord for new channels created.
+5. The session will be started in a newly created channel category 
 6. Use the commands listed below
 
 **MODULES / COMMANDS**

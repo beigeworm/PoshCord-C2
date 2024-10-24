@@ -97,7 +97,7 @@ You can add custom scripting / commands - Type 'YOUR CUSTOM POWERSHELL COMMAND' 
 Save a hosted file contents as 'kill' to stop 'KeyCapture' or 'Exfiltrate' command and return to waiting for commands.
 
 **UVNC Listener / Server**
-Zip File - https://github.com/beigeworm/assets/raw/main/uvnc-server.zip
+Zip File - https://github.com/wormserv/assets/raw/main/uvnc-server.zip
 
 
 

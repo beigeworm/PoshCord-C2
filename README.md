@@ -84,6 +84,7 @@ Every 10 seconds it will check for a new message in chat and interpret it as a c
 - **Cleanup**: Wipe history (run prompt, powershell, recycle bin, Temp)
 - **Kill**: Stop a running module (eg. Exfiltrate)
 - **PauseJobs**: Pause the current jobs for this session
+- **ResumeJobs**: Resume all jobs for this session
 - **Close**: Close this session
 
 **FEATURES**

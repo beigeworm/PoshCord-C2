@@ -15,6 +15,14 @@
 
 **INFORMATION**
 - The Discord bot you use must be in one server ONLY
+
+USELESS PADDING
+The Get-Content cmdlet gets the content of the item at the location specified by the path, such as the text in a file or the content of a function. For files, the content is read one line at a time and returns a collection of objects, each representing a line of content.
+Beginning in PowerShell 3.0, Get-Content can also get a specified number of lines from the beginning or end of an item.
+Examples
+Example 1: Get the content of a text file
+
+This example gets the content of a file in the current directory. The LineNumbers.txt file has 100 lines in the format, This is Line X and is used in several examples.
 -------------------------------------------------------------------------------------------------
 #>
 # =====================================================================================================================================================

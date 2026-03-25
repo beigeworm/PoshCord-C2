@@ -19,6 +19,8 @@
 USELESS PADDING
 The Get-Content cmdlet gets the content of the item at the location specified by the path, such as the text in a file or the content of a function. For files, the content is read one line at a time and returns a collection of objects, each representing a line of content.
 Beginning in PowerShell 3.0, Get-Content can also get a specified number of lines from the beginning or end of an item.
+The Get-Content cmdlet gets the content of the item at the location specified by the path, such as the text in a file or the content of a function. For files, the content is read one line at a time and returns a collection of objects, each representing a line of content.
+Beginning in PowerShell 3.0, Get-Content can also get a specified number of lines from the beginning or end of an item.
 The Set-PSDebug cmdlet turns script debugging features on and off, sets the trace level, and toggles strict mode. By default, the PowerShell debug features are off.
 When the Trace parameter has a value of 1, each line of script is traced as it runs. When the parameter has a value of 2, variable assignments, function calls, and script calls are also traced. If the Step parameter is specified, you're prompted before each line of the script runs.
 Examples

